@@ -362,8 +362,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         <div className="w-full bg-gray-800 border-y border-gray-800 grid sm:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
             { icon: StarGlyph, title: 'VITRINE PROFISSIONAL', text: 'Tenha um link bio personalizado. O cliente vê profissionalismo desde o primeiro clique.' },
-            { icon: ZapIcon, title: 'MAIS HORÁRIOS APROVEITADOS', text: 'Zero tempo perdido entre clientes e mais atendimentos concluídos no mesmo dia.' },
             { icon: ZapIcon, title: 'RESGATE IMEDIATO', text: 'Cancelamentos deixam de ser prejuízo. O horário volta automaticamente para a vitrine e pode ser preenchido por outro cliente em segundos.' },
+            { icon: ZapIcon, title: 'MAIS HORÁRIOS APROVEITADOS', text: 'Zero tempo perdido entre clientes e mais atendimentos concluídos no mesmo dia.' },
             { icon: MoneyGlyph, title: 'LUCRO BLINDADO', text: 'Menos tempo ocioso entre atendimentos significa mais faturamento no fim do mês.' },
             { icon: SmileGlyph, title: 'CLIENTE SATISFEITO', text: 'Quem agenda tem a certeza de ser atendido no horário marcado, sem atrasos por erro de cálculo.' },
             { icon: CheckDoubleIcon, title: 'FLUXO COMPLETO', text: 'Da descoberta ao pós-atendimento, profissional e cliente continuam dentro do mesmo sistema.' },
@@ -538,7 +538,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                   },
                   {
                     title: 'Lembrete automático + WhatsApp',
-                    text: 'Um lembrete automático avisa o cliente 30 minutos antes, e você pode complementar enviando uma mensagem direto pro WhatsApp dele quando quiser.',
+                    text: 'Um lembrete automático avisa o cliente 30 minutos antes. Se quiser, você pode complementar com uma mensagem pelo WhatsApp.',
                   },
                   {
                     title: 'Sincronia com o Google Agenda',
