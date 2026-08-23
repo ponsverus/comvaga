@@ -362,7 +362,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           </h2>
           <div className="space-y-5 text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
             <p>
-              Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem um cancelamento virando um espaço vazio o resto do dia.
+              Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem perder de vista quanto da sua agenda futura já está comprometido e quanto isso representa em receita, sem um cancelamento virando um espaço vazio o resto do dia.
             </p>
             <p>
               Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo.
@@ -394,8 +394,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             },
             {
               num: '02',
-              title: 'ENCAIXE AUTOMÁTICO',
-              text: 'O algoritmo recalcula sua agenda a cada evento: novos horários marcados, desistências ou trocas. Tudo se reorganiza no ato para manter seu trabalho com o máximo de eficiência.',
+              title: 'RECEITA PROJETADA',
+              text: 'Você acompanha quanto da sua agenda já está preenchida e quanto isso representa em receita para os próximos dias — o dinheiro que antes passava despercebido.',
             },
             {
               num: '03',
@@ -441,9 +441,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
         <div className="w-full bg-gray-800 border-y border-gray-800 grid sm:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
-            { icon: StarGlyph, title: 'VITRINE PROFISSIONAL', text: 'Tenha um link bio personalizado. O cliente vê profissionalismo desde o primeiro clique.' },
-            { icon: ZapIcon, title: 'RESGATE IMEDIATO', text: 'Cancelamentos deixam de ser prejuízo. O horário volta automaticamente para a vitrine e pode ser preenchido por outro cliente em segundos.' },
-            { icon: ZapIcon, title: 'MAIS HORÁRIOS APROVEITADOS', text: 'Zero tempo perdido entre clientes e mais atendimentos concluídos no mesmo dia.' },
             { icon: MoneyGlyph, title: 'LUCRO BLINDADO', text: 'Menos tempo ocioso entre atendimentos significa mais faturamento no fim do mês.' },
             { icon: SmileGlyph, title: 'CLIENTE SATISFEITO', text: 'Quem agenda tem a certeza de ser atendido no horário marcado, sem atrasos por erro de cálculo.' },
             { icon: CheckDoubleIcon, title: 'FLUXO COMPLETO', text: 'Da descoberta ao pós-atendimento, profissional e cliente continuam dentro do mesmo sistema.' },
