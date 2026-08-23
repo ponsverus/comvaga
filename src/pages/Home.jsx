@@ -351,6 +351,30 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       </section>
 
 
+      <section className="py-20 sm:py-24 px-4 bg-dark-200 border-b border-gray-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-6">
+            O problema
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 leading-tight">
+            AGENDA COMUM SÓ REGISTRA.<br />
+            <span className="text-primary">ELA NÃO PENSA.</span>
+          </h2>
+          <div className="space-y-5 text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
+            <p>
+              Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem um cancelamento virando um espaço vazio o resto do dia.
+            </p>
+            <p>
+              Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo.
+            </p>
+          </div>
+          <p className="mt-10 text-xl sm:text-2xl font-normal text-white">
+            A <span className="text-primary">Comvaga</span> não resolve só um desses problemas. Ela usa inteligência pra manter sua agenda otimizada em tempo real, o tempo todo.
+          </p>
+        </div>
+      </section>
+
+
       <section className="py-0 bg-dark-200 w-full">
         <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-24">
           <h2 className="text-5xl font-black mb-4">
