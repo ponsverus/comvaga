@@ -351,7 +351,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       </section>
 
 
-      <section className="py-20 sm:py-24 px-4 bg-dark-200 border-b border-gray-800">
+      <section className="py-20 sm:py-24 px-4 bg-dark-100">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
             O problema
@@ -376,7 +376,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
 
       <section id="como-funciona" className="py-0 bg-dark-100 w-full">
-        <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-24">
+        <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-4">
           <h3 className="text-5xl font-black mb-4">
             A INTELIGÊNCIA <span className="text-primary">POR TRÁS DA COMVAGA</span>
           </h3>
@@ -394,8 +394,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             },
             {
               num: '02',
-              title: 'RECEITA PROJETADA',
-              text: 'Você acompanha quanto da sua agenda já está preenchida e quanto isso representa em receita para os próximos dias — o dinheiro que antes passava despercebido.',
+              title: 'DIA SEGUINTE',
+              text: 'Você acompanha quanto da sua agenda de amanhã já está ocupada e quanto isso já representa em receita projetada — o dinheiro que antes passava despercebido.',
             },
             {
               num: '03',
@@ -494,12 +494,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                   VER VITRINE EXEMPLO 
                   <ZapIcon className="w-5 h-5 group-hover:animate-bounce" />
                 </a>
-                <Link
-                  to="/cadastro"
-                  className="px-8 py-4 bg-white/10 border border-white/20 text-white font-bold rounded-button hover:bg-white/20 backdrop-blur-sm transition-all flex items-center justify-center gap-3"
-                >
-                  TESTAR GRÁTIS POR 30 DIAS <ZapIcon className="w-5 h-5" />
-                </Link>
               </div>
             </div>
 
