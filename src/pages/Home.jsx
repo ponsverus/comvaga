@@ -381,7 +381,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             A INTELIGÊNCIA <span className="text-primary">POR TRÁS DA COMVAGA</span>
           </h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada procedimento para validar agendamentos sem lacunas ociosas.
+            É essa inteligência que resolve, na prática, cada um dos pequenos problemas que você acabou de ver. Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada procedimento para validar agendamentos sem lacunas ociosas.
           </p>
         </div>
 
