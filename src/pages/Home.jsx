@@ -351,30 +351,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       </section>
 
 
-      <section className="py-20 sm:py-24 px-4 bg-dark-200 border-b border-gray-800">
-        <div className="max-w-4xl mx-auto text-center">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
-            O problema
-          </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 leading-tight">
-            UM CANCELAMENTO NÃO É SÓ<br />
-            <span className="text-primary">UM HORÁRIO VAZIO</span>
-          </h2>
-          <div className="space-y-5 text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
-            <p>
-              Um cliente cancela. O horário fica livre. Na prática, ele provavelmente vai continuar vazio até o fim do dia, porque ninguém mais vai saber que ele existe.
-            </p>
-            <p>
-              Agora multiplique isso pelos cancelamentos do mês inteiro. Não é um problema pequeno: é receita que passou perto e nunca chegou até você.
-            </p>
-          </div>
-          <p className="mt-10 text-xl sm:text-2xl font-normal text-white">
-            É exatamente esse espaço que a <span className="text-primary">Comvaga</span> recupera, antes que ele vire prejuízo.
-          </p>
-        </div>
-      </section>
-
-
       <section className="py-0 bg-dark-200 w-full">
         <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-24">
           <h2 className="text-5xl font-black mb-4">
@@ -428,7 +404,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
               </h2>
               
               <p className="text-lg text-gray-400 mb-10 leading-relaxed max-w-3xl">
-                Não precisa acreditar na nossa palavra. Veja como o horário que quase ficou vazio aparece para o seu cliente, e como ele chega do primeiro clique até o agendamento em uma experiência só.
+                Seu negócio merece mais do que um link de WhatsApp. Veja como seus clientes podem encontrar seus trabalhos, depoimentos, equipe e horários e chegar ao agendamento em uma experiência só.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -455,47 +431,47 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             A INTELIGÊNCIA <span className="text-primary">POR TRÁS DA COMVAGA</span>
           </h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Você não precisa entender de algoritmos pra sentir a diferença. Aqui está, de forma simples, o que acontece por trás dos panos pra sua agenda nunca ficar com espaço perdido.
+            Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada procedimento para validar agendamentos sem lacunas ociosas.
           </p>
         </div>
 
         <div className="w-full bg-gray-800 border-y border-gray-800 grid md:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
             {
-              tag: 'ROTINA REAL',
-              title: 'Cada profissional trabalha do seu jeito, sem bagunçar a agenda geral',
-              text: 'Dias, horários e pausas de cada profissional são respeitados individualmente, permitindo fluxos de trabalho independentes dentro do mesmo negócio.',
+              num: '01',
+              title: 'ROTINA REAL',
+              text: 'Cada profissional trabalha com seus próprios dias, horários e pausas. A agenda se adapta à rotina individual de cada um, permitindo fluxos de trabalho independentes.',
             },
             {
-              tag: 'ENCAIXE AUTOMÁTICO',
-              title: 'Nenhum horário fica esquecido depois de um novo agendamento',
-              text: 'A cada novo horário marcado, desistência ou troca, a agenda se reorganiza no ato para manter o máximo de eficiência.',
+              num: '02',
+              title: 'ENCAIXE AUTOMÁTICO',
+              text: 'O algoritmo recalcula sua agenda a cada evento: novos horários marcados, desistências ou trocas. Tudo se reorganiza no ato para manter seu trabalho com o máximo de eficiência.',
             },
             {
-              tag: 'ZONA DE CALOR',
-              title: 'Pare de criar buracos desnecessários na agenda',
-              text: 'Em vez de espalhar clientes aleatoriamente, novos horários são direcionados para encostar nos atendimentos já confirmados, compactando o dia.',
+              num: '03',
+              title: 'ZONA DE CALOR',
+              text: 'Em vez de distribuir clientes aleatoriamente pela agenda, o sistema prioriza os horários que encostam diretamente em atendimentos já confirmados, compactando o dia e eliminando intervalos vazios.',
             },
             {
-              tag: 'AGENDAMENTO MÚLTIPLO SEQUENCIAL',
-              title: 'Vários serviços resolvidos em uma única reserva, sem conflito',
-              text: 'Quando o cliente escolhe mais de um trabalho, o tempo de cada um é somado com a margem operacional e só é confirmado se couber inteiro no turno do profissional.',
+              num: '04',
+              title: 'AGENDAMENTO MÚLTIPLO SEQUENCIAL',
+              text: 'Quando o cliente seleciona mais de um trabalho, o sistema soma o tempo de cada um, adiciona a margem operacional entre atendimentos e só confirma se o bloco inteiro couber no turno do profissional.',
             },
             {
-              tag: 'REAPROVEITAMENTO INTELIGENTE',
-              title: 'Um cancelamento vira uma nova oportunidade em segundos',
-              text: 'A janela vaga é redistribuída na vitrine automaticamente: um horário de 60 minutos pode virar três de 20 ou dois de 30, sempre identificado com um ícone discreto pro cliente.',
+              num: '05',
+              title: 'REAPROVEITAMENTO INTELIGENTE',
+              text: 'Cancelou? O sistema reage em milissegundos e redistribui a janela vaga na vitrine como novas oportunidades: um horário de 60 minutos pode ser reservado inteiro ou virar três de 20 ou dois de 30, sempre identificado com um ícone discreto para o cliente.',
             },
             {
-              tag: 'CONTROLE DE CONFLITOS',
-              title: 'Dois clientes nunca são marcados no mesmo horário',
-              text: 'Por trás de tudo isso está a mesma lógica de integridade usada em bancos de dados relacionais de alta performance.',
+              num: '06',
+              title: 'CONTROLE DE CONFLITOS',
+              text: 'Por trás de tudo isso está a mesma lógica de integridade usada em bancos de dados relacionais de alta performance, garantindo que dois agendamentos nunca colidam.',
             },
-          ].map(({ tag, title, text }) => (
-            <div key={tag} className="bg-dark-100 p-8 md:p-10 flex flex-col px-4 sm:px-8 md:px-10 lg:px-12">
-              <span className="inline-block w-fit text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/10 rounded-full px-3 py-1 mb-5">
-                {tag}
-              </span>
+          ].map(({ num, title, text }) => (
+            <div key={num} className="bg-dark-100 p-8 md:p-10 flex flex-col px-4 sm:px-8 md:px-10 lg:px-12">
+              <div className="w-14 h-14 bg-gradient-to-br from-primary to-yellow-600 rounded-full flex items-center justify-center text-black font-black text-xl shadow-lg shadow-primary/50 mb-6 shrink-0">
+                {num}
+              </div>
               <h3 className="text-2xl font-normal mb-3 text-white">{title}</h3>
               <p className="text-gray-400 leading-relaxed">{text}</p>
             </div>
@@ -605,7 +581,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                 capacity: 'Até 3 profissionais',
                 oldPrice: 'R$ 99,99',
                 price: 'R$ 69,99',
-                badge: 'MAIS ESCOLHIDO',
+                badge: 'OFERTA',
               },
               {
                 code: 'premium',
@@ -618,10 +594,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             ].map((plan) => (
               <div
                 key={plan.code}
-                className={[
-                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6',
-                  plan.code === 'profissional' ? 'relative ring-1 ring-inset ring-primary/40 bg-primary/5' : '',
-                ].join(' ')}
+                className="px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
               >
                 <div>
                   <div className="flex items-center gap-3 mb-3">
@@ -680,79 +653,17 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         </div>
       </section>
 
-      <section className="py-0 bg-black w-full border-b border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 text-center mb-14 pt-24">
-          <h2 className="text-5xl font-black mb-4">
-            AINDA COM <span className="text-primary">DÚVIDAS?</span>
-          </h2>
-          <p className="text-xl text-gray-400">As perguntas mais comuns antes de começar.</p>
-        </div>
-
-        <div className="max-w-3xl mx-auto px-4 pb-24 flex flex-col gap-3">
-          {[
-            {
-              q: 'Meu cliente precisa baixar algum aplicativo?',
-              a: 'Não. Seu cliente recebe um link exclusivo e visualiza apenas os horários livres reais, direto pelo navegador, sem precisar instalar nada.',
-            },
-            {
-              q: 'Funciona para uma equipe com vários profissionais?',
-              a: 'Sim. Os planos vão de 1 profissional até 9, e cada um mantém sua própria rotina, dias e horários dentro do mesmo negócio.',
-            },
-            {
-              q: 'Minha agenda sincroniza com o Google Agenda?',
-              a: 'Sim. O cliente confirma se quer manter ou criar o compromisso no Google Agenda, sem precisar fazer isso manualmente depois.',
-            },
-            {
-              q: 'Preciso me comprometer com algum contrato?',
-              a: 'Não. Você testa o plano escolhido gratuitamente por 30 dias, sem burocracia.',
-            },
-            {
-              q: 'E se eu precisar de um plano diferente dos disponíveis?',
-              a: 'Nossa equipe monta um plano personalizado pra você, com o limite e os recursos que sua operação precisa.',
-            },
-          ].map(({ q, a }) => (
-            <details
-              key={q}
-              className="group rounded-[3px] border border-white/10 bg-dark-200 px-6 py-5 open:bg-dark-100"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-normal text-white">
-                {q}
-                <span className="shrink-0 text-primary transition-transform group-open:rotate-45 text-2xl leading-none">+</span>
-              </summary>
-              <p className="mt-4 text-gray-400 leading-relaxed">{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
       <section className="py-24 px-4 bg-gradient-to-r from-primary via-yellow-500 to-yellow-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl font-black text-black mb-6">SUA AGENDA PODE TRABALHAR MELHOR</h2>
-          <p className="text-2xl text-black/80 mb-10">Uma vitrine para apresentar seu negócio, um painel para operar e uma agenda que pensa antes de confirmar.</p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10 max-w-2xl mx-auto">
-            {[
-              'Teste grátis por 30 dias',
-              'Configure seu negócio',
-              'Publique sua agenda',
-              'Comece a receber agendamentos',
-            ].map((step, i) => (
-              <div key={step} className="flex flex-col items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-black text-primary font-black flex items-center justify-center text-sm">
-                  {i + 1}
-                </div>
-                <p className="text-black/80 text-xs font-normal uppercase leading-snug">{step}</p>
-              </div>
-            ))}
-          </div>
-
+          <p className="text-2xl text-black/80 mb-8">Uma vitrine para apresentar seu negócio, um painel para operar e uma agenda que pensa antes de confirmar.</p>
           <Link
             to="/cadastro"
             className="inline-flex items-center gap-3 px-12 py-6 bg-black text-primary rounded-button font-black text-xl hover:shadow-2xl transition-all"
           >
             TESTAR AGORA <ZapIcon className="w-6 h-6" />
           </Link>
-          <p className="text-black/60 text-sm mt-6">Comece sem compromisso e descubra como a Comvaga se adapta à sua operação.</p>
+          <p className="text-black/60 text-sm mt-6">Eficiência comprovada em barbearias, estúdios e clínicas.</p>
         </div>
       </section>
 
