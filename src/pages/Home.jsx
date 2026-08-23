@@ -377,11 +377,11 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
       <section id="como-funciona" className="py-0 bg-dark-100 w-full">
         <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-24">
-          <h2 className="text-5xl font-black mb-4">
+          <h3 className="text-5xl font-black mb-4">
             A INTELIGÊNCIA <span className="text-primary">POR TRÁS DA COMVAGA</span>
-          </h2>
+          </h3>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            É essa inteligência que resolve, na prática, cada um dos pequenos problemas que você acabou de ver. Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada procedimento para validar agendamentos sem lacunas ociosas.
+            É essa inteligência que resolve, na prática, cada um dos pequenos problemas que você acabou de ver. Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada trabalho para validar agendamentos sem lacunas ociosas.
           </p>
         </div>
 
