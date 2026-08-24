@@ -231,7 +231,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         console.error('Erro na busca:', error);
         showMessage('home.search_failed_support');
         setResultadosBusca([]);
-      } finally {
+      } font-normalally {
         if (!cancelled) setBuscando(false);
       }
     };
@@ -248,7 +248,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
   return (
     <div className="min-h-screen bg-black text-white relative">
-    <div className="relative z-50 w-full bg-yellow-400 border-b border-yellow-300/50 overflow-hidden h-10 flex items-center">
+      <div className="relative z-50 w-full bg-yellow-400 border-b border-yellow-300/50 overflow-hidden h-10 flex items-center">
         <div className="announcement-bar-wrapper flex">
           {[1, 2].map((i) => (
             <div
@@ -285,7 +285,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         `}</style>
       </div>
 
-
       <header className="absolute top-20 left-0 w-full z-40 bg-transparent border-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex items-center justify-center h-16 sm:h-20">
@@ -311,6 +310,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           </div>
         </div>
       </header>
+
       <section className="relative pt-32 pb-12 sm:pt-40 sm:pb-16 lg:pt-48 lg:pb-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-yellow-600/10"></div>
         <div className="absolute top-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
@@ -350,7 +350,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         </div>
       </section>
 
-
       <section className="py-20 sm:py-24 px-4 bg-dark-100">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
@@ -365,24 +364,17 @@ export default function Home({ user, userType, professionalRole = null, onLogout
               Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem ter que calcular na mão quanto da sua agenda de amanhã já está ocupada e quanto isso representa em receita, sem um cancelamento virando um espaço vazio o resto do dia, em vez de virar novas oportunidades de horário.
             </p>
             <p>
-              Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo.
+              Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo. A boa notícia é que a Comvaga resolve cada um deles em tempo real:
             </p>
           </div>
-          <p className="mt-10 text-xl sm:text-2xl font-normal text-white">
-            A <span className="text-primary">Comvaga</span> não resolve só um desses problemas. Ela usa inteligência pra manter sua agenda otimizada em tempo real, o tempo todo.
-          </p>
         </div>
       </section>
 
-
       <section id="como-funciona" className="py-0 bg-dark-100 w-full">
-        <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-4">
-          <h3 className="text-5xl font-black mb-4">
-            A INTELIGÊNCIA <span className="text-primary">POR TRÁS DA COMVAGA</span>
+        <div className="max-w-7xl mx-auto px-4 text-center mb-10 pt-4">
+          <h3 className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1">
+            A SOLUÇÃO
           </h3>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            É essa inteligência que resolve, na prática, cada um dos pequenos problemas que você acabou de ver. Muito além de uma grade fixa, a Comvaga avalia a dinâmica de cada profissional e o tempo exato de cada trabalho para validar agendamentos sem lacunas ociosas.
-          </p>
         </div>
 
         <div className="w-full bg-gray-800 border-y border-gray-800 grid md:grid-cols-2 lg:grid-cols-3 gap-px">
@@ -427,9 +419,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             </div>
           ))}
         </div>
-
       </section>
-
 
       <section className="py-0 bg-dark-200 w-full">
         <div className="max-w-7xl mx-auto px-4 text-center mb-16 pt-24">
@@ -458,7 +448,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           ))}
         </div>
       </section>
-
 
       <section className="py-0 bg-black overflow-hidden border-b border-gray-800">
         <div className="w-full bg-dark-200 overflow-hidden relative">
@@ -496,11 +485,9 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                 </a>
               </div>
             </div>
-
           </div>
         </div>
       </section>
-
 
       <section
         ref={plansSectionRef}
