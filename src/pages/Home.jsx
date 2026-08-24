@@ -364,13 +364,23 @@ export default function Home({ user, userType, professionalRole = null, onLogout
               Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem ter que calcular na mão quanto da sua agenda de amanhã já está ocupada e quanto isso representa em receita, sem um cancelamento virando um espaço vazio o resto do dia, em vez de virar novas oportunidades de horário.
             </p>
             <p>
-              Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo. A boa notícia é que a Comvaga resolve cada um deles em tempo real:
+              Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo.
             </p>
           </div>
         </div>
       </section>
 
-      <section id="como-funciona" className="py-0 bg-dark-100 w-full">
+      <section id="como-funciona" className="py-16 sm:py-20 bg-dark-100 w-full">
+        <div className="max-w-4xl mx-auto text-center mb-12 px-4">
+          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 mb-6">
+            RESOLVIDO
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight">
+            É ASSIM QUE A COMVAGA FAZ A SUA AGENDA <br />
+            <span className="text-primary">PENSAR POR VOCÊ:</span>
+          </h2>
+        </div>
+
         <div className="w-full bg-gray-800 border-y border-gray-800 grid md:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
             {
@@ -604,8 +614,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                     : '',
                 ].join(' ')}
               >
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex-1 w-full">
+                  <div className="flex items-center justify-between gap-3 mb-3 w-full">
                     <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
                       {plan.name}
                     </span>
