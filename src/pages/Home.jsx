@@ -371,12 +371,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       </section>
 
       <section id="como-funciona" className="py-0 bg-dark-100 w-full">
-        <div className="max-w-7xl mx-auto px-4 text-center mb-10 pt-4">
-          <h3 className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1">
-            A SOLUÇÃO
-          </h3>
-        </div>
-
         <div className="w-full bg-gray-800 border-y border-gray-800 grid md:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
             {
