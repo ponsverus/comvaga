@@ -354,7 +354,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       <section className="pt-20 sm:pt-24 pb-6 sm:pb-8 px-4 bg-dark-100">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
-            O problema
+            Problema
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 leading-tight">
             AGENDA COMUM SÓ REGISTRA.<br />
@@ -362,7 +362,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           </h2>
           <div className="space-y-5 text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
             <p>
-              Marcar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem buracos entre atendimentos, sem cálculo manual toda vez que um cliente pede mais de um serviço, sem risco de dois clientes marcados na mesma janela, sem ter que calcular na mão quanto da sua agenda de amanhã já está ocupada e quanto isso representa em receita, sem um cancelamento virando um espaço vazio o resto do dia, em vez de virar novas oportunidades de horário.
+              Agendar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem ter que engessar turnos ignorando a rotina e as pausas de cada profissional, sem ter que somar atendimento por atendimento para prever a receita e o rendimento do dia, sem buracos e horários mortos espalhados entre os atendimentos, sem contas exaustivas toda vez que o cliente escolhe mais de um trabalho, sem um cancelamento virar um intervalo vago o resto do dia em vez de virar novas oportunidades de horário, e sem risco de dois clientes agendados na mesma janela.
             </p>
             <p>
               Cada um desses pequenos problemas, sozinho, parece pequeno. Juntos, ao longo do mês, custam tempo e dinheiro que ninguém percebe estar perdendo.
@@ -391,8 +391,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             },
             {
               num: '02',
-              title: 'DIA SEGUINTE',
-              text: 'Você não precisa contar agendamento por agendamento pra saber se amanhã vai ser um bom dia. A Comvaga já calcula pra você quanto da agenda está ocupada e quanto isso representa em receita.',
+              title: 'FUTURO',
+              text: 'Pule a contagem manual de horários para prever seus resultados. A Comvaga calcula automaticamente o volume da sua agenda preenchida e o valor exato em receita.',
             },
             {
               num: '03',
@@ -540,7 +540,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                   },
                   {
                     title: 'Agendamento assistido pelo profissional',
-                    text: 'O profissional registra o agendamento pela agenda quando o cliente precisa de ajuda para concluir a reserva.',
+                    text: 'Permite ao profissional registrar horários em nome do cliente quando solicitado, garantindo flexibilidade total para quem prefere suporte direto na hora de agendar.',
                   },
                   {
                     title: 'Reagendamento inteligente pela área exclusiva do cliente',
@@ -552,11 +552,11 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                   },
                   {
                     title: 'Lembrete automático + WhatsApp',
-                    text: 'Um lembrete automático avisa o cliente 30 minutos antes. Se quiser, você pode complementar com uma mensagem pelo WhatsApp.',
+                    text: 'Um lembrete automático avisa o cliente 30 minutos antes. Se quiser, você também pode enviar uma mensagem complementar pelo WhatsApp direto do seu painel.',
                   },
                   {
                     title: 'Sincronia com o Google Agenda',
-                    text: 'O cliente confirma se quer manter ou criar o agendamento no Google Agenda, sem precisar fazer isso manualmente depois.',
+                    text: 'Como um ganho extra, o sistema permite guardar o horário no Google Agenda com um toque, ajudando a lembrar do evento no dia a dia.',
                   },
                 ].map((item) => (
                   <div key={item.title} className="flex items-start gap-2.5">
