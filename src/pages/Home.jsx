@@ -597,15 +597,20 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             ].map((plan) => (
               <div
                 key={plan.code}
-                className="px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
+                className={[
+                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 transition-all relative',
+                  plan.code === 'profissional'
+                    ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
+                    : '',
+                ].join(' ')}
               >
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-[10px] font-normal uppercase tracking-widest text-gray-400">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
                       {plan.name}
                     </span>
                     {plan.badge && (
-                      <span className="inline-flex items-center rounded-full bg-green-400 px-2.5 py-0.5 text-[9px] font-normal uppercase tracking-widest text-white">
+                      <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
                         {plan.badge}
                       </span>
                     )}
@@ -626,7 +631,12 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                 <Link
                   to={planSignupTo(plan.code)}
                   onClick={() => saveSelectedPlanIntent(plan.code)}
-                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-yellow-600 text-black text-xs font-normal uppercase tracking-wider rounded-full hover:shadow-lg hover:shadow-primary/30 transition-all"
+                  className={[
+                    'shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all',
+                    plan.code === 'premium'
+                      ? 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30'
+                      : 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
+                  ].join(' ')}
                 >
                    Testar o {plan.name} <ZapIcon className="w-3.5 h-3.5" />
                 </Link>
@@ -634,8 +644,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             ))}
 
             <div className="flex-1 flex flex-col items-start justify-center text-left gap-3 px-4 sm:px-8 md:px-12 lg:px-16 py-10 bg-primary/5">
-              <span className="text-[10px] font-normal uppercase tracking-widest text-primary">
-                Personalizado
+              <span className="inline-block rounded-full bg-primary/20 border border-primary/30 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-primary">
+                PERSONALIZADO
               </span>
               <p className="text-xl md:text-2xl font-normal text-white">
                 Precisa de um plano personalizado?
