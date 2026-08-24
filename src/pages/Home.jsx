@@ -350,7 +350,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         </div>
       </section>
 
-      <section className="py-20 sm:py-24 px-4 bg-dark-100">
+      <section className="pt-20 sm:pt-24 pb-6 sm:pb-8 px-4 bg-dark-100">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
             O problema
@@ -370,7 +370,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         </div>
       </section>
 
-      <section id="como-funciona" className="py-16 sm:py-20 bg-dark-100 w-full">
+      <section id="como-funciona" className="pt-6 sm:pt-8 pb-16 sm:pb-20 bg-dark-100 w-full">
         <div className="max-w-4xl mx-auto text-center mb-12 px-4">
           <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 mb-6">
             RESOLVIDO
