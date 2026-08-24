@@ -8,6 +8,7 @@ import { saveSelectedPlanIntent } from '../utils/plans';
 import { searchHome } from '../utils/searchHome';
 
 const planSignupTo = (planCode) => `/cadastro/profissional?plano=${planCode}`;
+
 function getBusinessLogoUrl(path) {
   if (!path) return null;
   try {
@@ -608,48 +609,59 @@ export default function Home({ user, userType, professionalRole = null, onLogout
               <div
                 key={plan.code}
                 className={[
-                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 transition-all relative',
+                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col gap-6 transition-all',
                   plan.code === 'profissional'
                     ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
                     : '',
                 ].join(' ')}
               >
-                <div className="flex-1 w-full">
-                  <div className="flex items-center justify-between gap-3 mb-3 w-full">
-                    <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
-                      {plan.name}
+                <div className="flex items-center justify-between w-full">
+                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
+                    {plan.name}
+                  </span>
+
+                  {plan.badge && (
+                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                      {plan.badge}
                     </span>
-                    {plan.badge && (
-                      <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                        {plan.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">{plan.capacity}</p>
-                  <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
-                    {plan.oldPrice && (
-                      <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
-                        {plan.oldPrice}
-                      </span>
-                    )}
-                    <span className={`text-xl font-normal ${plan.code === 'profissional' ? 'text-green-400' : 'text-white'}`}>
-                      {plan.price}<span className="text-sm font-normal text-gray-500">/mês</span>
-                    </span>
-                  </div>
+                  )}
                 </div>
 
-                <Link
-                  to={planSignupTo(plan.code)}
-                  onClick={() => saveSelectedPlanIntent(plan.code)}
-                  className={[
-                    'shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all',
-                    plan.code === 'premium'
-                      ? 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30'
-                      : 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
-                  ].join(' ')}
-                >
-                   Testar o {plan.name} <ZapIcon className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 w-full">
+                  <div>
+                    <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
+                      {plan.capacity}
+                    </p>
+                    <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
+                      {plan.oldPrice && (
+                        <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
+                          {plan.oldPrice}
+                        </span>
+                      )}
+                      <span
+                        className={`text-xl font-normal ${
+                          plan.code === 'profissional' ? 'text-green-400' : 'text-white'
+                        }`}
+                      >
+                        {plan.price}
+                        <span className="text-sm font-normal text-gray-500">/mês</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={planSignupTo(plan.code)}
+                    onClick={() => saveSelectedPlanIntent(plan.code)}
+                    className={[
+                      'shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all',
+                      plan.code === 'premium'
+                        ? 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30'
+                        : 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
+                    ].join(' ')}
+                  >
+                    Testar o {plan.name} <ZapIcon className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             ))}
 
