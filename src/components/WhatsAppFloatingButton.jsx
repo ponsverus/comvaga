@@ -2,6 +2,8 @@ import { useLocation } from 'react-router-dom';
 import MessageIcon from './icons/MessageIcon';
 import { getSupportHref } from '../support';
 
+// Áreas logadas/internas do sistema: o ícone flutuante não deve aparecer aqui.
+// O suporte dentro dessas áreas continua disponível pelo link fixo no footer.
 const PRIVATE_PATH_PREFIXES = [
   '/dashboard',
   '/minha-area',
@@ -23,10 +25,12 @@ export default function WhatsAppFloatingButton() {
 
   if (isPrivatePath(pathname)) return null;
 
+  // Mensagem sempre "aberta": em página pública ainda não sabemos
+  // se quem está entrando em contato é cliente ou profissional.
   const href = getSupportHref('public');
 
   return (
-    
+    <a
       href={href}
       target="_blank"
       rel="noreferrer"
