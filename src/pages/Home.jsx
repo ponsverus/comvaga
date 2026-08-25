@@ -502,7 +502,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           <h2 className="text-5xl font-normal mb-4">
             SEM <span className="text-primary">BUROCRACIA</span>
           </h2>
-          <p className="text-xl text-gray-400">Teste grátis por 30 dias o plano escolhido. Sem compromisso e sem burocracia ;)</p>
+          <p className="text-xl text-gray-400">Teste grátis por 30 dias o plano escolhido. Sem compromisso e sem letras miúdas ;)</p>
         </div>
 
         <div className="
