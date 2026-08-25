@@ -4,6 +4,7 @@ export { default as CheckIcon } from './CheckIcon';
 export { default as CheckedIcon } from './CheckedIcon';
 export { default as LocationIcon } from './LocationIcon';
 export { default as LogoutIcon } from './LogoutIcon';
+export { default as MessageIcon } from './MessageIcon';
 export { default as ProfessionalIcon } from './ProfessionalIcon';
 export { default as ProtectionIcon } from './ProtectionIcon';
 export { default as SearchIcon } from './SearchIcon';
