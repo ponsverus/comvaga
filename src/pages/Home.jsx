@@ -397,7 +397,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             {
               num: '03',
               title: 'ZONA DE CALOR',
-              text: 'Em vez de distribuir clientes aleatoriamente pela agenda, o sistema prioriza os horários que encostam diretamente em atendimentos já confirmados, compactando o dia e eliminando intervalos vazios.',
+              text: 'Em vez de espalhar clientes aleatoriamente pelo dia, o sistema prioriza horários encostados em agendamentos já confirmados, compactando o expediente e eliminando buracos na agenda.',
             },
             {
               num: '04',
@@ -436,7 +436,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
         <div className="w-full bg-gray-800 border-y border-gray-800 grid sm:grid-cols-2 lg:grid-cols-3 gap-px">
           {[
-            { icon: MoneyGlyph, title: 'LUCRO BLINDADO', text: 'Menos tempo ocioso entre atendimentos significa mais faturamento no fim do mês.' },
+            { icon: MoneyGlyph, title: 'LUCRO BLINDADO', text: 'Menos buracos e horários mortos na agenda significam mais faturamento no fim do mês.' },
             { icon: SmileGlyph, title: 'CLIENTE SATISFEITO', text: 'Quem agenda tem a certeza de ser atendido no horário marcado, sem atrasos por erro de cálculo.' },
             { icon: CheckDoubleIcon, title: 'FLUXO COMPLETO', text: 'Da descoberta ao pós-atendimento, profissional e cliente continuam dentro do mesmo sistema.' },
           ].map(({ icon: Icon, title, text }, i) => (
@@ -524,7 +524,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
                 {[
                   {
                     title: 'Reabertura automática de horários cancelados na agenda',
-                    text: 'Horários liberados por cancelamentos voltam automaticamente à disponibilidade, via particionamento dinâmico da agenda.',
+                    text: 'Diante de um cancelamento, o sistema reestrutura a agenda na hora, devolvendo o período vago para a vitrine através do particionamento dinâmico de horários.',
                   },
                   {
                     title: 'Reserva em lote de múltiplos trabalhos',
