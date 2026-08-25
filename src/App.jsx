@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import { isPasswordRecoveryUrl } from './utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from './utils/profileAccess';
 import { ptBR } from './feedback/messages/ptBR.js';
+import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
 import FeedbackProvider from './feedback/FeedbackProvider';
 
@@ -501,6 +502,7 @@ export default function App() {
         <RecoveryWatcher onChange={setRecoveryMode} />
         <LogoutRedirectResetter redirectPath={postLogoutRedirect} onClear={() => setPostLogoutRedirect(null)} />
         <ScrollToTopOnRouteChange />
+        <WhatsAppFloatingButton />
 
         <RouteErrorGuard>
           <Suspense fallback={<FullScreenLoading />}>
