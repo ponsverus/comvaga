@@ -416,7 +416,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             },
           ].map(({ num, title, text }) => (
             <div key={num} className="bg-dark-100 p-8 md:p-10 flex flex-col px-4 sm:px-8 md:px-10 lg:px-12">
-              <div className="w-14 h-14 bg-gradient-to-br from-primary to-yellow-600 rounded-full flex items-center justify-center text-normal font-black text-xl shadow-lg shadow-primary/50 mb-6 shrink-0">
+              <div className="w-14 h-14 bg-gradient-to-br from-primary to-yellow-600 rounded-full flex items-center justify-center text-black font-normal text-xl shadow-lg shadow-primary/50 mb-6 shrink-0">
                 {num}
               </div>
               <h3 className="text-2xl font-normal mb-3 text-white">{title}</h3>
