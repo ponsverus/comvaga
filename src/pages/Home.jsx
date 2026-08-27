@@ -319,7 +319,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         <div className="relative z-10 max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-button mb-8 backdrop-blur-sm">
             <ZapIcon className="w-4 h-4 text-primary" />
-            <span className="text-primary font-bold text-sm">O FIM DA AGENDA NORMAL</span>
+            <span className="text-primary font-bold text-sm">O FIM DA AGENDA COMUM</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-6 leading-tight drop-shadow-lg">
