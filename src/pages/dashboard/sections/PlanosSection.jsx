@@ -186,80 +186,51 @@ function getPlanLimitMessage(plan, count) {
   });
 }
 
+// Rótulo de capacidade lido do próprio plano (não fixo), para nunca divergir do catálogo real.
+function getCapacityLabel(plan) {
+  const limit = getPlanLimit(plan);
+  if (limit == null) return 'Profissionais ilimitados';
+  return limit === 1 ? '1 profissional' : `Até ${limit} profissionais`;
+}
+
+// Lista única de recursos, compartilhada por todos os planos (coluna esquerda, estilo Home).
+const ALL_FEATURES = [
+  'Reabertura automática de horários cancelados na agenda',
+  'Reserva em lote de múltiplos trabalhos em sequência para o mesmo dia',
+  'Direcionamento inteligente de novos agendamentos para horários colados aos já existentes',
+  'Indicadores de agendamentos e receita, com comparativo ao dia anterior, além de indicadores de receita por período.',
+  'Métricas de faturamento e desempenho operacional por data ou período',
+  'Montagem de ofertas nos trabalhos oferecidos',
+  'Comprometimento da agenda e receita futura projetada',
+  'Agendamento assistido pelo profissional',
+  'Reagendamento inteligente em um clique pela área exclusiva do cliente',
+  'Alertas por e-mail em tempo real',
+  'Lembrete automático 30 min antes',
+  'Sincronia total com o Google Agenda',
+];
+
+// Conteúdo específico de cada plano (só o que difere entre eles: nome, preço "de/por", cor do preço e do CTA).
 const PLAN_CONTENT = {
   essencial: {
     label: 'Essencial',
-    description: 'Para autônomos que buscam organizar sua agenda.',
-    badgeClass: 'text-gray-400 bg-gray-800',
-    price: (
-      <>
-        R$ 69<span className="text-base font-normal text-gray-500">,99/mês</span>
-      </>
-    ),
-    items: [
-      'Reabertura automática de horários cancelados na agenda',
-      'Reserva em lote de múltiplos trabalhos em sequência para o mesmo dia',
-      'Direcionamento inteligente de novos agendamentos para horários colados aos já existentes',
-      'Indicadores de agendamentos e receita, com comparativo ao dia anterior, além de indicadores de receita por período.',
-      'Métricas de faturamento e desempenho operacional por data ou período',
-      'Montagem de ofertas nos trabalhos oferecidos',
-      'Comprometimento da agenda e receita futura projetada',
-      'Agendamento assistido pelo profissional',
-      'Reagendamento inteligente em um clique pela área exclusiva do cliente',
-      'Alertas por e-mail em tempo real',
-      'Lembrete automático 30 min antes',
-      'Sincronia total com o Google Agenda',
-    ],
-    checkClass: 'text-gray-600',
-    textClass: 'text-gray-400',
+    oldPriceLabel: null,
+    priceClass: 'text-white',
     buttonText: 'Selecionar Essencial',
-    buttonClass: 'bg-transparent border border-primary text-primary text-xs font-normal uppercase tracking-wider rounded-full hover:bg-primary/10',
+    buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
   },
   profissional: {
     label: 'Profissional',
-    description: 'Para negócios em crescimento que precisam ampliar sua equipe.',
-    badgeClass: 'text-primary bg-primary/15',
-    price: (
-      <span className="inline-flex flex-wrap items-end gap-x-3 gap-y-1">
-        <span className="text-3xl font-normal text-red-500 line-through decoration-red-500 decoration-2">
-          R$ 99,99
-        </span>
-        <span className="text-xl font-normal text-green-400">
-          R$ 69,99<span className="text-base font-normal text-gray-400">/mês</span>
-        </span>
-      </span>
-    ),
-    items: [
-      'Tudo do plano ESSENCIAL',
-      'Até 3 profissionais cadastrados',
-    ],
-    checkClass: 'text-primary',
-    textClass: 'text-gray-300',
-    highlight: (
-      <>
-        PLANO PROFISSIONAL PELO MESMO <strong className="font-bold">VALOR</strong> DO ESSENCIAL, COM ATÉ 3 PROFISSIONAIS.
-      </>
-    ),
+    oldPriceLabel: 'R$ 99,99',
+    priceClass: 'text-green-400',
     buttonText: 'Selecionar plano',
-    buttonClass: 'bg-gradient-to-r from-primary to-yellow-600 text-black text-sm uppercase rounded-full hover:shadow-lg hover:shadow-primary/30',
+    buttonClass: 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
   },
   premium: {
     label: 'Premium Real',
-    description: 'Para negócios que querem crescer sem limites e aproveitar primeiro as novas possibilidades.',
-    badgeClass: 'text-gray-400 bg-gray-800',
-    price: (
-      <>
-        R$ 129<span className="text-base font-normal text-gray-500">,99/mês</span>
-      </>
-    ),
-    items: [
-      'Profissionais ilimitados',
-      'Acesso antecipado a novos recursos',
-    ],
-    checkClass: 'text-gray-600',
-    textClass: 'text-gray-400',
+    oldPriceLabel: null,
+    priceClass: 'text-white',
     buttonText: 'Selecionar Premium',
-    buttonClass: 'bg-transparent border border-primary text-primary text-xs font-normal uppercase tracking-wider rounded-full hover:bg-primary/10',
+    buttonClass: 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30',
   },
 };
 
@@ -268,14 +239,6 @@ function CheckMark({ className }) {
     <svg className={`h-4 w-4 shrink-0 mt-0.5 ${className}`} viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M3 8l3.5 3.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  );
-}
-
-function StarGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
-  return (
-    <span className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className}`}>
-      {'\u2606'}
-    </span>
   );
 }
 
@@ -294,7 +257,7 @@ export default function PlanosSection({
   const [cancelingPlan, setCancelingPlan] = useState('');
   const [error, setError] = useState('');
   const planScrollerRef = useRef(null);
-  const planCardRefs = useRef({});
+  const rightPanelRef = useRef(null);
 
   const loadPlans = useCallback(async () => {
     if (!negocioId) {
@@ -351,18 +314,17 @@ export default function PlanosSection({
     [profissionais]
   );
 
+  // No mobile, as duas colunas (recursos / planos) viram painéis com snap horizontal.
+  // Rola automaticamente até o painel de planos, que é o que importa para quem já assina algo.
   useEffect(() => {
     const scroller = planScrollerRef.current;
-    const activeCard = planCardRefs.current[currentPlanCode];
-    if (!scroller || !activeCard) return;
+    const panel = rightPanelRef.current;
+    if (!scroller || !panel) return;
 
     window.requestAnimationFrame(() => {
       const scrollerRect = scroller.getBoundingClientRect();
-      const cardRect = activeCard.getBoundingClientRect();
-      const nextLeft = scroller.scrollLeft
-        + (cardRect.left - scrollerRect.left)
-        - ((scrollerRect.width - cardRect.width) / 2);
-
+      const panelRect = panel.getBoundingClientRect();
+      const nextLeft = scroller.scrollLeft + (panelRect.left - scrollerRect.left);
       scroller.scrollTo({ left: Math.max(0, nextLeft), behavior: 'auto' });
     });
   }, [currentPlanCode, plans]);
@@ -483,121 +445,181 @@ export default function PlanosSection({
 
       <div
         ref={planScrollerRef}
-        className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 flex sm:grid sm:grid-cols-3 gap-px overflow-x-auto sm:overflow-visible snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 flex md:grid md:grid-cols-2 gap-px overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {plans.map((plan) => {
-          const active = plan.code === currentPlanCode;
-          const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
-          const saving = savingPlan === plan.code;
-          const canceling = cancelingPlan === plan.code;
-          const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
-          const currentStatus = String(billingStatus?.status || '').toLowerCase();
-          const freeAccessOpen = currentStatus === 'trialing';
-          const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
-          const canCancel = active
-            && !selectedCanceledOrCancellationScheduled
-            && Boolean(billingStatus?.can_cancel_subscription);
-          const activeFreeAccess = active && freeAccessOpen;
-          const needsPayment = active
-            && !activeFreeAccess
-            && !['valid', 'none'].includes(paymentStatus);
-          const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
-          const planLimit = getPlanLimit(plan);
-          const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
-          const selectedStatusLabel = statusText(billingStatus);
-          const selectedStatusClass = statusBadgeClass(billingStatus);
-          const selectedPaymentButtonText = statusButtonText(billingStatus);
-          const selectedPaymentButtonClass = statusButtonClass(billingStatus);
-          const content = PLAN_CONTENT[plan.code] || {
-            label: plan.name,
-            description: '',
-            badgeClass: 'text-gray-400 bg-gray-800',
-            price: (
-              <>
-                {formatCurrencyFromCents(plan.price_cents)}
-                <span className="text-base font-normal text-gray-500">/mês</span>
-              </>
-            ),
-            items: [],
-            checkClass: 'text-gray-600',
-            textClass: 'text-gray-400',
-            buttonText: 'Selecionar plano',
-            buttonClass: 'bg-transparent border border-primary text-primary text-xs font-normal uppercase tracking-wider rounded-full hover:bg-primary/10',
-          };
+        {/* Coluna esquerda: recursos universais, iguais em todos os planos (estilo Home) */}
+        <div className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-100 px-4 sm:px-8 md:px-12 lg:px-16 py-10 md:py-12">
+          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-4">
+            Todos os planos incluem
+          </span>
+          <h3 className="text-2xl md:text-3xl font-black text-white mb-2">TODOS OS RECURSOS</h3>
+          <p className="text-gray-400 mb-8 text-sm">
+            A mesma inteligência em todos os planos. Nenhum recurso fica bloqueado atrás de um plano mais caro.
+          </p>
 
-          return (
-            <article
-              key={plan.code}
-              ref={(node) => {
-                if (node) planCardRefs.current[plan.code] = node;
-                else delete planCardRefs.current[plan.code];
-              }}
-              className={`relative shrink-0 w-[calc(100vw-3rem)] sm:w-auto snap-center p-8 sm:p-10 flex flex-col px-4 sm:px-8 md:px-12 ${plan.code === 'profissional' ? 'bg-primary/5' : 'bg-dark-100'}`}
-            >
-              <div className="mb-5">
-                <span className={`inline-block text-[10px] font-normal uppercase tracking-widest rounded-full px-3 py-1 mb-4 ${content.badgeClass}`}>
-                  {content.label}
-                </span>
-                {active && (
-                  <span className={`absolute right-4 top-8 sm:right-8 sm:top-10 rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
-                    {selectedStatusLabel}
-                  </span>
-                )}
-                <p className="text-2xl font-normal text-white mb-1">
-                  {content.price}
-                </p>
-                <p className={`text-sm leading-relaxed ${plan.code === 'profissional' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {content.description}
-                </p>
-                {pendingForPlan && (
-                  <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
-                    Mudanca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
-                  </p>
-                )}
+          <div className="flex flex-col gap-5">
+            {ALL_FEATURES.map((item) => (
+              <div key={item} className="flex items-start gap-2.5">
+                <CheckMark className="text-primary" />
+                <span className="text-sm leading-snug text-gray-300">{item}</span>
               </div>
+            ))}
+          </div>
+        </div>
 
-              <div className="pt-5 flex flex-col gap-3 flex-grow">
-                {content.items.map((item) => (
-                  <div key={item} className="flex items-start gap-2.5">
-                    <CheckMark className={content.checkClass} />
-                    <span className={`text-sm leading-snug ${content.textClass}`}>{item}</span>
-                  </div>
-                ))}
-              </div>
+        {/* Coluna direita: um card por plano, com preço, badges e as ações reais de billing */}
+        <div ref={rightPanelRef} className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-200 flex flex-col divide-y divide-gray-800">
+          <div className="px-4 sm:px-8 md:px-12 lg:px-16 pt-10 md:pt-12 pb-6">
+            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/15 rounded-full px-3 py-1 mb-4">
+              Escolha a capacidade
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-2">QUANTOS PROFISSIONAIS?</h3>
+            <p className="text-gray-400 text-sm">
+              Estrutura flexível para qualquer volume de trabalho. Encontre o limite perfeito para a sua equipe.
+            </p>
+          </div>
 
-              {content.highlight && (
-                <div className="mt-8 flex items-center justify-center gap-2.5 bg-primary/10 border border-primary/20 rounded-full px-4 py-3">
-                  <StarGlyph sizeClass="h-4 w-4 text-[18px]" className="shrink-0" />
-                  <span className="text-xs font-normal text-primary uppercase tracking-wide">
-                    {content.highlight}
-                  </span>
-                </div>
-              )}
+          {plans.map((plan) => {
+            const active = plan.code === currentPlanCode;
+            const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
+            const saving = savingPlan === plan.code;
+            const canceling = cancelingPlan === plan.code;
+            const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
+            const currentStatus = String(billingStatus?.status || '').toLowerCase();
+            const freeAccessOpen = currentStatus === 'trialing';
+            const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
+            const canCancel = active
+              && !selectedCanceledOrCancellationScheduled
+              && Boolean(billingStatus?.can_cancel_subscription);
+            const activeFreeAccess = active && freeAccessOpen;
+            const needsPayment = active
+              && !activeFreeAccess
+              && !['valid', 'none'].includes(paymentStatus);
+            const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
+            const planLimit = getPlanLimit(plan);
+            const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
+            const selectedStatusLabel = statusText(billingStatus);
+            const selectedStatusClass = statusBadgeClass(billingStatus);
+            const selectedPaymentButtonText = statusButtonText(billingStatus);
+            const selectedPaymentButtonClass = statusButtonClass(billingStatus);
+            const content = PLAN_CONTENT[plan.code] || {
+              label: plan.name,
+              oldPriceLabel: null,
+              priceClass: 'text-white',
+              buttonText: 'Selecionar plano',
+              buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
+            };
 
-              <button
-                type="button"
-                disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
-                onClick={() => handleSelectPlan(plan.code)}
-                className={`mt-4 flex min-h-[42px] items-center justify-center px-5 py-2.5 transition-all disabled:cursor-not-allowed disabled:opacity-40 ${activeFreeAccess ? 'cursor-default rounded-full border border-primary/40 bg-primary/10 text-xs font-normal uppercase tracking-wider text-primary' : activeWithoutAction ? 'cursor-default rounded-full bg-green-400/10 text-xs font-normal uppercase tracking-wider text-green-300 border border-green-400/30' : active && (needsPayment || selectedCanceledOrCancellationScheduled) ? selectedPaymentButtonClass : content.buttonClass}`}
+            // Cada card só tem espaço para 2 etiquetas: a do nome do plano (sempre) + 1 contextual.
+            // "Estar em oferta" é uma característica do PLANO (tem preço "de/por"), não de um
+            // código fixo — então qualquer plano pode ter OFERTA no dia em que entrar em promoção.
+            // Quando as duas etiquetas contextuais disputariam o mesmo card (o plano em questão é,
+            // ao mesmo tempo, o plano contratado pelo negócio E um plano em oferta), a etiqueta de
+            // status da assinatura (Ativo/Cancelado/Pagamento pendente/etc.) tem prioridade sobre a
+            // etiqueta de marketing "OFERTA", que nesse card deixa de ser exibida.
+            const hasOferta = Boolean(content.oldPriceLabel);
+            const showStatusBadge = active;
+            const showOfertaBadge = hasOferta && !showStatusBadge;
+
+            return (
+              <div
+                key={plan.code}
+                className={[
+                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col gap-6 transition-all',
+                  plan.code === 'profissional'
+                    ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
+                    : '',
+                ].join(' ')}
               >
-                {planLimitBlocked ? 'Limite excedido' : pendingForPlan ? 'Agendado' : activeFreeAccess ? 'Teste grátis' : activeWithoutAction ? 'Plano ativo' : saving ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...') : active && (needsPayment || selectedCanceledOrCancellationScheduled) ? selectedPaymentButtonText : content.buttonText}
-              </button>
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
+                    {content.label}
+                  </span>
 
-              {canCancel && (
-                <button
-                  type="button"
-                  disabled={!!savingPlan || !!cancelingPlan}
-                  onClick={() => handleCancelPlan(plan.code)}
-                  className="mt-3 flex items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {canceling ? 'Cancelando...' : 'Cancelar'}
-                </button>
-              )}
-            </article>
-          );
-        })}
+                  {showStatusBadge && (
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
+                      {selectedStatusLabel}
+                    </span>
+                  )}
+
+                  {showOfertaBadge && (
+                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                      OFERTA
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 w-full">
+                  <div>
+                    <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
+                      {getCapacityLabel(plan)}
+                    </p>
+                    <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
+                      {content.oldPriceLabel && (
+                        <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
+                          {content.oldPriceLabel}
+                        </span>
+                      )}
+                      <span className={`text-xl font-normal ${content.priceClass}`}>
+                        {formatCurrencyFromCents(plan.price_cents)}
+                        <span className="text-sm font-normal text-gray-500">/mês</span>
+                      </span>
+                    </div>
+
+                    {pendingForPlan && (
+                      <p className="mt-3 max-w-xs rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
+                        Mudanca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:items-end shrink-0">
+                    <button
+                      type="button"
+                      disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
+                      onClick={() => handleSelectPlan(plan.code)}
+                      className={`flex min-h-[42px] items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+                        activeFreeAccess
+                          ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
+                          : activeWithoutAction
+                            ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
+                            : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                              ? selectedPaymentButtonClass
+                              : content.buttonClass
+                      }`}
+                    >
+                      {planLimitBlocked
+                        ? 'Limite excedido'
+                        : pendingForPlan
+                          ? 'Agendado'
+                          : activeFreeAccess
+                            ? 'Teste grátis'
+                            : activeWithoutAction
+                              ? 'Plano ativo'
+                              : saving
+                                ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
+                                : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                                  ? selectedPaymentButtonText
+                                  : content.buttonText}
+                    </button>
+
+                    {canCancel && (
+                      <button
+                        type="button"
+                        disabled={!!savingPlan || !!cancelingPlan}
+                        onClick={() => handleCancelPlan(plan.code)}
+                        className="flex items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {canceling ? 'Cancelando...' : 'Cancelar'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-
     </section>
   );
 }
