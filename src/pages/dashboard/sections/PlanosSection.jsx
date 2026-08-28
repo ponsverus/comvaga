@@ -193,15 +193,42 @@ function getCapacityLabel(plan) {
 }
 
 const ALL_FEATURES = [
-  'Reabertura automática de horários cancelados na agenda',
-  'Reserva em lote de múltiplos trabalhos',
-  'Direcionamento inteligente de novos agendamentos',
-  'Comprometimento da agenda e receita futura projetada',
-  'Agendamento assistido pelo profissional',
-  'Reagendamento inteligente pela área exclusiva do cliente',
-  'Alertas por e-mail em tempo real',
-  'Lembrete automático + WhatsApp',
-  'Sincronia com o Google Agenda',
+  {
+    title: 'Reabertura automática de horários cancelados na agenda',
+    description: 'Preenche desistências instantaneamente, notificando clientes e mantendo a agenda cheia sem trabalho manual.',
+  },
+  {
+    title: 'Reserva em lote de múltiplos trabalhos',
+    description: 'Permite ao cliente agendar mais de um serviço na mesma sessão com cálculo automático do tempo total.',
+  },
+  {
+    title: 'Direcionamento inteligente de novos agendamentos',
+    description: 'Otimiza os horários entre a equipe para otimizar o tempo e equilibrar a ocupação dos profissionais.',
+  },
+  {
+    title: 'Comprometimento da agenda e receita futura projetada',
+    description: 'Acompanhe métricas em tempo real sobre faturamento previsto e retenção de horários.',
+  },
+  {
+    title: 'Agendamento assistido pelo profissional',
+    description: 'Interface rápida e intuitiva para o profissional criar ou ajustar compromissos diretamente no painel.',
+  },
+  {
+    title: 'Reagendamento inteligente pela área exclusiva do cliente',
+    description: 'Dá total autonomia para o cliente alterar datas respeitando as regras de antecedência da sua empresa.',
+  },
+  {
+    title: 'Alertas por e-mail em tempo real',
+    description: 'Notificações instantâneas a cada novo agendamento, cancelamento ou alteração de horário.',
+  },
+  {
+    title: 'Lembrete automático + WhatsApp',
+    description: 'Envio de confirmações diretas para o WhatsApp do cliente para reduzir drasticamente as faltas (no-show).',
+  },
+  {
+    title: 'Sincronia com o Google Agenda',
+    description: 'Integração bidirecional para evitar conflitos entre compromissos pessoais e profissionais.',
+  },
 ];
 
 const PLAN_CONTENT = {
@@ -445,27 +472,24 @@ export default function PlanosSection({
         className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 flex md:grid md:grid-cols-2 gap-px overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-100 px-4 sm:px-8 md:px-12 lg:px-16 py-10 md:py-12">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-6">
+          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-8">
             Todos os planos incluem
           </span>
 
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-6">
             {ALL_FEATURES.map((item) => (
-              <div key={item} className="flex items-start gap-2.5">
-                <CheckMark className="text-primary" />
-                <span className="text-sm leading-snug text-gray-300">{item}</span>
+              <div key={item.title} className="flex items-start gap-3">
+                <CheckMark className="text-primary mt-1" />
+                <div>
+                  <p className="text-sm font-medium text-gray-200 leading-snug">{item.title}</p>
+                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.description}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         <div ref={rightPanelRef} className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-200 flex flex-col divide-y divide-gray-800">
-          <div className="px-4 sm:px-8 md:px-12 lg:px-16 pt-10 md:pt-12 pb-6">
-            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/15 rounded-full px-3 py-1">
-              Escolha a capacidade
-            </span>
-          </div>
-
           {plans.map((plan) => {
             const active = plan.code === currentPlanCode;
             const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
