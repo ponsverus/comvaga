@@ -192,36 +192,6 @@ function getCapacityLabel(plan) {
   return limit === 1 ? '1 profissional' : `Até ${limit} profissionais`;
 }
 
-const ALL_FEATURES = [
-  {
-    title: 'Reabertura automática de horários cancelados na agenda',
-  },
-  {
-    title: 'Reserva em lote de múltiplos trabalhos',
-  },
-  {
-    title: 'Direcionamento inteligente de novos agendamentos',
-  },
-  {
-    title: 'Comprometimento da agenda e receita futura projetada',
-  },
-  {
-    title: 'Agendamento assistido pelo profissional',
-  },
-  {
-    title: 'Reagendamento inteligente pela área exclusiva do cliente',
-  },
-  {
-    title: 'Alertas por e-mail em tempo real',
-  },
-  {
-    title: 'Lembrete automático + WhatsApp',
-  },
-  {
-    title: 'Sincronia com o Google Agenda',
-  },
-];
-
 const PLAN_CONTENT = {
   essencial: {
     label: 'Essencial',
@@ -246,14 +216,6 @@ const PLAN_CONTENT = {
   },
 };
 
-function CheckMark({ className }) {
-  return (
-    <svg className={`h-4 w-4 shrink-0 mt-0.5 ${className}`} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M3 8l3.5 3.5L13 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export default function PlanosSection({
   negocioId,
   profissionais = [],
@@ -268,9 +230,8 @@ export default function PlanosSection({
   const [savingPlan, setSavingPlan] = useState('');
   const [cancelingPlan, setCancelingPlan] = useState('');
   const [error, setError] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const planScrollerRef = useRef(null);
-  const rightPanelRef = useRef(null);
-  const hasAutoScrolled = useRef(false);
 
   const loadPlans = useCallback(async () => {
     if (!negocioId) {
@@ -327,21 +288,25 @@ export default function PlanosSection({
     [profissionais]
   );
 
-  useEffect(() => {
-    if (hasAutoScrolled.current || !plans.length) return;
+  const handleScroll = () => {
+    const el = planScrollerRef.current;
+    if (!el || !plans.length) return;
+    const cardWidth = el.scrollWidth / plans.length;
+    if (cardWidth > 0) {
+      const index = Math.round(el.scrollLeft / cardWidth);
+      setActiveIndex(Math.min(Math.max(index, 0), plans.length - 1));
+    }
+  };
 
-    const scroller = planScrollerRef.current;
-    const panel = rightPanelRef.current;
-    if (!scroller || !panel) return;
-
-    window.requestAnimationFrame(() => {
-      const scrollerRect = scroller.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const nextLeft = scroller.scrollLeft + (panelRect.left - scrollerRect.left);
-      scroller.scrollTo({ left: Math.max(0, nextLeft), behavior: 'auto' });
-      hasAutoScrolled.current = true;
-    });
-  }, [plans]);
+  const scrollToPlan = (index) => {
+    const el = planScrollerRef.current;
+    if (!el) return;
+    const cards = el.querySelectorAll('[data-plan-card]');
+    if (cards[index]) {
+      cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+    setActiveIndex(index);
+  };
 
   const handleSelectPlan = async (planCode) => {
     if (!negocioId || savingPlan) return;
@@ -458,29 +423,12 @@ export default function PlanosSection({
         </div>
       )}
 
-      <div
-        ref={planScrollerRef}
-        className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 flex md:grid md:grid-cols-2 gap-px overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-100 px-4 sm:px-8 md:px-12 lg:px-16 py-10 md:py-12">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-8">
-            Todos os planos incluem
-          </span>
-
-          <div className="flex flex-col gap-6">
-            {ALL_FEATURES.map((item) => (
-              <div key={item.title} className="flex items-start gap-3">
-                <CheckMark className="text-primary mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-200 leading-snug">{item.title}</p>
-                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div ref={rightPanelRef} className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-200 flex flex-col divide-y divide-gray-800">
+      <div>
+        <div
+          ref={planScrollerRef}
+          onScroll={handleScroll}
+          className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2"
+        >
           {plans.map((plan) => {
             const active = plan.code === currentPlanCode;
             const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
@@ -519,32 +467,33 @@ export default function PlanosSection({
             return (
               <div
                 key={plan.code}
+                data-plan-card
                 className={[
-                  'px-4 sm:px-8 md:px-12 lg:px-16 py-8 flex flex-col gap-6 transition-all',
+                  'shrink-0 w-[85vw] sm:w-auto snap-start flex flex-col justify-between gap-6 p-6 md:p-8 rounded-2xl bg-dark-200 border transition-all',
                   plan.code === 'profissional'
-                    ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
-                    : '',
+                    ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                    : 'border-gray-800 hover:border-gray-700',
                 ].join(' ')}
               >
-                <div className="flex items-center justify-between w-full gap-2">
-                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
-                    {content.label}
-                  </span>
-
-                  {showStatusBadge && (
-                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
-                      {selectedStatusLabel}
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
+                      {content.label}
                     </span>
-                  )}
 
-                  {showOfertaBadge && (
-                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                      OFERTA
-                    </span>
-                  )}
-                </div>
+                    {showStatusBadge && (
+                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
+                        {selectedStatusLabel}
+                      </span>
+                    )}
 
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 w-full">
+                    {showOfertaBadge && (
+                      <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                        OFERTA
+                      </span>
+                    )}
+                  </div>
+
                   <div>
                     <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
                       {getCapacityLabel(plan)}
@@ -562,58 +511,75 @@ export default function PlanosSection({
                     </div>
 
                     {pendingForPlan && (
-                      <p className="mt-3 max-w-xs rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
+                      <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
                         Mudanca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
                       </p>
                     )}
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-3 sm:items-end shrink-0">
+                <div className="flex flex-col gap-3 pt-4">
+                  <button
+                    type="button"
+                    disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
+                    onClick={() => handleSelectPlan(plan.code)}
+                    className={`flex min-h-[42px] items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 w-full ${
+                      activeFreeAccess
+                        ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
+                        : activeWithoutAction
+                          ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
+                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                            ? selectedPaymentButtonClass
+                            : content.buttonClass
+                    }`}
+                  >
+                    {planLimitBlocked
+                      ? 'Limite excedido'
+                      : pendingForPlan
+                        ? 'Agendado'
+                        : activeFreeAccess
+                          ? 'Teste grátis'
+                          : activeWithoutAction
+                            ? 'Plano ativo'
+                            : saving
+                              ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
+                              : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                                ? selectedPaymentButtonText
+                                : content.buttonText}
+                  </button>
+
+                  {canCancel && (
                     <button
                       type="button"
-                      disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
-                      onClick={() => handleSelectPlan(plan.code)}
-                      className={`flex min-h-[42px] items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                        activeFreeAccess
-                          ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
-                          : activeWithoutAction
-                            ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
-                            : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                              ? selectedPaymentButtonClass
-                              : content.buttonClass
-                      }`}
+                      disabled={!!savingPlan || !!cancelingPlan}
+                      onClick={() => handleCancelPlan(plan.code)}
+                      className="flex items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40 w-full"
                     >
-                      {planLimitBlocked
-                        ? 'Limite excedido'
-                        : pendingForPlan
-                          ? 'Agendado'
-                          : activeFreeAccess
-                            ? 'Teste grátis'
-                            : activeWithoutAction
-                              ? 'Plano ativo'
-                              : saving
-                                ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
-                                : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                                  ? selectedPaymentButtonText
-                                  : content.buttonText}
+                      {canceling ? 'Cancelando...' : 'Cancelar'}
                     </button>
-
-                    {canCancel && (
-                      <button
-                        type="button"
-                        disabled={!!savingPlan || !!cancelingPlan}
-                        onClick={() => handleCancelPlan(plan.code)}
-                        className="flex items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {canceling ? 'Cancelando...' : 'Cancelar'}
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
+
+        {plans.length > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-6 lg:hidden">
+            {plans.map((plan, index) => (
+              <button
+                key={plan.code}
+                type="button"
+                
+                onClick={() => scrollToPlan(index)}
+                aria-label={`Ir para plano ${plan.name}`}
+                className={`h-2.5 rounded-full transition-all ${
+                  activeIndex === index ? 'w-8 bg-primary' : 'w-2.5 bg-gray-700 hover:bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
