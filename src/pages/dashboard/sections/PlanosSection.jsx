@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   cancelAsaasSubscription,
@@ -230,8 +230,6 @@ export default function PlanosSection({
   const [savingPlan, setSavingPlan] = useState('');
   const [cancelingPlan, setCancelingPlan] = useState('');
   const [error, setError] = useState('');
-  const [activeIndex, setActiveIndex] = useState(0);
-  const planScrollerRef = useRef(null);
 
   const loadPlans = useCallback(async () => {
     if (!negocioId) {
@@ -287,26 +285,6 @@ export default function PlanosSection({
     () => profissionais.filter((item) => ['ativo', 'pendente'].includes(String(item?.status || '').toLowerCase())).length,
     [profissionais]
   );
-
-  const handleScroll = () => {
-    const el = planScrollerRef.current;
-    if (!el || !plans.length) return;
-    const cardWidth = el.scrollWidth / plans.length;
-    if (cardWidth > 0) {
-      const index = Math.round(el.scrollLeft / cardWidth);
-      setActiveIndex(Math.min(Math.max(index, 0), plans.length - 1));
-    }
-  };
-
-  const scrollToPlan = (index) => {
-    const el = planScrollerRef.current;
-    if (!el) return;
-    const cards = el.querySelectorAll('[data-plan-card]');
-    if (cards[index]) {
-      cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-    }
-    setActiveIndex(index);
-  };
 
   const handleSelectPlan = async (planCode) => {
     if (!negocioId || savingPlan) return;
@@ -423,163 +401,139 @@ export default function PlanosSection({
         </div>
       )}
 
-      <div>
-        <div
-          ref={planScrollerRef}
-          onScroll={handleScroll}
-          className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-2"
-        >
-          {plans.map((plan) => {
-            const active = plan.code === currentPlanCode;
-            const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
-            const saving = savingPlan === plan.code;
-            const canceling = cancelingPlan === plan.code;
-            const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
-            const currentStatus = String(billingStatus?.status || '').toLowerCase();
-            const freeAccessOpen = currentStatus === 'trialing';
-            const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
-            const canCancel = active
-              && !selectedCanceledOrCancellationScheduled
-              && Boolean(billingStatus?.can_cancel_subscription);
-            const activeFreeAccess = active && freeAccessOpen;
-            const needsPayment = active
-              && !activeFreeAccess
-              && !['valid', 'none'].includes(paymentStatus);
-            const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
-            const planLimit = getPlanLimit(plan);
-            const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
-            const selectedStatusLabel = statusText(billingStatus);
-            const selectedStatusClass = statusBadgeClass(billingStatus);
-            const selectedPaymentButtonText = statusButtonText(billingStatus);
-            const selectedPaymentButtonClass = statusButtonClass(billingStatus);
-            const content = PLAN_CONTENT[plan.code] || {
-              label: plan.name,
-              oldPriceLabel: null,
-              priceClass: 'text-white',
-              buttonText: 'Selecionar plano',
-              buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
-            };
+      <div className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 grid grid-cols-1 lg:grid-cols-3 gap-px">
+        {plans.map((plan) => {
+          const active = plan.code === currentPlanCode;
+          const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
+          const saving = savingPlan === plan.code;
+          const canceling = cancelingPlan === plan.code;
+          const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
+          const currentStatus = String(billingStatus?.status || '').toLowerCase();
+          const freeAccessOpen = currentStatus === 'trialing';
+          const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
+          const canCancel = active
+            && !selectedCanceledOrCancellationScheduled
+            && Boolean(billingStatus?.can_cancel_subscription);
+          const activeFreeAccess = active && freeAccessOpen;
+          const needsPayment = active
+            && !activeFreeAccess
+            && !['valid', 'none'].includes(paymentStatus);
+          const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
+          const planLimit = getPlanLimit(plan);
+          const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
+          const selectedStatusLabel = statusText(billingStatus);
+          const selectedStatusClass = statusBadgeClass(billingStatus);
+          const selectedPaymentButtonText = statusButtonText(billingStatus);
+          const selectedPaymentButtonClass = statusButtonClass(billingStatus);
+          const content = PLAN_CONTENT[plan.code] || {
+            label: plan.name,
+            oldPriceLabel: null,
+            priceClass: 'text-white',
+            buttonText: 'Selecionar plano',
+            buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
+          };
 
-            const hasOferta = Boolean(content.oldPriceLabel);
-            const showStatusBadge = active;
-            const showOfertaBadge = hasOferta && !showStatusBadge;
+          const hasOferta = Boolean(content.oldPriceLabel);
+          const showStatusBadge = active;
+          const showOfertaBadge = hasOferta && !showStatusBadge;
 
-            return (
-              <div
-                key={plan.code}
-                data-plan-card
-                className={[
-                  'shrink-0 w-[85vw] sm:w-auto snap-start flex flex-col justify-between gap-6 p-6 md:p-8 rounded-2xl bg-dark-200 border transition-all',
-                  plan.code === 'profissional'
-                    ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
-                    : 'border-gray-800 hover:border-gray-700',
-                ].join(' ')}
-              >
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center justify-between w-full gap-2">
-                    <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
-                      {content.label}
+          return (
+            <div
+              key={plan.code}
+              className={[
+                'bg-dark-200 p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-8 transition-all',
+                plan.code === 'profissional'
+                  ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
+                  : '',
+              ].join(' ')}
+            >
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
+                    {content.label}
+                  </span>
+
+                  {showStatusBadge && (
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
+                      {selectedStatusLabel}
                     </span>
+                  )}
 
-                    {showStatusBadge && (
-                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
-                        {selectedStatusLabel}
-                      </span>
-                    )}
-
-                    {showOfertaBadge && (
-                      <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                        OFERTA
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
-                      {getCapacityLabel(plan)}
-                    </p>
-                    <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
-                      {content.oldPriceLabel && (
-                        <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
-                          {content.oldPriceLabel}
-                        </span>
-                      )}
-                      <span className={`text-xl font-normal ${content.priceClass}`}>
-                        {formatCurrencyFromCents(plan.price_cents)}
-                        <span className="text-sm font-normal text-gray-500">/mês</span>
-                      </span>
-                    </div>
-
-                    {pendingForPlan && (
-                      <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
-                        Mudanca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
-                      </p>
-                    )}
-                  </div>
+                  {showOfertaBadge && (
+                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                      OFERTA
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-3 pt-4">
-                  <button
-                    type="button"
-                    disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
-                    onClick={() => handleSelectPlan(plan.code)}
-                    className={`flex min-h-[42px] items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 w-full ${
-                      activeFreeAccess
-                        ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
-                        : activeWithoutAction
-                          ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
-                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                            ? selectedPaymentButtonClass
-                            : content.buttonClass
-                    }`}
-                  >
-                    {planLimitBlocked
-                      ? 'Limite excedido'
-                      : pendingForPlan
-                        ? 'Agendado'
-                        : activeFreeAccess
-                          ? 'Teste grátis'
-                          : activeWithoutAction
-                            ? 'Plano ativo'
-                            : saving
-                              ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
-                              : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                                ? selectedPaymentButtonText
-                                : content.buttonText}
-                  </button>
+                <div>
+                  <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
+                    {getCapacityLabel(plan)}
+                  </p>
+                  <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
+                    {content.oldPriceLabel && (
+                      <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
+                        {content.oldPriceLabel}
+                      </span>
+                    )}
+                    <span className={`text-xl font-normal ${content.priceClass}`}>
+                      {formatCurrencyFromCents(plan.price_cents)}
+                      <span className="text-sm font-normal text-gray-500">/mês</span>
+                    </span>
+                  </div>
 
-                  {canCancel && (
-                    <button
-                      type="button"
-                      disabled={!!savingPlan || !!cancelingPlan}
-                      onClick={() => handleCancelPlan(plan.code)}
-                      className="flex items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40 w-full"
-                    >
-                      {canceling ? 'Cancelando...' : 'Cancelar'}
-                    </button>
+                  {pendingForPlan && (
+                    <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
+                      Mudanca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
+                    </p>
                   )}
                 </div>
               </div>
-            );
-          })}
-        </div>
 
-        {plans.length > 0 && (
-          <div className="flex items-center justify-center gap-2 mt-6 lg:hidden">
-            {plans.map((plan, index) => (
-              <button
-                key={plan.code}
-                type="button"
-                
-                onClick={() => scrollToPlan(index)}
-                aria-label={`Ir para plano ${plan.name}`}
-                className={`h-2.5 rounded-full transition-all ${
-                  activeIndex === index ? 'w-8 bg-primary' : 'w-2.5 bg-gray-700 hover:bg-gray-600'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
+                  onClick={() => handleSelectPlan(plan.code)}
+                  className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+                    activeFreeAccess
+                      ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
+                      : activeWithoutAction
+                        ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
+                        : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                          ? selectedPaymentButtonClass
+                          : content.buttonClass
+                  }`}
+                >
+                  {planLimitBlocked
+                    ? 'Limite excedido'
+                    : pendingForPlan
+                      ? 'Agendado'
+                      : activeFreeAccess
+                        ? 'Teste grátis'
+                        : activeWithoutAction
+                          ? 'Plano ativo'
+                          : saving
+                            ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
+                            : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                              ? selectedPaymentButtonText
+                              : content.buttonText}
+                </button>
+
+                {canCancel && (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan}
+                    onClick={() => handleCancelPlan(plan.code)}
+                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {canceling ? 'Cancelando...' : 'Cancelar'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
