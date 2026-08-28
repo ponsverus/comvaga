@@ -195,39 +195,30 @@ function getCapacityLabel(plan) {
 const ALL_FEATURES = [
   {
     title: 'Reabertura automática de horários cancelados na agenda',
-    description: 'Preenche desistências instantaneamente, notificando clientes e mantendo a agenda cheia sem trabalho manual.',
   },
   {
     title: 'Reserva em lote de múltiplos trabalhos',
-    description: 'Permite ao cliente agendar mais de um serviço na mesma sessão com cálculo automático do tempo total.',
   },
   {
     title: 'Direcionamento inteligente de novos agendamentos',
-    description: 'Otimiza os horários entre a equipe para otimizar o tempo e equilibrar a ocupação dos profissionais.',
   },
   {
     title: 'Comprometimento da agenda e receita futura projetada',
-    description: 'Acompanhe métricas em tempo real sobre faturamento previsto e retenção de horários.',
   },
   {
     title: 'Agendamento assistido pelo profissional',
-    description: 'Interface rápida e intuitiva para o profissional criar ou ajustar compromissos diretamente no painel.',
   },
   {
     title: 'Reagendamento inteligente pela área exclusiva do cliente',
-    description: 'Dá total autonomia para o cliente alterar datas respeitando as regras de antecedência da sua empresa.',
   },
   {
     title: 'Alertas por e-mail em tempo real',
-    description: 'Notificações instantâneas a cada novo agendamento, cancelamento ou alteração de horário.',
   },
   {
     title: 'Lembrete automático + WhatsApp',
-    description: 'Envio de confirmações diretas para o WhatsApp do cliente para reduzir drasticamente as faltas (no-show).',
   },
   {
     title: 'Sincronia com o Google Agenda',
-    description: 'Integração bidirecional para evitar conflitos entre compromissos pessoais e profissionais.',
   },
 ];
 
