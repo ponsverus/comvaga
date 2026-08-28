@@ -186,30 +186,24 @@ function getPlanLimitMessage(plan, count) {
   });
 }
 
-// Rótulo de capacidade lido do próprio plano (não fixo), para nunca divergir do catálogo real.
 function getCapacityLabel(plan) {
   const limit = getPlanLimit(plan);
   if (limit == null) return 'Profissionais ilimitados';
   return limit === 1 ? '1 profissional' : `Até ${limit} profissionais`;
 }
 
-// Lista única de recursos, compartilhada por todos os planos (coluna esquerda, estilo Home).
 const ALL_FEATURES = [
   'Reabertura automática de horários cancelados na agenda',
-  'Reserva em lote de múltiplos trabalhos em sequência para o mesmo dia',
-  'Direcionamento inteligente de novos agendamentos para horários colados aos já existentes',
-  'Indicadores de agendamentos e receita, com comparativo ao dia anterior, além de indicadores de receita por período.',
-  'Métricas de faturamento e desempenho operacional por data ou período',
-  'Montagem de ofertas nos trabalhos oferecidos',
+  'Reserva em lote de múltiplos trabalhos',
+  'Direcionamento inteligente de novos agendamentos',
   'Comprometimento da agenda e receita futura projetada',
   'Agendamento assistido pelo profissional',
-  'Reagendamento inteligente em um clique pela área exclusiva do cliente',
+  'Reagendamento inteligente pela área exclusiva do cliente',
   'Alertas por e-mail em tempo real',
-  'Lembrete automático 30 min antes',
-  'Sincronia total com o Google Agenda',
+  'Lembrete automático + WhatsApp',
+  'Sincronia com o Google Agenda',
 ];
 
-// Conteúdo específico de cada plano (só o que difere entre eles: nome, preço "de/por", cor do preço e do CTA).
 const PLAN_CONTENT = {
   essencial: {
     label: 'Essencial',
@@ -258,6 +252,7 @@ export default function PlanosSection({
   const [error, setError] = useState('');
   const planScrollerRef = useRef(null);
   const rightPanelRef = useRef(null);
+  const hasAutoScrolled = useRef(false);
 
   const loadPlans = useCallback(async () => {
     if (!negocioId) {
@@ -314,9 +309,9 @@ export default function PlanosSection({
     [profissionais]
   );
 
-  // No mobile, as duas colunas (recursos / planos) viram painéis com snap horizontal.
-  // Rola automaticamente até o painel de planos, que é o que importa para quem já assina algo.
   useEffect(() => {
+    if (hasAutoScrolled.current || !plans.length) return;
+
     const scroller = planScrollerRef.current;
     const panel = rightPanelRef.current;
     if (!scroller || !panel) return;
@@ -326,8 +321,9 @@ export default function PlanosSection({
       const panelRect = panel.getBoundingClientRect();
       const nextLeft = scroller.scrollLeft + (panelRect.left - scrollerRect.left);
       scroller.scrollTo({ left: Math.max(0, nextLeft), behavior: 'auto' });
+      hasAutoScrolled.current = true;
     });
-  }, [currentPlanCode, plans]);
+  }, [plans]);
 
   const handleSelectPlan = async (planCode) => {
     if (!negocioId || savingPlan) return;
@@ -401,6 +397,7 @@ export default function PlanosSection({
       setCancelingPlan('');
     }
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-14 text-gray-500">
@@ -447,15 +444,10 @@ export default function PlanosSection({
         ref={planScrollerRef}
         className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 flex md:grid md:grid-cols-2 gap-px overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {/* Coluna esquerda: recursos universais, iguais em todos os planos (estilo Home) */}
         <div className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-100 px-4 sm:px-8 md:px-12 lg:px-16 py-10 md:py-12">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-4">
+          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-6">
             Todos os planos incluem
           </span>
-          <h3 className="text-2xl md:text-3xl font-black text-white mb-2">TODOS OS RECURSOS</h3>
-          <p className="text-gray-400 mb-8 text-sm">
-            A mesma inteligência em todos os planos. Nenhum recurso fica bloqueado atrás de um plano mais caro.
-          </p>
 
           <div className="flex flex-col gap-5">
             {ALL_FEATURES.map((item) => (
@@ -467,16 +459,11 @@ export default function PlanosSection({
           </div>
         </div>
 
-        {/* Coluna direita: um card por plano, com preço, badges e as ações reais de billing */}
         <div ref={rightPanelRef} className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-200 flex flex-col divide-y divide-gray-800">
           <div className="px-4 sm:px-8 md:px-12 lg:px-16 pt-10 md:pt-12 pb-6">
-            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/15 rounded-full px-3 py-1 mb-4">
+            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/15 rounded-full px-3 py-1">
               Escolha a capacidade
             </span>
-            <h3 className="text-2xl md:text-3xl font-black text-white mb-2">QUANTOS PROFISSIONAIS?</h3>
-            <p className="text-gray-400 text-sm">
-              Estrutura flexível para qualquer volume de trabalho. Encontre o limite perfeito para a sua equipe.
-            </p>
           </div>
 
           {plans.map((plan) => {
@@ -510,13 +497,6 @@ export default function PlanosSection({
               buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
             };
 
-            // Cada card só tem espaço para 2 etiquetas: a do nome do plano (sempre) + 1 contextual.
-            // "Estar em oferta" é uma característica do PLANO (tem preço "de/por"), não de um
-            // código fixo — então qualquer plano pode ter OFERTA no dia em que entrar em promoção.
-            // Quando as duas etiquetas contextuais disputariam o mesmo card (o plano em questão é,
-            // ao mesmo tempo, o plano contratado pelo negócio E um plano em oferta), a etiqueta de
-            // status da assinatura (Ativo/Cancelado/Pagamento pendente/etc.) tem prioridade sobre a
-            // etiqueta de marketing "OFERTA", que nesse card deixa de ser exibida.
             const hasOferta = Boolean(content.oldPriceLabel);
             const showStatusBadge = active;
             const showOfertaBadge = hasOferta && !showStatusBadge;
