@@ -103,7 +103,7 @@ function getPendingPlanChangeSuffix(status) {
   if (!planChangeScheduled || !pendingPlanLabel) return '';
 
   const pendingPlanDate = status?.pending_plan_effective_label || '';
-  return ` A MUDANÇA PARA ${pendingPlanLabel}${pendingPlanDate ? ` ESTÁ AGENDADA PARA ${pendingPlanDate}` : ' CONTINUA AGENDADA'}.`;
+  return ` A TROCA PARA ${pendingPlanLabel}${pendingPlanDate ? ` ESTÁ AGENDADA PARA ${pendingPlanDate}` : ' CONTINUA AGENDADA'}.`;
 }
 
 function getBillingAnnouncement(status) {
