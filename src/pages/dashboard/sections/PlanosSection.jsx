@@ -45,32 +45,6 @@ function getAccessEndDate(status) {
   return status?.access_ends_label || '';
 }
 
-function buildPlanTimelineText({
-  canceledOrCancellationScheduled,
-  planChangeScheduled,
-  accessEndDate,
-  pendingPlanLabel,
-  pendingPlanDate,
-}) {
-  if (canceledOrCancellationScheduled && planChangeScheduled) {
-    const accessText = accessEndDate ? ` O acesso segue ativo ate ${accessEndDate}.` : '';
-    const pendingText = pendingPlanLabel
-      ? ` A mudanca para ${pendingPlanLabel}${pendingPlanDate ? ` esta agendada para ${pendingPlanDate}` : ' continua agendada'}.`
-      : '';
-    return `Cancelado.${accessText}${pendingText}`;
-  }
-
-  if (canceledOrCancellationScheduled) {
-    return accessEndDate ? `Cancelado: o acesso segue ativo ate ${accessEndDate}.` : 'Cancelado.';
-  }
-
-  if (planChangeScheduled && pendingPlanLabel) {
-    return `Mudanca agendada para ${pendingPlanLabel}${pendingPlanDate ? ` em ${pendingPlanDate}` : ''}.`;
-  }
-
-  return '';
-}
-
 function isCanceledOrCancellationScheduled(status) {
   return String(status?.status || '').toLowerCase() === 'canceled' || isCancellationScheduled(status);
 }
@@ -270,13 +244,6 @@ export default function PlanosSection({
   const pendingPlanLabel = billingStatus?.pending_plan_name || billingStatus?.pending_plan_code || '';
   const accessEndDate = getAccessEndDate(billingStatus);
   const renewalDate = getRenewalDate(billingStatus);
-  const planTimelineText = buildPlanTimelineText({
-    canceledOrCancellationScheduled,
-    planChangeScheduled,
-    accessEndDate,
-    pendingPlanLabel,
-    pendingPlanDate,
-  });
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.code === currentPlanCode) || null,
     [currentPlanCode, plans]
@@ -388,12 +355,6 @@ export default function PlanosSection({
           )}
         </div>
       </div>
-
-      {planTimelineText && (
-        <div className="rounded-custom border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm leading-relaxed text-yellow-100">
-          {planTimelineText}
-        </div>
-      )}
 
       {error && (
         <div className="rounded-custom border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
