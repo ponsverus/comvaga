@@ -97,25 +97,35 @@ function InfoPill({ label, value, tone = 'text-gray-300', border = 'border-gray-
   );
 }
 
+function getPendingPlanChangeSuffix(status) {
+  const planChangeScheduled = Boolean(status?.plan_change_scheduled);
+  const pendingPlanLabel = status?.pending_plan_name || status?.pending_plan_code || '';
+  if (!planChangeScheduled || !pendingPlanLabel) return '';
+
+  const pendingPlanDate = status?.pending_plan_effective_label || '';
+  return ` A MUDANÇA PARA ${pendingPlanLabel}${pendingPlanDate ? ` ESTÁ AGENDADA PARA ${pendingPlanDate}` : ' CONTINUA AGENDADA'}.`;
+}
+
 function getBillingAnnouncement(status) {
   if (!status) return null;
   const current = String(status.status || '').toLowerCase();
   const daysUntilTrialEnd = Number(status.days_until_trial_end);
   const daysUntilBlock = Number(status.days_until_block);
   const trialDays = Number(status.trial_days);
+  const pendingPlanChangeSuffix = getPendingPlanChangeSuffix(status);
 
   if (isCancellationScheduled(status)) {
     const accessEndLabel = status?.access_ends_label || '';
     return {
       tone: 'warning',
-      text: `PLANO CANCELADO. ACESSO LIBERADO${accessEndLabel ? ` ATÉ ${accessEndLabel}` : ''}`,
+      text: `PLANO CANCELADO. ACESSO LIBERADO${accessEndLabel ? ` ATÉ ${accessEndLabel}` : ''}.${pendingPlanChangeSuffix}`,
     };
   }
 
   if (current === 'blocked' || current === 'canceled') {
     return {
       tone: 'danger',
-      text: 'AGENDA BLOQUEADA. REGULARIZE SEU PLANO.',
+      text: `AGENDA BLOQUEADA. REGULARIZE SEU PLANO.${pendingPlanChangeSuffix}`,
     };
   }
 
@@ -125,7 +135,7 @@ function getBillingAnnouncement(status) {
       : '';
     return {
       tone: 'warning',
-      text: `TESTE ENCERRADO. ADD UM PAGAMENTO.${suffix}`,
+      text: `TESTE ENCERRADO. ADD UM PAGAMENTO.${suffix}${pendingPlanChangeSuffix}`,
     };
   }
 
@@ -135,7 +145,14 @@ function getBillingAnnouncement(status) {
       : '';
     return {
       tone: 'warning',
-      text: `TESTE GRÁTIS ATIVO. FALTAM ${daysUntilTrialEnd} DIA${daysUntilTrialEnd === 1 ? '' : 'S'}${total}.`,
+      text: `TESTE GRÁTIS ATIVO. FALTAM ${daysUntilTrialEnd} DIA${daysUntilTrialEnd === 1 ? '' : 'S'}${total}.${pendingPlanChangeSuffix}`,
+    };
+  }
+
+  if (pendingPlanChangeSuffix) {
+    return {
+      tone: 'warning',
+      text: pendingPlanChangeSuffix.trim(),
     };
   }
 
