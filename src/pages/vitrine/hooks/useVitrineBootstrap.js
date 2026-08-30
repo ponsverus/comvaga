@@ -15,7 +15,7 @@ import { flattenEntregaPages } from '../../../utils/entregas';
 const EMPTY_NOW = { ts: null, dow: 0, date: '', source: 'db', minutes: 0 };
 const GALERIA_PAGE_SIZE = 12;
 const DEPOIMENTOS_PAGE_SIZE = 12;
-const ENTREGAS_PAGE_SIZE = 4;
+const ENTREGAS_PAGE_SIZE = 6;
 
 function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
   const next = {};
