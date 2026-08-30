@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CalendarIcon, CheckIcon, SelectIcon, TimeIcon } from '../../../components/icons';
 
-const ENTREGAS_POR_PAGINA = 4;
+const ENTREGAS_POR_PAGINA = 6;
 
 function EntregaButtons({
   entrega,
@@ -269,6 +269,7 @@ export default function EntregasCarousel({
       <div style={{ overflow: 'hidden', position: 'relative' }}>
         {animando && (
           <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
             style={{
               position: 'absolute',
               top: 0,
@@ -276,9 +277,6 @@ export default function EntregasCarousel({
               right: 0,
               transform: `translateX(${translateSaindo})`,
               transition: 'transform 320ms cubic-bezier(0.4, 0, 0.2, 1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
             }}
           >
             {itensAntigos.map((item) => (
@@ -297,12 +295,10 @@ export default function EntregasCarousel({
           </div>
         )}
         <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
           style={{
             transform: animando ? `translateX(${translateEntrando})` : 'translateX(0%)',
             transition: animando ? 'transform 320ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
           }}
         >
           {(animando ? itensNovos : itensMostrados).map((item) => (
@@ -322,7 +318,7 @@ export default function EntregasCarousel({
       </div>
       {totalPaginas > 1 && (
         <div className="flex items-center justify-center gap-3 mt-4">
-          <button type="button" onClick={() => irPara(pagina - 1)} disabled={pagina === 0 || loadingTargetPage !== null || loadingPage !== null} className={`p-1.5 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtnCl}`}>
+          <button type="button" onClick={() => irPara(pagina - 1)} disabled={pagina === 0 || loadingTargetPage !== null || loadingPage !== null} className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-vborder transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtnCl}`}>
             <ChevronLeft className="w-4 h-4" />
           </button>
           {Array.from({ length: totalPaginas }).map((_, i) => (
@@ -334,7 +330,7 @@ export default function EntregasCarousel({
               aria-label={`Página ${i + 1}`}
             />
           ))}
-          <button type="button" onClick={() => irPara(pagina + 1)} disabled={pagina === totalPaginas - 1 || loadingTargetPage !== null || loadingPage !== null} className={`p-1.5 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtnCl}`}>
+          <button type="button" onClick={() => irPara(pagina + 1)} disabled={pagina === totalPaginas - 1 || loadingTargetPage !== null || loadingPage !== null} className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-vborder transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtnCl}`}>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
