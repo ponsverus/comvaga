@@ -33,7 +33,7 @@ export const ptBR = {
     },
     route_load_failed: {
       title: 'Algo deu errado',
-      body: 'O carregamento da tela falhou. Por favor, atualize a pagina e tente novamente.',
+      body: 'O carregamento da tela falhou. Por favor, atualize a página e tente novamente.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'TENTAR NOVAMENTE',
