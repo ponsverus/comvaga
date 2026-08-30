@@ -16,12 +16,6 @@ function toISO(year, month, day) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function formatBR(iso) {
-  const p = parseISO(iso);
-  if (!p) return '';
-  return `${String(p.day).padStart(2, '0')}.${String(p.month).padStart(2, '0')}.${p.year}`;
-}
-
 function daysInMonth(y, m)  { return new Date(y, m, 0).getDate(); }
 function firstDow(y, m)     { return new Date(y, m - 1, 1).getDay(); }
 function isoLt(a, b)        { return String(a) < String(b); }
@@ -293,9 +287,6 @@ export default function BookingCalendar({
   const loadingColor    = isLight ? 'text-gray-400'                      : 'text-gray-500';
   const slotsErrorClass = isLight ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300';
   const showMoreBtn     = isLight ? 'border-gray-300 bg-gray-50 text-gray-600 hover:border-gray-400 hover:text-gray-800' : 'border-gray-700 bg-dark-200 text-gray-300 hover:border-gray-500 hover:text-white';
-  const resumeBg        = isLight ? 'bg-gray-50 border-gray-200'         : 'bg-dark-200 border-gray-800';
-  const resumeLabel     = isLight ? 'text-gray-500'                      : 'text-gray-500';
-  const resumeValue     = isLight ? 'text-gray-900'                      : 'text-white';
   const confirmBtnClass = isLight
     ? 'bg-gray-900 text-white hover:bg-gray-700'
     : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
@@ -455,21 +446,9 @@ export default function BookingCalendar({
           )}
 
           {todayISO && selectedSlot && (
-            <div ref={resumeRef} className={`border rounded-custom p-4 ${resumeBg}`}>
-              <div className={`text-xs uppercase tracking-wide mb-3 ${resumeLabel}`}>Resumo</div>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="min-w-0">
-                  <div className={`text-xs mb-1 ${resumeLabel}`}>DATA</div>
-                  <div className={`text-sm ${resumeValue}`}>{formatBR(selectedDay)}</div>
-                </div>
-                <div className="min-w-0 flex flex-col gap-1 text-xs">
-                  <span className={resumeLabel}>HORÁRIO</span>
-                  <div className="text-sm text-vprimary font-normal">{selectedSlot.hora}</div>
-                </div>
-              </div>
-
+            <div ref={resumeRef}>
               {confirmError && (
-                <div className={`-mx-4 mb-3 border-y px-4 py-3 text-xs ${isLight ? 'border-red-200 bg-red-50/60 text-red-600' : 'border-red-500/20 bg-red-500/5 text-red-300'}`}>
+                <div className={`mb-3 border rounded-custom px-4 py-3 text-xs ${isLight ? 'border-red-200 bg-red-50/60 text-red-600' : 'border-red-500/20 bg-red-500/5 text-red-300'}`}>
                   {confirmError}
                 </div>
               )}
