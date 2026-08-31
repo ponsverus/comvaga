@@ -29,7 +29,6 @@ function ClienteCard({ cliente, itemLabelText, onAgendarCliente }) {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-base font-normal text-white truncate uppercase">{nome}</h3>
-          <p className="text-xs text-gray-500 uppercase">{Number(cliente.total_agendamentos || 0)} agendamentos</p>
         </div>
       </div>
 
