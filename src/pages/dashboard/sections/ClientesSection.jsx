@@ -73,50 +73,31 @@ export default function ClientesSection({
   itemLabel = 'SERV',
 }) {
   const itemLabelText = String(itemLabel || 'SERV').toUpperCase();
-  const [desktopPage, setDesktopPage] = useState(0);
-  const [mobileVisibleCount, setMobileVisibleCount] = useState(CLIENTES_PER_PAGE);
+  const [page, setPage] = useState(0);
 
-  const desktopPageCount = Math.max(1, Math.ceil(clientes.length / CLIENTES_PER_PAGE));
-  const currentDesktopPage = Math.min(desktopPage, desktopPageCount - 1);
-  const canGoDesktopNext = currentDesktopPage < desktopPageCount - 1 || clientesHasMore;
-
-  useEffect(() => {
-    setDesktopPage((prev) => Math.min(prev, desktopPageCount - 1));
-  }, [desktopPageCount]);
+  const pageCount = Math.max(1, Math.ceil(clientes.length / CLIENTES_PER_PAGE));
+  const currentPage = Math.min(page, pageCount - 1);
+  const canGoNext = currentPage < pageCount - 1 || clientesHasMore;
 
   useEffect(() => {
-    setMobileVisibleCount((prev) => Math.max(CLIENTES_PER_PAGE, Math.min(prev, Math.max(clientes.length, CLIENTES_PER_PAGE))));
-  }, [clientes.length]);
+    setPage((prev) => Math.min(prev, pageCount - 1));
+  }, [pageCount]);
 
-  const desktopClientes = useMemo(() => {
-    const start = currentDesktopPage * CLIENTES_PER_PAGE;
+  const visibleClientes = useMemo(() => {
+    const start = currentPage * CLIENTES_PER_PAGE;
     return clientes.slice(start, start + CLIENTES_PER_PAGE);
-  }, [clientes, currentDesktopPage]);
+  }, [clientes, currentPage]);
 
-  const mobileClientes = useMemo(() => (
-    clientes.slice(0, mobileVisibleCount)
-  ), [clientes, mobileVisibleCount]);
+  const goPrev = () => setPage((prev) => Math.max(prev - 1, 0));
 
-  const goDesktopPrev = () => setDesktopPage((prev) => Math.max(prev - 1, 0));
-
-  const goDesktopNext = async () => {
-    if (currentDesktopPage < desktopPageCount - 1) {
-      setDesktopPage((prev) => prev + 1);
+  const goNext = async () => {
+    if (currentPage < pageCount - 1) {
+      setPage((prev) => prev + 1);
       return;
     }
     if (!clientesHasMore || clientesLoadingMore) return;
     await loadMoreClientes();
-    setDesktopPage((prev) => prev + 1);
-  };
-
-  const loadMoreMobile = async () => {
-    if (mobileVisibleCount < clientes.length) {
-      setMobileVisibleCount((prev) => prev + CLIENTES_PER_PAGE);
-      return;
-    }
-    if (!clientesHasMore || clientesLoadingMore) return;
-    await loadMoreClientes();
-    setMobileVisibleCount((prev) => prev + CLIENTES_PER_PAGE);
+    setPage((prev) => prev + 1);
   };
 
   return (
@@ -132,72 +113,48 @@ export default function ClientesSection({
           {clientesError}
         </div>
       ) : clientes.length > 0 ? (
-        <>
-          <div className="md:hidden space-y-4">
-            {mobileClientes.map((cliente) => (
+        <div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visibleClientes.map((cliente) => (
               <ClienteCard key={cliente.cliente_id} cliente={cliente} itemLabelText={itemLabelText} onAgendarCliente={onAgendarCliente} />
             ))}
           </div>
 
-          {(mobileVisibleCount < clientes.length || clientesHasMore) ? (
-            <button
-              type="button"
-              onClick={loadMoreMobile}
-              disabled={clientesLoadingMore}
-              className="mt-2 w-full py-3 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {clientesLoadingMore ? 'CARREGANDO...' : 'CARREGAR MAIS'}
-            </button>
-          ) : null}
+          {(pageCount > 1 || clientesHasMore) ? (
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={currentPage === 0}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-700 text-gray-300 transition-colors hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-          <div className="hidden md:block">
-            <div className="relative md:px-16">
-              {(desktopPageCount > 1 || clientesHasMore) ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={goDesktopPrev}
-                    disabled={currentDesktopPage === 0}
-                    className="hidden md:inline-flex absolute left-3 top-1/2 -translate-y-1/2 items-center justify-center w-10 h-10 rounded-full border border-gray-700 bg-dark-100 text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-colors z-10"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goDesktopNext}
-                    disabled={!canGoDesktopNext || clientesLoadingMore}
-                    className="hidden md:inline-flex absolute right-3 top-1/2 -translate-y-1/2 items-center justify-center w-10 h-10 rounded-full border border-gray-700 bg-dark-100 text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-colors z-10"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
+              {Array.from({ length: pageCount }).map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setPage(index)}
+                  className={['rounded-full transition-all duration-300', index === currentPage ? 'w-4 h-2 bg-primary' : 'w-2 h-2 bg-gray-600 hover:bg-gray-400'].join(' ')}
+                  aria-label={`Ir para pagina ${index + 1}`}
+                />
+              ))}
+              {clientesHasMore ? (
+                <span className="w-2 h-2 rounded-full bg-gray-800" aria-hidden="true" />
               ) : null}
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {desktopClientes.map((cliente) => (
-                  <ClienteCard key={cliente.cliente_id} cliente={cliente} itemLabelText={itemLabelText} onAgendarCliente={onAgendarCliente} />
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!canGoNext || clientesLoadingMore}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-700 text-gray-300 transition-colors hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-
-            {(desktopPageCount > 1 || clientesHasMore) ? (
-              <div className="flex items-center justify-center gap-2 mt-4">
-                {Array.from({ length: desktopPageCount }).map((_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setDesktopPage(index)}
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${index === currentDesktopPage ? 'bg-primary' : 'bg-gray-600 hover:bg-gray-400'}`}
-                    aria-label={`Ir para pagina ${index + 1}`}
-                  />
-                ))}
-                {clientesHasMore ? (
-                  <span className="w-2.5 h-2.5 rounded-full bg-gray-800" aria-hidden="true" />
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </>
+          ) : null}
+        </div>
       ) : (
         <div className="text-center py-12">
           <UsersIcon className="w-16 h-16 mx-auto mb-4 text-gray-500 opacity-40" />
