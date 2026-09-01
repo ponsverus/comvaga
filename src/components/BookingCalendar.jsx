@@ -251,7 +251,7 @@ export default function BookingCalendar({
         setConfirmError('Alguém acabou de reservar esse horário. Escolha outro.');
         fetchSlots(selectedDay);
       } else {
-        setConfirmError('Erro ao confirmar. Tente novamente mais tarde.');
+        setConfirmError('Você só pode criar agendamentos para a sua própria agenda.');
       }
     } finally {
       setConfirming(false);
