@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { UsersIcon, CheckIcon } from '../../../components/icons';
 import { formatDateBRFromISO } from '../utils';
@@ -99,6 +99,26 @@ export default function ClientesSection({
     setPage((prev) => prev + 1);
   };
 
+  const touchStartRef = useRef(null);
+
+  const handleTouchStart = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches?.[0];
+    touchStartRef.current = null;
+    if (!start || !touch || (pageCount <= 1 && !clientesHasMore)) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -113,7 +133,11 @@ export default function ClientesSection({
         </div>
       ) : clientes.length > 0 ? (
         <div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {visibleClientes.map((cliente) => (
               <ClienteCard key={cliente.cliente_id} cliente={cliente} itemLabelText={itemLabelText} onAgendarCliente={onAgendarCliente} />
             ))}
