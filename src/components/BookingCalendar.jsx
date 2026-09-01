@@ -166,7 +166,7 @@ export default function BookingCalendar({
       setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     } catch {
       if (!canApply()) return;
-      setSlotsError('Erro ao buscar horários. Tente outro dia.');
+      setSlotsError('Erro ao buscar horários. Tente novamente.');
     } finally {
       if (canApply()) setSlotsLoading(false);
     }
