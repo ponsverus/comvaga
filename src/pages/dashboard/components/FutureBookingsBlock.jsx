@@ -1,3 +1,4 @@
+import ScrollableCardsRow from './ScrollableCardsRow';
 
 function formatCurrency(value) {
   return `R$ ${Number(value || 0).toFixed(2)}`;
@@ -66,17 +67,22 @@ export default function FutureBookingsBlock({
       </div>
 
       {souDono && porProfissional.length > 0 ? (
-        <div className="mt-4 grid sm:grid-cols-2 xl:grid-cols-3 gap-3 items-start">
-          {porProfissional.map((item) => (
-            <div key={String(item?.profissional_id || item?.nome)} className="bg-dark-100 border border-gray-800 rounded-custom p-4">
-              <div className="text-xs text-gray-500 mb-1">PROFISSIONAL</div>
-              <div className="font-normal text-white uppercase">{String(item?.nome || 'PROFISSIONAL')}</div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <ProfessionalInfoPill value={formatCurrency(item?.receita_projetada)} tone="text-primary" border="border-primary/30" bg="bg-primary/10" />
-                <ProfessionalInfoPill label="Agendam." value={Number(item?.total_agendamentos || 0)} />
-              </div>
-            </div>
-          ))}
+        <div className="mt-4">
+          <ScrollableCardsRow
+            items={porProfissional}
+            keyExtractor={(item) => String(item?.profissional_id || item?.nome)}
+            cardClassName="bg-dark-100 border border-gray-800 rounded-custom p-4"
+            renderItem={(item) => (
+              <>
+                <div className="text-xs text-gray-500 mb-1">PROFISSIONAL</div>
+                <div className="font-normal text-white uppercase">{String(item?.nome || 'PROFISSIONAL')}</div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <ProfessionalInfoPill value={formatCurrency(item?.receita_projetada)} tone="text-primary" border="border-primary/30" bg="bg-primary/10" />
+                  <ProfessionalInfoPill label="Agendam." value={Number(item?.total_agendamentos || 0)} />
+                </div>
+              </>
+            )}
+          />
         </div>
       ) : null}
     </div>
