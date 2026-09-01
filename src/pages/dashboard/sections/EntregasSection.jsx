@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 const ENTREGAS_PER_PAGE = 6;
@@ -55,6 +55,26 @@ function ProfissionalEntregasBlock({
   const goPrev = () => goToPage(currentPage - 1);
   const goNext = () => goToPage(currentPage + 1);
 
+  const touchStartRef = useRef(null);
+
+  const handleTouchStart = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches?.[0];
+    touchStartRef.current = null;
+    if (!start || !touch || pageCount <= 1) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
+
   return (
     <div className="bg-dark-200 border border-gray-800 rounded-custom p-6">
       <div className="flex items-center justify-between mb-4">
@@ -64,7 +84,11 @@ function ProfissionalEntregasBlock({
 
       {totalCount ? (
         <div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+          <div
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
               {visibleEntregas.map(s => {
                 const preco = Number(s.preco ?? 0);
                 const promo = s.preco_promocional == null ? null : Number(s.preco_promocional);
