@@ -155,7 +155,7 @@ export async function fetchBillingPlans() {
   const { data, error } = await withTimeout(
     supabase
       .from('billing_plans')
-      .select('code, name, price_cents, currency, max_profissionais, trial_days, grace_days, features, sort_order')
+      .select('code, name, price_cents, currency, max_profissionais, trial_days, grace_days, sort_order')
       .eq('active', true)
       .order('sort_order', { ascending: true }),
     6000,
