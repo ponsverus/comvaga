@@ -6,7 +6,6 @@ type BillingPlan = {
   name: string;
   price_cents: number;
   max_profissionais: number | null;
-  features: Record<string, unknown>;
   sort_order: number;
 };
 
@@ -69,10 +68,6 @@ function centsToReais(cents: number) {
 
 function formatMoney(cents: number) {
   return `R$ ${(Number(cents || 0) / 100).toFixed(2).replace('.', ',')}`;
-}
-
-function hasFeature(plan: BillingPlan, feature: string) {
-  return plan.features?.[feature] === true;
 }
 
 function proratedUpgradeCents(currentPriceCents: number, nextPriceCents: number, periodStart: unknown, periodEnd: unknown) {
@@ -162,7 +157,7 @@ Deno.serve(async (req) => {
     if (!negocioId || !planCode) return jsonResponse({ error: 'missing_required_fields' }, 400, req);
 
     const [{ data: plan, error: planFetchError }, { data: negocio, error: negocioError }] = await Promise.all([
-      admin.from('billing_plans').select('code, name, price_cents, max_profissionais, features, sort_order').eq('code', planCode).eq('active', true).maybeSingle(),
+      admin.from('billing_plans').select('code, name, price_cents, max_profissionais, sort_order').eq('code', planCode).eq('active', true).maybeSingle(),
       admin.from('negocios').select('id, owner_id, nome').eq('id', negocioId).maybeSingle(),
     ]);
 
@@ -182,19 +177,6 @@ Deno.serve(async (req) => {
       if (countError) throw countError;
       if (Number(count || 0) > selectedPlan.max_profissionais) {
         return jsonResponse({ error: 'plan_professional_limit_reached' }, 400, req);
-      }
-    }
-
-    if (!hasFeature(selectedPlan, 'offers')) {
-      const { count, error: offersError } = await admin
-        .from('entregas')
-        .select('id', { count: 'exact', head: true })
-        .eq('negocio_id', negocioId)
-        .eq('ativo', true)
-        .gt('preco_promocional', 0);
-      if (offersError) throw offersError;
-      if (Number(count || 0) > 0) {
-        return jsonResponse({ error: 'feature_unavailable: offers' }, 400, req);
       }
     }
 
@@ -230,7 +212,7 @@ Deno.serve(async (req) => {
     if (activePaidSubscription) {
       const { data: currentPlan, error: currentPlanError } = await admin
         .from('billing_plans')
-        .select('code, name, price_cents, max_profissionais, features, sort_order')
+        .select('code, name, price_cents, max_profissionais, sort_order')
         .eq('code', currentPlanCode)
         .eq('active', true)
         .maybeSingle();
