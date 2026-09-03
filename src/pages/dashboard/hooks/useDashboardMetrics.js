@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchDashboardOverview } from '../api/dashboardApi';
 
+function normalizeMonth(value, todayISO) {
+  const raw = String(value || '').trim();
+  if (/^\d{4}-\d{2}$/.test(raw)) return raw;
+  const todayMonth = String(todayISO || '').slice(0, 7);
+  return /^\d{4}-\d{2}$/.test(todayMonth) ? todayMonth : '';
+}
+
 export function useDashboardMetrics({
   negocioId,
   hoje,
   faturamentoData,
-  faturamentoPeriodo,
+  faturamentoMes,
   parceiroProfissionalId,
 }) {
   const [metricsHoje, setMetricsHoje] = useState(null);
@@ -47,7 +54,7 @@ export function useDashboardMetrics({
     id = negocioId,
     refDateISO = hoje,
     selectedDateISO = faturamentoData || hoje,
-    periodo = faturamentoPeriodo,
+    mes = faturamentoMes,
     profId = parceiroProfissionalId,
     options = {}
   ) => {
@@ -60,7 +67,7 @@ export function useDashboardMetrics({
         negocioId: id,
         refDateISO: String(refDateISO),
         faturamentoDateISO: String(selectedDateISO),
-        periodo: String(periodo || '7d'),
+        periodo: normalizeMonth(mes, refDateISO || hoje),
         profissionalId: profId,
       });
       setMetricsHoje(overview.metricsHoje);
@@ -78,7 +85,7 @@ export function useDashboardMetrics({
   }, [
     clearOverview,
     faturamentoData,
-    faturamentoPeriodo,
+    faturamentoMes,
     hoje,
     negocioId,
     parceiroProfissionalId,
@@ -86,21 +93,21 @@ export function useDashboardMetrics({
   ]);
 
   const loadHoje = useCallback((id = negocioId, profId = parceiroProfissionalId, options = {}) => (
-    loadOverview(id, hoje, faturamentoData || hoje, faturamentoPeriodo, profId, options)
-  ), [faturamentoData, faturamentoPeriodo, hoje, loadOverview, negocioId, parceiroProfissionalId]);
+    loadOverview(id, hoje, faturamentoData || hoje, faturamentoMes, profId, options)
+  ), [faturamentoData, faturamentoMes, hoje, loadOverview, negocioId, parceiroProfissionalId]);
 
   const loadDia = useCallback((id = negocioId, dateISO = faturamentoData || hoje, profId = parceiroProfissionalId, options = {}) => (
-    loadOverview(id, hoje, dateISO, faturamentoPeriodo, profId, options)
-  ), [faturamentoData, faturamentoPeriodo, hoje, loadOverview, negocioId, parceiroProfissionalId]);
+    loadOverview(id, hoje, dateISO, faturamentoMes, profId, options)
+  ), [faturamentoData, faturamentoMes, hoje, loadOverview, negocioId, parceiroProfissionalId]);
 
-  const loadPeriodo = useCallback((id = negocioId, refDateISO = hoje, periodo = faturamentoPeriodo, profId = parceiroProfissionalId, options = {}) => (
-    loadOverview(id, refDateISO, faturamentoData || refDateISO, periodo, profId, options)
-  ), [faturamentoData, faturamentoPeriodo, hoje, loadOverview, negocioId, parceiroProfissionalId]);
+  const loadMes = useCallback((id = negocioId, refDateISO = hoje, mes = faturamentoMes, profId = parceiroProfissionalId, options = {}) => (
+    loadOverview(id, refDateISO, faturamentoData || refDateISO, mes, profId, options)
+  ), [faturamentoData, faturamentoMes, hoje, loadOverview, negocioId, parceiroProfissionalId]);
 
   useEffect(() => {
     if (!negocioId || !hoje || !faturamentoData) return;
-    loadOverview(negocioId, hoje, faturamentoData, faturamentoPeriodo, parceiroProfissionalId);
-  }, [negocioId, hoje, faturamentoData, faturamentoPeriodo, parceiroProfissionalId, loadOverview]);
+    loadOverview(negocioId, hoje, faturamentoData, faturamentoMes, parceiroProfissionalId);
+  }, [negocioId, hoje, faturamentoData, faturamentoMes, parceiroProfissionalId, loadOverview]);
 
   return {
     metricsHoje,
@@ -120,6 +127,6 @@ export function useDashboardMetrics({
     loadOverview,
     loadHoje,
     loadDia,
-    loadPeriodo,
+    loadMes,
   };
 }
