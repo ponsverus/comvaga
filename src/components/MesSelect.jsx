@@ -154,7 +154,7 @@ export default function MesSelect({ value, onChange, todayISO }) {
               disabled={isDisabled}
               onClick={() => selectMonth(month)}
               className={[
-                'h-10 rounded-custom border text-xs font-normal uppercase transition-colors',
+                'h-10 rounded-full border text-xs font-normal uppercase transition-colors',
                 isSelected
                   ? 'border-primary bg-primary text-black'
                   : isDisabled
@@ -178,8 +178,9 @@ export default function MesSelect({ value, onChange, todayISO }) {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((next) => !next)}
-        className="inline-flex min-w-[112px] items-center justify-center rounded-full border border-gray-800 bg-dark-200 px-4 py-1.5 text-sm font-normal text-white transition-colors hover:border-primary/50 focus:border-primary/50 focus:outline-none"
+        className="inline-flex min-w-[112px] items-center justify-center gap-2 rounded-full border border-gray-800 bg-dark-200 px-4 py-1.5 text-sm font-normal text-white transition-colors hover:border-primary/50 focus:border-primary/50 focus:outline-none"
       >
+        <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
         <span className="truncate uppercase">{displayValue}</span>
       </button>
 
