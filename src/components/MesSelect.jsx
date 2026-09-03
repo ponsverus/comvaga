@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTH_NAMES = [
   'Janeiro',
@@ -36,7 +36,7 @@ function monthISO(year, month) {
 function formatDisplay(value) {
   const parsed = parseMonth(value);
   if (!parsed) return null;
-  return `${MONTH_NAMES[parsed.month - 1]} ${parsed.year}`;
+  return MONTH_NAMES[parsed.month - 1];
 }
 
 function compareMonth(a, b) {
@@ -178,12 +178,9 @@ export default function MesSelect({ value, onChange, todayISO }) {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((next) => !next)}
-        className="inline-flex min-w-[152px] items-center justify-between gap-2 rounded-custom border border-gray-800 bg-dark-200 px-3 py-1.5 text-sm font-normal text-white transition-colors hover:border-primary/50 focus:border-primary/50 focus:outline-none"
+        className="inline-flex min-w-[112px] items-center justify-center rounded-full border border-gray-800 bg-dark-200 px-4 py-1.5 text-sm font-normal text-white transition-colors hover:border-primary/50 focus:border-primary/50 focus:outline-none"
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-gray-500" />
-          <span className="truncate uppercase">{displayValue}</span>
-        </span>
+        <span className="truncate uppercase">{displayValue}</span>
       </button>
 
       {open && createPortal(popover, document.body)}
