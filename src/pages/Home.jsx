@@ -158,14 +158,6 @@ function SearchBox({
   );
 }
 
-function StarGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
-  return (
-    <span className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className}`}>
-      {'\u2606'}
-    </span>
-  );
-}
-
 function MoneyGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
   return (
     <span
