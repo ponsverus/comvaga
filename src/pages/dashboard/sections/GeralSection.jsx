@@ -120,7 +120,7 @@ export default function VisaoGeralSection({
           </div>
         )}
         <div className="mt-2 bg-dark-100 border border-gray-800 rounded-custom p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3"><div className="text-xs text-gray-500 uppercase tracking-wide">FATURAMENTO DO MÊS</div><MesSelect value={faturamentoMes} onChange={setFaturamentoMes} todayISO={hoje} /></div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3"><div className="text-xs text-gray-500 uppercase tracking-wide">FATURAMENTO MÊS</div><MesSelect value={faturamentoMes} onChange={setFaturamentoMes} todayISO={hoje} /></div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">CONCLUÍDOS</div><div className="text-xl font-normal text-green-400">{Number(metricsPeriodoData?.period?.concluidos || 0)}</div></div>
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">FATURAMENTO</div><div className="text-xl font-normal text-primary">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.faturamento || 0).toFixed(2)}`}</div></div>
