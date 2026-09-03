@@ -126,7 +126,7 @@ export default function VisaoGeralSection({
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">FATURAMENTO</div><div className="text-xl font-normal text-primary">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.faturamento || 0).toFixed(2)}`}</div></div>
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">MÉDIA POR {counterSingular.toUpperCase()}</div><div className="text-xl font-normal text-white">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.media_por_atendimento || 0).toFixed(2)}`}</div></div>
           </div>
-          {souDono && faturamentoPorProfissionalPeriodo.length > 0 && <PeriodProfessionalsScroller items={faturamentoPorProfissionalPeriodo} />}
+          {faturamentoPorProfissionalPeriodo.length > 0 && <PeriodProfessionalsScroller items={faturamentoPorProfissionalPeriodo} />}
         </div>
       </div>
     </div>
