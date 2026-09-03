@@ -306,7 +306,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   }, [acessoDashboardAutorizado, parceiroProfissional, uiAlert]);
 
   const [faturamentoData, setFaturamentoData]             = useState('');
-  const [faturamentoPeriodo, setFaturamentoPeriodo]       = useState('7d');
+  const [faturamentoMes, setFaturamentoMes]             = useState('');
   const {
     metricsHoje,
     metricsTopCards,
@@ -325,7 +325,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     negocioId: negocio?.id,
     hoje,
     faturamentoData,
-    faturamentoPeriodo,
+    faturamentoMes,
     parceiroProfissionalId,
   });
 
@@ -400,7 +400,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const realtimeDashboardContextRef = useRef({
     activeTab,
     faturamentoData,
-    faturamentoPeriodo,
+    faturamentoMes,
     hoje,
     negocioId: negocio?.id || null,
     parceiroProfissionalId,
@@ -409,12 +409,12 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     realtimeDashboardContextRef.current = {
       activeTab,
       faturamentoData,
-      faturamentoPeriodo,
+      faturamentoMes,
       hoje,
       negocioId: negocio?.id || null,
       parceiroProfissionalId,
     };
-  }, [activeTab, faturamentoData, faturamentoPeriodo, hoje, negocio?.id, parceiroProfissionalId]);
+  }, [activeTab, faturamentoData, faturamentoMes, hoje, negocio?.id, parceiroProfissionalId]);
 
   const agendamentosStatusRef = useRef(new Map());
   useEffect(() => {
@@ -510,6 +510,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   useEffect(() => {
     setFaturamentoData(prev => prev ? prev : hoje);
+    setFaturamentoMes(prev => prev ? prev : String(hoje || '').slice(0, 7));
   }, [hoje]);
 
   useEffect(() => {
@@ -528,7 +529,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
           ctx.negocioId,
           ctx.hoje,
           ctx.faturamentoData || ctx.hoje,
-          ctx.faturamentoPeriodo,
+          ctx.faturamentoMes,
           ctx.parceiroProfissionalId,
           { silent: true }
         )).catch(() => {});
@@ -838,8 +839,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 metricsDiaLoading={metricsDiaLoading}
                 metricsDia={metricsDia}
                 faturamentoPorProfissionalFiltro={faturamentoPorProfissionalFiltro}
-                faturamentoPeriodo={faturamentoPeriodo}
-                setFaturamentoPeriodo={setFaturamentoPeriodo}
+                faturamentoMes={faturamentoMes}
+                setFaturamentoMes={setFaturamentoMes}
                 metricsPeriodoData={metricsPeriodoData}
                 metricsPeriodoLoading={metricsPeriodoLoading}
                 faturamentoPorProfissionalPeriodo={faturamentoPorProfissionalPeriodo}
