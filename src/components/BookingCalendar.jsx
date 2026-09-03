@@ -146,7 +146,6 @@ export default function BookingCalendar({
         isRaio:         !!s.is_raio,
         horario_inicio: s.horario_inicio || null,
         horario_fim:    s.horario_fim    || null,
-        duracaoMin:     dur,
       }));
 
       const rank = h => h.isRaio ? 3 : h.isHeat ? 2 : 1;
@@ -483,14 +482,14 @@ function SlotButton({ slot, isSelected, onClick, isLight }) {
   const baseNormal    = isLight
     ? 'bg-white border-gray-200 hover:border-gray-500 text-gray-700'
     : 'bg-dark-200 border-gray-800 hover:border-primary text-gray-300';
-  const minuteColor   = isLight ? 'text-gray-400' : 'text-gray-500';
 
   return (
     <button
       type="button"
       onClick={() => onClick(slot)}
       className={[
-        'relative p-3 rounded-custom transition-all border uppercase font-normal text-center',
+        'relative min-h-9 rounded-full border py-2 text-sm uppercase font-normal text-center transition-colors',
+        slot.isRaio && !isSelected ? 'pl-4 pr-7' : 'px-4',
         isSelected
           ? baseSelected
           : slot.isRaio
@@ -501,10 +500,9 @@ function SlotButton({ slot, isSelected, onClick, isLight }) {
       ].join(' ')}
     >
       {slot.isRaio && !isSelected && (
-        <ZapIcon strokeWidth={1.5} className={`w-3 h-3 absolute top-1 right-1 ${isLight ? 'text-gray-700' : 'text-primary'}`} />
+        <ZapIcon strokeWidth={1.5} className={`absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 ${isLight ? 'text-gray-700' : 'text-primary'}`} />
       )}
-      <div className="text-lg normal-case">{slot.hora}</div>
-      <div className={`text-[10px] normal-case ${minuteColor}`}>{slot.duracaoMin} MIN</div>
+      <span className="tabular-nums normal-case">{slot.hora}</span>
     </button>
   );
 }
