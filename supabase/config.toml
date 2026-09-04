@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.asaas-cancel-subscription]
 verify_jwt = true
+
+[functions.auth-send-email-onesignal]
+verify_jwt = false
