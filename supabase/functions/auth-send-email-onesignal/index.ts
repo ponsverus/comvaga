@@ -27,6 +27,7 @@ type EmailMessage = {
   subject: string;
   preheader: string;
   html: string;
+  dedupeKey?: string;
 };
 
 const ONESIGNAL_EMAIL_ENDPOINT = 'https://api.onesignal.com/notifications?c=email';
@@ -133,6 +134,10 @@ function authEmailHtml(title: string, body: string, actionLabel: string | null, 
 
 function notificationHtml(title: string, body: string) {
   return authEmailHtml(title, body, null, null);
+}
+
+function withDedupe(message: EmailMessage, value: string) {
+  return { ...message, dedupeKey: value || crypto.randomUUID() };
 }
 
 function messageForAction(
@@ -244,10 +249,10 @@ function messageForAction(
     return {
       to,
       action,
-      subject: `${token || 'Codigo'} é sua chave`,
+      subject: `${token || 'Codigo'} é seu código de acesso`,
       preheader: 'Use este código para confirmar sua identidade.',
       html: authEmailHtml(
-        'Chave de acesso',
+        'Código de acesso',
         'Use o código abaixo para confirmar sua identidade no Comvaga.',
         null,
         null,
@@ -293,15 +298,15 @@ function buildMessages(payload: AuthHookPayload) {
     const messages: EmailMessage[] = [];
 
     if (currentEmail && token && tokenHashNew) {
-      messages.push(messageForAction(emailData, currentEmail, 'email_change', tokenHashNew, token));
+      messages.push(withDedupe(messageForAction(emailData, currentEmail, 'email_change', tokenHashNew, token), tokenHashNew || token));
     }
 
     if (newEmail && tokenNew && tokenHash) {
-      messages.push(messageForAction(emailData, newEmail, 'email_change_new', tokenHash, tokenNew));
+      messages.push(withDedupe(messageForAction(emailData, newEmail, 'email_change_new', tokenHash, tokenNew), tokenHash || tokenNew));
     }
 
     if (!messages.length && newEmail && tokenHash) {
-      messages.push(messageForAction(emailData, newEmail, 'email_change_new', tokenHash, token || tokenNew));
+      messages.push(withDedupe(messageForAction(emailData, newEmail, 'email_change_new', tokenHash, token || tokenNew), tokenHash || token || tokenNew));
     }
 
     if (!messages.length) throw new Error('missing_email_change_fields');
@@ -311,7 +316,7 @@ function buildMessages(payload: AuthHookPayload) {
   const recipient = newEmail && action === 'email_change_new' ? newEmail : currentEmail;
   if (!recipient) throw new Error('missing_recipient_email');
 
-  return [messageForAction(emailData, recipient, action, tokenHash || tokenHashNew, token || tokenNew)];
+  return [withDedupe(messageForAction(emailData, recipient, action, tokenHash || tokenHashNew, token || tokenNew), tokenHash || tokenHashNew || token || tokenNew)];
 }
 
 async function sendWithOneSignal(message: EmailMessage, idempotencyKey: string) {
@@ -398,7 +403,7 @@ Deno.serve(async (req) => {
     const action = text(payload.email_data?.email_action_type) || 'auth';
 
     await Promise.all(messages.map((message, index) =>
-      sendWithOneSignal(message, `${userId}:${action}:${index}`)
+      sendWithOneSignal(message, `${userId}:${action}:${index}:${message.dedupeKey || crypto.randomUUID()}`)
     ));
 
     return jsonResponse({}, 200, req);
