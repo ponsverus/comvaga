@@ -156,9 +156,13 @@ export default function Login({ onLogin, inRecovery: inRecoveryProp = false }) {
 
       showMessage('login.recovery_password_updated');
 
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.warn('Password recovery signOut warning:', signOutError);
+      }
       clearPasswordRecoveryState();
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (e2) {
       showMessage(getPasswordUpdateAlertKey(e2));
       console.error('Password update error:', e2);
