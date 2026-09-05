@@ -321,7 +321,7 @@ function buildMessages(payload: AuthHookPayload) {
 
 async function sendWithOneSignal(message: EmailMessage, idempotencyKey: string) {
   const appId = requiredEnv('ONESIGNAL_APP_ID');
-  const apiKey = requiredEnv('ONESIGNAL_REST_API_KEY');
+  const apiKey = requiredEnv('ONESIGNAL_API_KEY');
   const fromName = optionalEnv('AUTH_EMAIL_FROM_NAME') || DEFAULT_FROM_NAME;
   const fromAddress = optionalEnv('AUTH_EMAIL_FROM_ADDRESS');
   const senderDomain = optionalEnv('AUTH_EMAIL_SENDER_DOMAIN');
