@@ -34,7 +34,11 @@ export default function ResetPassword() {
       if (error) throw error;
 
       showMessage('login.recovery_password_updated');
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.warn('ResetPassword signOut warning:', signOutError);
+      }
       clearPasswordRecoveryState();
       navigate('/login', { replace: true });
     } catch (error) {
