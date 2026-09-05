@@ -5,9 +5,14 @@ import { supabase } from '../supabase';
 import { ptBR } from '../feedback/messages/ptBR';
 import { fetchUserAccessProfile } from '../utils/profileAccess';
 import { clearPasswordRecoveryState } from '../utils/auth';
-import { getParceiroLoginAlert } from '../utils/friendlyErrors';
+import { getParceiroLoginAlert, getPasswordUpdateAlertKey } from '../utils/friendlyErrors';
 
 const msgs = ptBR.parceiroLogin;
+
+function getParceiroPasswordUpdateAlert(error) {
+  const key = getPasswordUpdateAlertKey(error).replace('login.', '');
+  return msgs[key] || msgs.recovery_password_update_error;
+}
 
 function Alerta({ msg }) {
   if (!msg) return null;
@@ -163,14 +168,18 @@ export default function LoginParceiro({ onLogin, suppressAuthRef, inRecovery: in
     try {
       const { error: upErr } = await supabase.auth.updateUser({ password: newPassword });
       if (upErr) throw upErr;
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (signOutError) {
+        console.warn('Partner password recovery signOut warning:', signOutError);
+      }
       clearPasswordRecoveryState();
       setIsRecovery(false);
       setNewPassword('');
       setNewPassword2('');
       setAlerta(msgs.recovery_password_updated);
-    } catch {
-      setRecoveryAlerta(msgs.recovery_password_update_error);
+    } catch (error) {
+      setRecoveryAlerta(getParceiroPasswordUpdateAlert(error));
     } finally {
       setRecoveryLoading(false);
     }
