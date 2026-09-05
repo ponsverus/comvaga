@@ -59,7 +59,13 @@ export function getPasswordResetRequestAlertKey(error) {
 }
 
 export function getPasswordUpdateAlertKey(error) {
+  const raw = getErrorText(error);
   if (isRateLimitError(error)) return 'alerts.rate_limit_exceeded';
+  if (
+    raw.includes('new password should be different from the old password')
+    || raw.includes('different from the old password')
+    || raw.includes('same password')
+  ) return 'login.recovery_password_same_as_old';
   if (isSessionInvalidOrExpiredError(error)) return 'login.session_expired_or_invalid';
   return 'login.recovery_password_update_error';
 }
