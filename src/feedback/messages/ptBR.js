@@ -69,7 +69,7 @@ export const ptBR = {
     business_delete_plan_active: {
       title: 'Plano ativo',
       body:
-        'Para  este negócio, primeiro cancele o plano ativo.\n' +
+        'Para este negócio, primeiro cancele o plano ativo.\n' +
         'Depois que a assinatura ficar cancelada, será possível excluí-lo.',
       variant: 'warning',
       screen: 'dark',
@@ -164,7 +164,7 @@ export const ptBR = {
       buttonText: 'OK',
     },
     billing_cancel_not_cancelable: {
-      title: 'Cancelamento indisponivel',
+      title: 'Cancelamento indisponível',
       body: 'Este plano já se encontra cancelado ou sem pagamentos pendentes.',
       variant: 'warning',
       screen: 'dark',
@@ -272,7 +272,7 @@ export const ptBR = {
     },
     gallery_no_images_added: {
       title: 'Nenhuma imagem adicionada',
-      body: 'Nenhuma imagem foi adicionada a galeria. Verifique os arquivos e tente novamente.',
+      body: 'Nenhuma imagem foi adicionada à galeria. Verifique os arquivos e tente novamente.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
@@ -849,7 +849,7 @@ export const ptBR = {
     },
     plan_professional_limit_current: {
       title: 'Limite do plano',
-      body: 'Este plano permite ate {limit} {professionalsLabel}. Você tem {count}.',
+      body: 'Este plano permite até {limit} {professionalsLabel}. Você tem {count}.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'OK',
@@ -1469,28 +1469,28 @@ export const ptBR = {
     },
     address_street_required: {
       title: 'Endere. incompleto',
-      body: 'Informe a RUA do negócio.',
+      body: 'Informe a rua do negócio.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
     },
     address_number_required: {
       title: 'Endere. incompleto',
-      body: 'Informe o NÚMERO do endere.',
+      body: 'Informe o número do endere.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
     },
     address_city_required: {
       title: 'Endere. incompleto',
-      body: 'Informe a CIDADE.',
+      body: 'Informe a cidade.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
     },
     address_state_required: {
       title: 'Endere. incompleto',
-      body: 'Informe o ESTADO.',
+      body: 'Informe o estado.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
@@ -1535,7 +1535,7 @@ export const ptBR = {
       title: 'Use uma conta administradora',
       body:
         'Esta conta pertence a um profissional parceiro.\n' +
-        'Para criar negocios, entre com uma conta administradora.',
+        'Para criar negócios, entre com uma conta administradora.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
