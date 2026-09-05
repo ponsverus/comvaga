@@ -928,6 +928,7 @@ export const ptBR = {
     reset_error:                    { body: 'Erro ao enviar o link agora. Tente novamente.', variant: 'erro' },
     recovery_password_too_short:    { body: 'A nova senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
     recovery_password_mismatch:     { body: 'As senhas divergem. Revise e tente novamente.', variant: 'erro' },
+    recovery_password_same_as_old:  { body: 'Use uma senha diferente da senha atual.', variant: 'aviso' },
     recovery_password_updated:      { body: 'Senha atualizada com sucesso. Acesse sua conta com a nova senha.', variant: 'sucesso' },
     recovery_password_update_error: { body: 'Erro ao atualizar a senha agora. Tente novamente.', variant: 'erro' },
   },
@@ -1302,10 +1303,17 @@ export const ptBR = {
     },
     recovery_password_mismatch: {
       title: 'Senhas diferentes',
-      body: 'O código diverge do esperado. Revise e tente novamente.',
+      body: 'Houve uma divergência nas senhas digitadas. Revise os campos e tente novamente.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
+    },
+    recovery_password_same_as_old: {
+      title: 'Escolha uma nova senha',
+      body: 'A nova senha precisa ser diferente da senha atual.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
     },
     recovery_password_updated: {
       title: 'Senha atualizada',
