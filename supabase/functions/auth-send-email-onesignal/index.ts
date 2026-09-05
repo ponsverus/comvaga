@@ -30,6 +30,7 @@ type EmailMessage = {
   html: string;
   dedupeKey?: string;
 };
+
 type ProviderSendResult = {
   notificationId: string | null;
   httpStatus: number;
@@ -87,6 +88,7 @@ function hasProviderErrors(errors: unknown) {
   if (typeof errors === 'object') return Object.keys(errors).length > 0;
   return Boolean(errors);
 }
+
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -129,6 +131,7 @@ function providerErrorMessage(error: unknown, fallback: string) {
   }
   return fallback;
 }
+
 let cachedSupabaseAdmin: ReturnType<typeof createClient> | null | undefined;
 
 function getSupabaseAdmin() {
@@ -517,6 +520,7 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
     httpStatus: response.status,
   };
 }
+
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   let actionForLog = 'auth';
