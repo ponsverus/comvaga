@@ -30,7 +30,6 @@ type EmailMessage = {
   html: string;
   dedupeKey?: string;
 };
-
 type ProviderSendResult = {
   notificationId: string | null;
   httpStatus: number;
@@ -56,7 +55,8 @@ type AuthEmailLogInput = {
   metadata?: Record<string, unknown>;
 };
 
-const ONESIGNAL_EMAIL_ENDPOINT = 'https://onesignal.com/api/v1/notifications';
+const ONESIGNAL_EMAIL_ENDPOINT = 'https://api.onesignal.com/notifications?c=email';
+const ONESIGNAL_REQUEST_TIMEOUT_MS = 4000;
 const DEFAULT_FROM_NAME = 'Comvaga';
 
 function requiredEnv(name: string) {
@@ -88,7 +88,6 @@ function hasProviderErrors(errors: unknown) {
   if (typeof errors === 'object') return Object.keys(errors).length > 0;
   return Boolean(errors);
 }
-
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -131,7 +130,6 @@ function providerErrorMessage(error: unknown, fallback: string) {
   }
   return fallback;
 }
-
 let cachedSupabaseAdmin: ReturnType<typeof createClient> | null | undefined;
 
 function getSupabaseAdmin() {
@@ -443,7 +441,7 @@ function buildMessages(payload: AuthHookPayload) {
   return [withDedupe(messageForAction(emailData, recipient, action, tokenHash || tokenHashNew, token || tokenNew), tokenHash || tokenHashNew || token || tokenNew)];
 }
 
-async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string): Promise<ProviderSendResult> {
+async function sendWithOneSignal(message: EmailMessage, idempotencyKey: string): Promise<ProviderSendResult> {
   const appId = requiredEnv('ONESIGNAL_APP_ID');
   const apiKey = requiredEnv('ONESIGNAL_API_KEY');
 
@@ -451,14 +449,17 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
 
   const body = {
     app_id: appId,
-    include_email_tokens: [message.to],
+    email_to: [message.to],
     email_subject: message.subject,
+    email_preheader: message.preheader,
     email_body: message.html,
+    include_unsubscribed: true,
     disable_email_click_tracking: true,
+    idempotency_key: idempotencyKey,
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const timeoutId = setTimeout(() => controller.abort(), ONESIGNAL_REQUEST_TIMEOUT_MS);
   let response: Response;
 
   try {
@@ -520,7 +521,6 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
     httpStatus: response.status,
   };
 }
-
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
   let actionForLog = 'auth';
