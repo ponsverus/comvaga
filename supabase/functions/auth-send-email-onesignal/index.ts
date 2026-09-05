@@ -1,4 +1,5 @@
 import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
 
 type AuthHookPayload = {
@@ -28,6 +29,30 @@ type EmailMessage = {
   preheader: string;
   html: string;
   dedupeKey?: string;
+};
+type ProviderSendResult = {
+  notificationId: string | null;
+  httpStatus: number;
+};
+
+type ProviderSendError = Error & {
+  httpStatus?: number;
+  errorCode?: string;
+};
+
+type AuthEmailLogStatus = 'received' | 'sent' | 'provider_error' | 'invalid_signature' | 'internal_error';
+
+type AuthEmailLogInput = {
+  requestId: string;
+  authUserId?: string | null;
+  actionType: string;
+  status: AuthEmailLogStatus;
+  email?: string | null;
+  providerMessageId?: string | null;
+  httpStatus?: number | null;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  metadata?: Record<string, unknown>;
 };
 
 const ONESIGNAL_EMAIL_ENDPOINT = 'https://onesignal.com/api/v1/notifications';
@@ -62,6 +87,31 @@ function hasProviderErrors(errors: unknown) {
   if (typeof errors === 'object') return Object.keys(errors).length > 0;
   return Boolean(errors);
 }
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function maskEmail(value: string) {
+  const normalized = normalizeEmail(value);
+  const [localPart = '', domain = ''] = normalized.split('@');
+  if (!localPart || !domain) return null;
+  const visible = localPart.slice(0, Math.min(2, localPart.length));
+  return `${visible}${'*'.repeat(Math.max(localPart.length - visible.length, 1))}@${domain}`;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function truncateText(value: string | null | undefined, maxLength = 500) {
+  if (!value) return null;
+  return value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value;
+}
+
+async function sha256Hex(value: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 function escapeHtml(value: string) {
   return value
@@ -78,6 +128,61 @@ function providerErrorMessage(error: unknown, fallback: string) {
     return String((error as { message?: unknown }).message || fallback);
   }
   return fallback;
+}
+let cachedSupabaseAdmin: ReturnType<typeof createClient> | null | undefined;
+
+function getSupabaseAdmin() {
+  if (cachedSupabaseAdmin !== undefined) return cachedSupabaseAdmin;
+
+  const supabaseUrl = optionalEnv('SUPABASE_URL');
+  const serviceKey = optionalEnv('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) {
+    cachedSupabaseAdmin = null;
+    return cachedSupabaseAdmin;
+  }
+
+  cachedSupabaseAdmin = createClient(supabaseUrl, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+  return cachedSupabaseAdmin;
+}
+
+async function writeAuthEmailLog(input: AuthEmailLogInput) {
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      console.warn('auth email log skipped: missing Supabase admin env');
+      return;
+    }
+
+    const email = input.email ? normalizeEmail(input.email) : '';
+    const { error } = await supabase.from('auth_email_logs').insert({
+      request_id: input.requestId,
+      auth_user_id: input.authUserId && isUuid(input.authUserId) ? input.authUserId : null,
+      action_type: input.actionType || 'auth',
+      status: input.status,
+      provider: 'onesignal',
+      provider_message_id: input.providerMessageId || null,
+      http_status: input.httpStatus ?? null,
+      error_code: truncateText(input.errorCode),
+      error_message: truncateText(input.errorMessage),
+      email_hash: email ? await sha256Hex(email) : null,
+      masked_email: email ? maskEmail(email) : null,
+      metadata: input.metadata || {},
+    });
+
+    if (error) {
+      console.error('auth email log insert failed:', {
+        status: input.status,
+        code: error.code,
+      });
+    }
+  } catch (error) {
+    console.error('auth email log insert failed:', providerErrorMessage(error, 'auth_email_log_failed'));
+  }
 }
 
 function verifyTypeFor(action: string) {
@@ -335,7 +440,7 @@ function buildMessages(payload: AuthHookPayload) {
   return [withDedupe(messageForAction(emailData, recipient, action, tokenHash || tokenHashNew, token || tokenNew), tokenHash || tokenHashNew || token || tokenNew)];
 }
 
-async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string) {
+async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string): Promise<ProviderSendResult> {
   const appId = requiredEnv('ONESIGNAL_APP_ID');
   const apiKey = requiredEnv('ONESIGNAL_API_KEY');
 
@@ -349,15 +454,31 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
     disable_email_click_tracking: true,
   };
 
-  const response = await fetch(ONESIGNAL_EMAIL_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      authorization: `Key ${apiKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let response: Response;
+
+  try {
+    response = await fetch(ONESIGNAL_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        authorization: `Key ${apiKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    const messageText = error instanceof DOMException && error.name === 'AbortError'
+      ? 'onesignal_email_timeout'
+      : providerErrorMessage(error, 'onesignal_fetch_failed');
+    const sendError = new Error(messageText) as ProviderSendError;
+    sendError.errorCode = messageText;
+    throw sendError;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const responseText = await response.text().catch(() => '');
   let notificationId: unknown = null;
@@ -380,16 +501,27 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
       status: response.status,
       hasErrors: hasOneSignalErrors,
     });
-    throw new Error(`onesignal_email_failed_${response.status}`);
+    const sendError = new Error(`onesignal_email_failed_${response.status}`) as ProviderSendError;
+    sendError.httpStatus = response.status;
+    sendError.errorCode = `onesignal_email_failed_${response.status}`;
+    throw sendError;
   }
 
   console.info('onesignal auth email sent:', {
     action: message.action,
     notificationId,
   });
-}
 
+  return {
+    notificationId: typeof notificationId === 'string' ? notificationId : null,
+    httpStatus: response.status,
+  };
+}
 Deno.serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  let actionForLog = 'auth';
+  let userIdForLog: string | null = null;
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
   if (req.method !== 'POST') return jsonResponse({ error: 'method_not_allowed' }, 405, req);
 
@@ -402,6 +534,13 @@ Deno.serve(async (req) => {
       payload = webhook.verify(payloadText, headers) as AuthHookPayload;
     } catch {
       console.error('auth-send-email-onesignal invalid signature');
+      await writeAuthEmailLog({
+        requestId,
+        actionType: 'auth',
+        status: 'invalid_signature',
+        errorCode: 'invalid_signature',
+        errorMessage: 'Assinatura inválida.',
+      });
       return jsonResponse({
         error: {
           http_code: 401,
@@ -409,18 +548,69 @@ Deno.serve(async (req) => {
         },
       }, 401, req);
     }
+
     const messages = buildMessages(payload);
     const userId = text(payload.user?.id) || crypto.randomUUID();
     const action = text(payload.email_data?.email_action_type) || 'auth';
+    userIdForLog = userId;
+    actionForLog = action;
+
+    await Promise.all(messages.map((message, index) => writeAuthEmailLog({
+      requestId,
+      authUserId: userId,
+      actionType: message.action,
+      status: 'received',
+      email: message.to,
+      metadata: { message_index: index },
+    })));
 
     await Promise.all(messages.map(async (message, index) => {
       const idempotencyKey = await uuidFromText(`${userId}:${action}:${index}:${message.dedupeKey || crypto.randomUUID()}`);
-      return sendWithOneSignal(message, idempotencyKey);
+      try {
+        const result = await sendWithOneSignal(message, idempotencyKey);
+        await writeAuthEmailLog({
+          requestId,
+          authUserId: userId,
+          actionType: message.action,
+          status: 'sent',
+          email: message.to,
+          providerMessageId: result.notificationId,
+          httpStatus: result.httpStatus,
+          metadata: { message_index: index },
+        });
+      } catch (error) {
+        const sendError = error as ProviderSendError;
+        await writeAuthEmailLog({
+          requestId,
+          authUserId: userId,
+          actionType: message.action,
+          status: 'provider_error',
+          email: message.to,
+          httpStatus: sendError.httpStatus ?? null,
+          errorCode: sendError.errorCode || providerErrorMessage(error, 'provider_error'),
+          errorMessage: providerErrorMessage(error, 'provider_error'),
+          metadata: { message_index: index },
+        });
+        throw error;
+      }
     }));
 
     return jsonResponse({}, 200, req);
   } catch (error) {
-    console.error('auth-send-email-onesignal failed:', providerErrorMessage(error, 'auth_email_failed'));
+    const message = providerErrorMessage(error, 'auth_email_failed');
+    console.error('auth-send-email-onesignal failed:', message);
+
+    if (!message.startsWith('onesignal_email_failed_') && message !== 'onesignal_email_timeout' && message !== 'onesignal_fetch_failed') {
+      await writeAuthEmailLog({
+        requestId,
+        authUserId: userIdForLog,
+        actionType: actionForLog,
+        status: 'internal_error',
+        errorCode: message,
+        errorMessage: message,
+      });
+    }
+
     return jsonResponse({
       error: {
         http_code: 500,
