@@ -30,7 +30,7 @@ type EmailMessage = {
   dedupeKey?: string;
 };
 
-const ONESIGNAL_EMAIL_ENDPOINT = 'https://api.onesignal.com/notifications?c=email';
+const ONESIGNAL_EMAIL_ENDPOINT = 'https://onesignal.com/api/v1/notifications';
 const DEFAULT_FROM_NAME = 'Comvaga';
 
 function requiredEnv(name: string) {
@@ -138,6 +138,14 @@ function notificationHtml(title: string, body: string) {
 
 function withDedupe(message: EmailMessage, value: string) {
   return { ...message, dedupeKey: value || crypto.randomUUID() };
+}
+
+async function uuidFromText(value: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes.slice(0, 16), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
 function messageForAction(
@@ -319,30 +327,18 @@ function buildMessages(payload: AuthHookPayload) {
   return [withDedupe(messageForAction(emailData, recipient, action, tokenHash || tokenHashNew, token || tokenNew), tokenHash || tokenHashNew || token || tokenNew)];
 }
 
-async function sendWithOneSignal(message: EmailMessage, idempotencyKey: string) {
+async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string) {
   const appId = requiredEnv('ONESIGNAL_APP_ID');
   const apiKey = requiredEnv('ONESIGNAL_API_KEY');
-  const fromName = optionalEnv('AUTH_EMAIL_FROM_NAME') || DEFAULT_FROM_NAME;
-  const fromAddress = optionalEnv('AUTH_EMAIL_FROM_ADDRESS');
-  const senderDomain = optionalEnv('AUTH_EMAIL_SENDER_DOMAIN');
-  const replyTo = optionalEnv('AUTH_EMAIL_REPLY_TO');
 
   if (!isEmail(message.to)) throw new Error('invalid_recipient_email');
 
   const body = {
     app_id: appId,
-    target_channel: 'email',
-    email_to: [message.to],
+    include_email_tokens: [message.to],
     email_subject: message.subject,
     email_body: message.html,
-    email_preheader: message.preheader,
-    email_from_name: fromName,
-    include_unsubscribed: true,
     disable_email_click_tracking: true,
-    idempotency_key: idempotencyKey,
-    ...(fromAddress ? { email_from_address: fromAddress } : {}),
-    ...(senderDomain ? { email_sender_domain: senderDomain } : {}),
-    ...(replyTo ? { email_reply_to_address: replyTo } : {}),
   };
 
   const response = await fetch(ONESIGNAL_EMAIL_ENDPOINT, {
@@ -357,17 +353,21 @@ async function sendWithOneSignal(message: EmailMessage, idempotencyKey: string) 
 
   const responseText = await response.text().catch(() => '');
   let notificationId: unknown = null;
+  let oneSignalErrors: unknown = null;
   try {
     const responseBody = responseText ? JSON.parse(responseText) as Record<string, unknown> : {};
     notificationId = responseBody.id || null;
+    oneSignalErrors = responseBody.errors || null;
   } catch {
     notificationId = null;
+    oneSignalErrors = null;
   }
 
-  if (!response.ok) {
+  if (!response.ok || oneSignalErrors) {
     console.error('onesignal auth email failed:', {
       action: message.action,
       status: response.status,
+      hasErrors: Boolean(oneSignalErrors),
     });
     throw new Error(`onesignal_email_failed_${response.status}`);
   }
@@ -402,9 +402,10 @@ Deno.serve(async (req) => {
     const userId = text(payload.user?.id) || crypto.randomUUID();
     const action = text(payload.email_data?.email_action_type) || 'auth';
 
-    await Promise.all(messages.map((message, index) =>
-      sendWithOneSignal(message, `${userId}:${action}:${index}:${message.dedupeKey || crypto.randomUUID()}`)
-    ));
+    await Promise.all(messages.map(async (message, index) => {
+      const idempotencyKey = await uuidFromText(`${userId}:${action}:${index}:${message.dedupeKey || crypto.randomUUID()}`);
+      return sendWithOneSignal(message, idempotencyKey);
+    }));
 
     return jsonResponse({}, 200, req);
   } catch (error) {
