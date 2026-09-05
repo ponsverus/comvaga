@@ -55,6 +55,14 @@ function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function hasProviderErrors(errors: unknown) {
+  if (!errors) return false;
+  if (Array.isArray(errors)) return errors.length > 0;
+  if (typeof errors === 'string') return errors.trim().length > 0;
+  if (typeof errors === 'object') return Object.keys(errors).length > 0;
+  return Boolean(errors);
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -115,13 +123,13 @@ function authEmailHtml(title: string, body: string, actionLabel: string | null, 
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;">
             <tr>
               <td style="padding:28px;">
-                <p style="margin:0 0 18px;font-size:14px;font-weight:700;color:#111827;">Comvaga</p>
+                <p style="margin:0 0 18px;font-size:14px;font-weight:700;color:#111827;">${escapeHtml(DEFAULT_FROM_NAME)}</p>
                 <h1 style="margin:0 0 14px;font-size:22px;line-height:1.3;color:#111827;">${escapeHtml(title)}</h1>
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#374151;">${escapeHtml(body)}</p>
                 ${code ? `<p style="margin:22px 0;font-size:28px;letter-spacing:4px;font-weight:700;color:#111827;">${escapeHtml(code)}</p>` : ''}
                 ${actionLabel && actionUrl ? button(actionLabel, actionUrl) : ''}
                 ${actionUrl ? `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#6b7280;">Clique ou copie e cole este link no navegador:<br><a href="${safeUrl}" style="color:#2563eb;word-break:break-all;">${safeUrl}</a></p>` : ''}
-                <p style="margin:26px 0 0;font-size:12px;line-height:1.5;color:#6b7280;">Este e-mail foi enviado para autenticar sua conta na Comvaga.</p>
+                <p style="margin:26px 0 0;font-size:12px;line-height:1.5;color:#6b7280;">Este e-mail foi enviado para autenticar sua conta na ${escapeHtml(DEFAULT_FROM_NAME)}.</p>
               </td>
             </tr>
           </table>
@@ -257,7 +265,7 @@ function messageForAction(
     return {
       to,
       action,
-      subject: `${token || 'Codigo'} é seu código de acesso`,
+      subject: `${token || 'Código'} é seu código de acesso`,
       preheader: 'Use este código para confirmar sua identidade.',
       html: authEmailHtml(
         'Código de acesso',
@@ -354,20 +362,23 @@ async function sendWithOneSignal(message: EmailMessage, _idempotencyKey: string)
   const responseText = await response.text().catch(() => '');
   let notificationId: unknown = null;
   let oneSignalErrors: unknown = null;
+  let hasOneSignalErrors = false;
   try {
     const responseBody = responseText ? JSON.parse(responseText) as Record<string, unknown> : {};
     notificationId = responseBody.id || null;
     oneSignalErrors = responseBody.errors || null;
+    hasOneSignalErrors = hasProviderErrors(oneSignalErrors);
   } catch {
     notificationId = null;
     oneSignalErrors = null;
+    hasOneSignalErrors = false;
   }
 
-  if (!response.ok || oneSignalErrors) {
+  if (!response.ok || hasOneSignalErrors) {
     console.error('onesignal auth email failed:', {
       action: message.action,
       status: response.status,
-      hasErrors: Boolean(oneSignalErrors),
+      hasErrors: hasOneSignalErrors,
     });
     throw new Error(`onesignal_email_failed_${response.status}`);
   }
