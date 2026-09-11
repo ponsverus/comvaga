@@ -209,7 +209,7 @@ export const ptBR = {
     },
     billing_cancel_not_cancelable: {
       title: 'Cancelamento indisponível',
-      body: 'Este plano já se encontra cancelado ou sem pagamentos pendentes.',
+      body: 'O cancelamento não está disponível para este plano no estado atual.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
