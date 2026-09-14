@@ -223,6 +223,21 @@ export async function cancelAsaasSubscription(negocioId) {
   if (!data?.billing_status) throw new Error('billing_status_missing');
   return data;
 }
+export async function cancelAsaasPlanDowngrade(negocioId) {
+  const { data, error } = await withTimeout(
+    supabase.functions.invoke('asaas-cancel-downgrade', {
+      body: {
+        negocio_id: negocioId,
+      },
+    }),
+    25000,
+    'asaas-cancel-downgrade'
+  );
+
+  if (error) throw await normalizeFunctionError(error);
+  if (!data?.billing_status) throw new Error('billing_status_missing');
+  return data;
+}
 
 export async function fetchPartnerNegocioIds(userId) {
   const { data, error } = await withTimeout(
