@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
+  cancelAsaasPlanDowngrade,
   cancelAsaasSubscription,
   createAsaasCheckout,
   fetchBillingPlans,
@@ -124,6 +125,17 @@ function getPlanCancelErrorMessage(error) {
   return messageBody('dashboard.billing_cancel_error');
 }
 
+function getDowngradeCancelErrorMessage(error) {
+  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  if (raw.includes('plan_downgrade_not_scheduled')) {
+    return messageBody('dashboard.billing_cancel_downgrade_unavailable');
+  }
+  if (raw.includes('provider_sync_in_progress')) {
+    return messageBody('dashboard.billing_provider_sync_in_progress');
+  }
+  return messageBody('dashboard.billing_cancel_downgrade_error');
+}
+
 function getPlanChangeErrorMessage(error) {
   const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
   if (raw.includes('future_plan_professional_limit_reached')) {
@@ -206,6 +218,7 @@ export default function PlanosSection({
   const [plansLoading, setPlansLoading] = useState(true);
   const [savingPlan, setSavingPlan] = useState('');
   const [cancelingPlan, setCancelingPlan] = useState('');
+  const [cancelingDowngrade, setCancelingDowngrade] = useState(false);
   const [error, setError] = useState('');
 
   const loadPlans = useCallback(async () => {
@@ -243,6 +256,8 @@ export default function PlanosSection({
   const currentStatusLabel = statusText(billingStatus);
   const canceledOrCancellationScheduled = isCanceledOrCancellationScheduled(billingStatus);
   const planChangeScheduled = Boolean(billingStatus?.plan_change_scheduled);
+  const providerSyncStatus = String(billingStatus?.provider_sync_status || 'synced').toLowerCase();
+  const providerSyncPending = Boolean(billingStatus?.provider_sync_pending) && providerSyncStatus !== 'synced';
   const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
   const pendingPlanLabel = billingStatus?.pending_plan_name || billingStatus?.pending_plan_code || '';
   const accessEndDate = getAccessEndDate(billingStatus);
@@ -329,6 +344,35 @@ export default function PlanosSection({
     }
   };
 
+  const handleCancelDowngrade = async () => {
+    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade) return;
+    const confirmed = await feedback.confirm('dashboard.billing_cancel_downgrade_confirm');
+    if (!confirmed) return;
+
+    setCancelingDowngrade(true);
+    setError('');
+    try {
+      const result = await cancelAsaasPlanDowngrade(negocioId);
+      if (result?.billing_status) {
+        onBillingStatusChange?.(result.billing_status);
+      } else {
+        await reloadBillingStatus?.();
+      }
+    } catch (err) {
+      console.error('cancelAsaasPlanDowngrade error:', err);
+      const requestKey = getRequestErrorKey(err);
+      if (requestKey === 'alerts.request_timeout') {
+        setError(messageBody('dashboard.billing_cancel_timeout'));
+      } else if (requestKey === 'alerts.rate_limit_exceeded') {
+        setError(messageBody('alerts.rate_limit_exceeded'));
+      } else {
+        setError(getDowngradeCancelErrorMessage(err));
+      }
+    } finally {
+      setCancelingDowngrade(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-14 text-gray-500">
@@ -356,6 +400,11 @@ export default function PlanosSection({
               {pendingPlanDate ? <span> EM {pendingPlanDate}</span> : null}
             </span>
           )}
+          {providerSyncPending && (
+            <span className={providerSyncStatus === 'failed' ? 'text-red-300' : 'text-yellow-200'}>
+              SINCRONIZANDO PAGAMENTO
+            </span>
+          )}
         </div>
       </div>
 
@@ -375,6 +424,7 @@ export default function PlanosSection({
           const currentStatus = String(billingStatus?.status || '').toLowerCase();
           const freeAccessOpen = currentStatus === 'trialing';
           const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
+          const canCancelDowngrade = active && Boolean(billingStatus?.can_cancel_plan_downgrade);
           const canCancel = active
             && !selectedCanceledOrCancellationScheduled
             && Boolean(billingStatus?.can_cancel_subscription);
@@ -457,7 +507,7 @@ export default function PlanosSection({
               <div className="flex flex-col gap-3">
                 <button
                   type="button"
-                  disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || planLimitBlocked}
+                  disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || cancelingDowngrade || planLimitBlocked}
                   onClick={() => handleSelectPlan(plan.code)}
                   className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                     activeFreeAccess
@@ -484,14 +534,25 @@ export default function PlanosSection({
                               : content.buttonText}
                 </button>
 
+                {canCancelDowngrade && (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade}
+                    onClick={handleCancelDowngrade}
+                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {cancelingDowngrade ? 'Cancelando downgrade...' : 'Cancelar downgrade'}
+                  </button>
+                )}
+
                 {canCancel && (
                   <button
                     type="button"
-                    disabled={!!savingPlan || !!cancelingPlan}
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade}
                     onClick={() => handleCancelPlan(plan.code)}
                     className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {canceling ? 'Cancelando...' : 'Cancelar'}
+                    {canceling ? 'Cancelando...' : 'Cancelar plano'}
                   </button>
                 )}
               </div>
