@@ -7,5 +7,11 @@ verify_jwt = false
 [functions.asaas-cancel-subscription]
 verify_jwt = true
 
-[functions.auth-send-email-onesignal]
+[functions.auth-email]
+verify_jwt = false
+
+[functions.asaas-cancel-downgrade]
+verify_jwt = true
+
+[functions.process-billing-events]
 verify_jwt = false
