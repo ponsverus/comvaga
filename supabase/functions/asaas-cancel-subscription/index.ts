@@ -47,7 +47,7 @@ async function cancelAsaasSubscription(subscriptionId: string) {
     headers: {
       access_token: apiKey,
       accept: 'application/json',
-      'User-Agent': 'ComVaga/1.0',
+      'User-Agent': 'Comvaga/1.0',
     },
   });
 
