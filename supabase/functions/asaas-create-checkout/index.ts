@@ -1,4 +1,5 @@
 import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { runImmediateSubscriptionProviderSync } from '../_shared/billing-provider-sync.ts';
 import { createAdminClient, createUserClient } from '../_shared/supabase.ts';
 
 type BillingPlan = {
@@ -70,6 +71,15 @@ function formatMoney(cents: number) {
   return `R$ ${(Number(cents || 0) / 100).toFixed(2).replace('.', ',')}`;
 }
 
+function checkoutExpiresAtIso() {
+  const minutes = Number(Deno.env.get('ASAAS_CHECKOUT_EXPIRES_MINUTES') || 1440);
+  return new Date(Date.now() + minutes * 60_000).toISOString();
+}
+
+function isKnownAsaasRejection(message: string) {
+  return message.startsWith('asaas_checkout_failed');
+}
+
 function proratedUpgradeCents(currentPriceCents: number, nextPriceCents: number, periodStart: unknown, periodEnd: unknown) {
   const diff = Math.max(0, Number(nextPriceCents || 0) - Number(currentPriceCents || 0));
   if (diff <= 0) return 0;
@@ -126,6 +136,101 @@ async function updateAsaasSubscriptionValue(subscriptionId: string, plan: Billin
     externalReference: `comvaga-subscription:${plan.code}`,
     description: `Plano ${plan.name}`,
   }, 'PUT');
+}
+
+function asText(value: unknown) {
+  return String(value || '').trim();
+}
+
+async function cancelAsaasCheckout(checkoutId: string) {
+  return callAsaas(`/checkouts/${encodeURIComponent(checkoutId)}/cancel`, {}, 'POST');
+}
+
+async function cancelBlockingCheckoutSession(
+  admin: ReturnType<typeof createAdminClient>,
+  beginData: Record<string, unknown>,
+  negocioId: string,
+  action: string,
+  requestedPlanCode: string,
+) {
+  const sessionId = asText(beginData?.session_id);
+  if (!sessionId || asText(beginData?.result) !== 'conflict') return false;
+
+  const { data: session, error: sessionError } = await admin
+    .from('billing_checkout_sessions')
+    .select('id, status, provider, provider_checkout_id, plan_code, action, amount_cents, metadata')
+    .eq('id', sessionId)
+    .eq('negocio_id', negocioId)
+    .eq('action', action)
+    .maybeSingle();
+  if (sessionError) throw sessionError;
+
+  if (
+    !session
+    || session.status !== 'active'
+    || String(session.provider || '').toLowerCase() !== ASAAS_PROVIDER
+    || !session.provider_checkout_id
+  ) {
+    return false;
+  }
+
+  const providerResponse = await cancelAsaasCheckout(String(session.provider_checkout_id));
+  const metadata = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+  const { data: canceled, error: updateError } = await admin
+    .from('billing_checkout_sessions')
+    .update({
+      status: 'canceled',
+      last_error: 'checkout_replaced_by_new_selection',
+      metadata: {
+        ...metadata,
+        replaced_by_new_selection: {
+          at: new Date().toISOString(),
+          from_plan_code: session.plan_code,
+          to_plan_code: requestedPlanCode,
+          action,
+          provider_response: providerResponse,
+        },
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', session.id)
+    .eq('status', 'active')
+    .select('id')
+    .maybeSingle();
+  if (updateError) throw updateError;
+
+  return Boolean(canceled?.id);
+}
+
+async function beginBillingCheckoutSession(
+  admin: ReturnType<typeof createAdminClient>,
+  args: {
+    p_negocio_id: string;
+    p_plan_code: string;
+    p_action: string;
+    p_amount_cents: number;
+    p_created_by: string;
+    p_expires_at: string;
+  },
+) {
+  const { data: firstBeginData, error: firstBeginError } = await admin.rpc('begin_billing_checkout_session', args);
+  if (firstBeginError) throw firstBeginError;
+
+  const replaced = await cancelBlockingCheckoutSession(
+    admin,
+    firstBeginData || {},
+    args.p_negocio_id,
+    args.p_action,
+    args.p_plan_code,
+  );
+  if (!replaced) return firstBeginData;
+
+  const { data: secondBeginData, error: secondBeginError } = await admin.rpc('begin_billing_checkout_session', {
+    ...args,
+    p_expires_at: checkoutExpiresAtIso(),
+  });
+  if (secondBeginError) throw secondBeginError;
+  return secondBeginData;
 }
 
 Deno.serve(async (req) => {
@@ -221,24 +326,30 @@ Deno.serve(async (req) => {
 
       const typedCurrentPlan = currentPlan as BillingPlan;
       if (selectedPlan.sort_order < typedCurrentPlan.sort_order) {
-        let providerPayload: Record<string, unknown> = {};
-        if (String(subscription?.provider || '').toLowerCase() === ASAAS_PROVIDER && providerSubscriptionId) {
-          providerPayload = {
-            provider_response: await updateAsaasSubscriptionValue(providerSubscriptionId, selectedPlan),
-          };
-        }
-
         const { data: downgradeStatus, error: downgradeError } = await admin.rpc('schedule_business_plan_downgrade', {
           p_negocio_id: negocioId,
           p_plan_code: selectedPlan.code,
           p_actor_id: authData.user.id,
-          p_provider_payload: providerPayload,
+          p_provider_payload: {
+            source: 'owner_dashboard',
+            requested_operation: 'apply_downgrade',
+          },
         });
         if (downgradeError) throw downgradeError;
 
+        const syncResult = await runImmediateSubscriptionProviderSync(
+          admin,
+          downgradeStatus,
+          'downgrade_schedule',
+        );
+        if (syncResult.providerSyncError) {
+          console.error('downgrade provider sync deferred:', syncResult.providerSyncError);
+        }
+
         return jsonResponse({
           action: 'downgrade_scheduled',
-          billing_status: downgradeStatus,
+          billing_status: syncResult.billingStatus || downgradeStatus,
+          provider_sync_deferred: Boolean(syncResult.providerSyncError),
         }, 200, req);
       }
 
@@ -287,8 +398,36 @@ Deno.serve(async (req) => {
           }, 200, req);
         }
 
+        const beginData = await beginBillingCheckoutSession(admin, {
+          p_negocio_id: negocioId,
+          p_plan_code: selectedPlan.code,
+          p_action: 'upgrade_proration',
+          p_amount_cents: proratedCents,
+          p_created_by: authData.user.id,
+          p_expires_at: checkoutExpiresAtIso(),
+        });
+
+        if (beginData?.result === 'reused') {
+          return jsonResponse({
+            action: 'upgrade_proration_checkout',
+            checkout_id: beginData.checkout_id,
+            checkout_url: beginData.checkout_url,
+            billing_status: statusData,
+            prorated_price_cents: proratedCents,
+            reused: true,
+          }, 200, req);
+        }
+        if (beginData?.result !== 'created') {
+          return jsonResponse({
+            error: `checkout_session_${beginData?.result || 'unavailable'}`,
+            billing_status: statusData,
+          }, 409, req);
+        }
+
+        const sessionId = String(beginData.session_id);
+        const externalReference = String(beginData.external_reference);
+
         const siteUrl = publicSiteUrl(req);
-        const externalReference = `comvaga:${negocioId}:${selectedPlan.code}:upgrade`;
         const checkoutPayload: Record<string, unknown> = {
           billingTypes: ['CREDIT_CARD'],
           chargeTypes: ['DETACHED'],
@@ -309,47 +448,60 @@ Deno.serve(async (req) => {
         };
         debugPayload = checkoutPayload;
 
-        const checkout = await callAsaas('/checkouts', checkoutPayload);
-        if (!checkout?.id) throw new Error('asaas_checkout_without_id');
+        try {
+          const checkout = await callAsaas('/checkouts', checkoutPayload);
+          if (!checkout?.id) throw new Error('asaas_checkout_without_id');
 
-        const checkoutEventPayload = {
-          checkout,
-          checkout_request: {
-            action: 'upgrade_proration',
-            externalReference,
-            currentPlanCode: typedCurrentPlan.code,
-            planCode: selectedPlan.code,
-            currentPlanPriceCents: typedCurrentPlan.price_cents,
-            currentPeriodPriceCents,
-            targetPlanPriceCents: selectedPlan.price_cents,
-            proratedPriceCents: proratedCents,
-            proratedPriceLabel: formatMoney(proratedCents),
-            currentPeriodStart: periodStart,
-            currentPeriodEnd: periodEnd,
-            customer: existingCustomerId,
-            providerSubscriptionId,
-          },
-        };
-        const checkoutEventId = `checkout:${checkout.id}`;
-        const { error: eventError } = await admin.rpc('record_gateway_event', {
-          p_provider: ASAAS_PROVIDER,
-          p_event_type: 'CHECKOUT_CREATED',
-          p_payload: checkoutEventPayload,
-          p_provider_event_id: checkoutEventId,
-          p_negocio_id: negocioId,
-          p_provider_customer_id: existingCustomerId,
-          p_provider_subscription_id: providerSubscriptionId || null,
-          p_provider_status: checkout?.status || null,
-        });
-        if (eventError) throw eventError;
+          const checkoutUrl = String(checkout.url || checkout.link || checkoutUrlFor(checkout.id));
+          const { error: completeError } = await admin.rpc('complete_billing_checkout_session', {
+            p_session_id: sessionId,
+            p_provider_checkout_id: String(checkout.id),
+            p_checkout_url: checkoutUrl,
+            p_provider_status: checkout?.status || null,
+            p_provider_customer_id: existingCustomerId,
+            p_provider_subscription_id: providerSubscriptionId,
+            p_payload: {
+              checkout,
+              checkout_request: {
+                action: 'upgrade_proration',
+                externalReference,
+                currentPlanCode: typedCurrentPlan.code,
+                planCode: selectedPlan.code,
+                currentPlanPriceCents: typedCurrentPlan.price_cents,
+                currentPeriodPriceCents,
+                targetPlanPriceCents: selectedPlan.price_cents,
+                proratedPriceCents: proratedCents,
+                proratedPriceLabel: formatMoney(proratedCents),
+                currentPeriodStart: periodStart,
+                currentPeriodEnd: periodEnd,
+                customer: existingCustomerId,
+                providerSubscriptionId,
+              },
+            },
+          });
+          if (completeError) throw completeError;
 
-        return jsonResponse({
-          action: 'upgrade_proration_checkout',
-          checkout_id: checkout.id,
-          checkout_url: checkout.url || checkout.link || checkoutUrlFor(checkout.id),
-          billing_status: statusData,
-          prorated_price_cents: proratedCents,
-        }, 200, req);
+          return jsonResponse({
+            action: 'upgrade_proration_checkout',
+            checkout_id: checkout.id,
+            checkout_url: checkoutUrl,
+            billing_status: statusData,
+            prorated_price_cents: proratedCents,
+          }, 200, req);
+        } catch (checkoutError) {
+          const message = checkoutError?.message || 'checkout_failed';
+          await admin.rpc('fail_billing_checkout_session', {
+            p_session_id: sessionId,
+            p_error: message,
+            p_outcome_unknown: !isKnownAsaasRejection(String(message)),
+            p_payload: { checkoutPayload },
+          }).then(({ error: failError }) => {
+            if (failError) console.error('fail_billing_checkout_session failed:', failError);
+          }).catch((failLoggingError) => {
+            console.error('fail_billing_checkout_session threw:', failLoggingError);
+          });
+          return jsonResponse({ error: message }, 400, req);
+        }
       }
     }
 
@@ -366,14 +518,40 @@ Deno.serve(async (req) => {
       }, 409, req);
     }
 
+    const beginDataSub = await beginBillingCheckoutSession(admin, {
+      p_negocio_id: negocioId,
+      p_plan_code: selectedPlan.code,
+      p_action: 'subscription',
+      p_amount_cents: selectedPlan.price_cents,
+      p_created_by: authData.user.id,
+      p_expires_at: checkoutExpiresAtIso(),
+    });
+
+    if (beginDataSub?.result === 'reused') {
+      return jsonResponse({
+        checkout_id: beginDataSub.checkout_id,
+        checkout_url: beginDataSub.checkout_url,
+        billing_status: statusData,
+        reused: true,
+      }, 200, req);
+    }
+    if (beginDataSub?.result !== 'created') {
+      return jsonResponse({
+        error: `checkout_session_${beginDataSub?.result || 'unavailable'}`,
+        billing_status: statusData,
+      }, 409, req);
+    }
+
+    const sessionIdSub = String(beginDataSub.session_id);
+    const externalReferenceSub = String(beginDataSub.external_reference);
+
     const siteUrl = publicSiteUrl(req);
-    const externalReference = `comvaga:${negocioId}:${selectedPlan.code}`;
     const nextDueDate = asAsaasDateTime(new Date());
     const checkoutPayload: Record<string, unknown> = {
       billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
       minutesToExpire: Number(Deno.env.get('ASAAS_CHECKOUT_EXPIRES_MINUTES') || 1440),
-      externalReference,
+      externalReference: externalReferenceSub,
       ...(existingCustomerId ? { customer: existingCustomerId } : {}),
       callback: {
         successUrl: `${siteUrl}/dashboard?tab=planos&billing=success`,
@@ -393,36 +571,49 @@ Deno.serve(async (req) => {
     };
     debugPayload = checkoutPayload;
 
-    const checkout = await callAsaas('/checkouts', checkoutPayload);
-    if (!checkout?.id) throw new Error('asaas_checkout_without_id');
+    try {
+      const checkout = await callAsaas('/checkouts', checkoutPayload);
+      if (!checkout?.id) throw new Error('asaas_checkout_without_id');
 
-    const checkoutEventPayload = {
-      checkout,
-      checkout_request: {
-        externalReference,
-        planCode: selectedPlan.code,
-        nextDueDate,
-        customer: existingCustomerId,
-      },
-    };
-    const checkoutEventId = `checkout:${checkout.id}`;
-    const { error: eventError } = await admin.rpc('record_gateway_event', {
-      p_provider: ASAAS_PROVIDER,
-      p_event_type: 'CHECKOUT_CREATED',
-      p_payload: checkoutEventPayload,
-      p_provider_event_id: checkoutEventId,
-      p_negocio_id: negocioId,
-      p_provider_customer_id: existingCustomerId,
-      p_provider_subscription_id: null,
-      p_provider_status: checkout?.status || null,
-    });
-    if (eventError) throw eventError;
+      const checkoutUrlSub = String(checkout.url || checkout.link || checkoutUrlFor(checkout.id));
+      const { error: completeErrorSub } = await admin.rpc('complete_billing_checkout_session', {
+        p_session_id: sessionIdSub,
+        p_provider_checkout_id: String(checkout.id),
+        p_checkout_url: checkoutUrlSub,
+        p_provider_status: checkout?.status || null,
+        p_provider_customer_id: existingCustomerId,
+        p_provider_subscription_id: null,
+        p_payload: {
+          checkout,
+          checkout_request: {
+            externalReference: externalReferenceSub,
+            planCode: selectedPlan.code,
+            nextDueDate,
+            customer: existingCustomerId,
+          },
+        },
+      });
+      if (completeErrorSub) throw completeErrorSub;
 
-    return jsonResponse({
-      checkout_id: checkout.id,
-      checkout_url: checkout.url || checkout.link || checkoutUrlFor(checkout.id),
-      billing_status: statusData,
-    }, 200, req);
+      return jsonResponse({
+        checkout_id: checkout.id,
+        checkout_url: checkoutUrlSub,
+        billing_status: statusData,
+      }, 200, req);
+    } catch (checkoutErrorSub) {
+      const messageSub = checkoutErrorSub?.message || 'checkout_failed';
+      await admin.rpc('fail_billing_checkout_session', {
+        p_session_id: sessionIdSub,
+        p_error: messageSub,
+        p_outcome_unknown: !isKnownAsaasRejection(String(messageSub)),
+        p_payload: { checkoutPayload },
+      }).then(({ error: failErrorSub }) => {
+        if (failErrorSub) console.error('fail_billing_checkout_session failed:', failErrorSub);
+      }).catch((failLoggingErrorSub) => {
+        console.error('fail_billing_checkout_session threw:', failLoggingErrorSub);
+      });
+      return jsonResponse({ error: messageSub }, 400, req);
+    }
   } catch (error) {
     console.error('asaas-create-checkout failed:', error);
     try {
