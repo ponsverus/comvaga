@@ -109,7 +109,7 @@ async function callAsaas(path: string, body: Record<string, unknown>, method = '
       access_token: apiKey,
       accept: 'application/json',
       'content-type': 'application/json',
-      'User-Agent': 'ComVaga/1.0',
+      'User-Agent': 'Comvaga/1.0',
     },
     body: JSON.stringify(body),
   });
