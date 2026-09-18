@@ -210,8 +210,8 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_checkout_conflict: {
-      title: 'Já existe um checkout aberto',
-      body: 'Existe um checkout válido aberto para outro pedido. Finalize este pagamento ou aguarde ele expirar antes de gerar um checkout diferente.',
+      title: 'Checkout em andamento para outro plano',
+      body: 'Já existe um processo de checkout em andamento para outro plano. Aguarde ele ser concluído ou expirar antes de tentar um plano diferente.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
