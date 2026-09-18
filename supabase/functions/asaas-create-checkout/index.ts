@@ -202,6 +202,14 @@ async function cancelBlockingCheckoutSession(
   return Boolean(canceled?.id);
 }
 
+async function fetchBillingStatus(userClient: ReturnType<typeof createUserClient>, negocioId: string) {
+  const { data, error } = await userClient.rpc('get_business_billing_status', {
+    p_negocio_id: negocioId,
+  });
+  if (error) throw error;
+  return data;
+}
+
 async function beginBillingCheckoutSession(
   admin: ReturnType<typeof createAdminClient>,
   args: {
@@ -285,10 +293,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: statusData, error: statusError } = await userClient.rpc('get_business_billing_status', {
-      p_negocio_id: negocioId,
-    });
-    if (statusError) throw statusError;
+    const statusData = await fetchBillingStatus(userClient, negocioId);
 
     const { data: subscription, error: subscriptionCustomerError } = await admin
       .from('business_subscriptions')
@@ -481,11 +486,13 @@ Deno.serve(async (req) => {
           });
           if (completeError) throw completeError;
 
+          const refreshedStatus = await fetchBillingStatus(userClient, negocioId);
+
           return jsonResponse({
             action: 'upgrade_proration_checkout',
             checkout_id: checkout.id,
             checkout_url: checkoutUrl,
-            billing_status: statusData,
+            billing_status: refreshedStatus,
             prorated_price_cents: proratedCents,
           }, 200, req);
         } catch (checkoutError) {
@@ -595,10 +602,12 @@ Deno.serve(async (req) => {
       });
       if (completeErrorSub) throw completeErrorSub;
 
+      const refreshedStatusSub = await fetchBillingStatus(userClient, negocioId);
+
       return jsonResponse({
         checkout_id: checkout.id,
         checkout_url: checkoutUrlSub,
-        billing_status: statusData,
+        billing_status: refreshedStatusSub,
       }, 200, req);
     } catch (checkoutErrorSub) {
       const messageSub = checkoutErrorSub?.message || 'checkout_failed';
