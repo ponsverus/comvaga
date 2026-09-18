@@ -23,7 +23,6 @@ import TermsOfUse             from './pages/TermsOfUse';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
-const SESSION_REFRESH_MARGIN_SECONDS = 60;
 
 function isRecoverableLazyLoadError(error) {
   const text = `${error?.name || ''} ${error?.message || ''}`.toLowerCase();
@@ -74,9 +73,18 @@ const SelecionarNegocio         = lazyRoute(() => import('./pages/SelecionarNego
 const SelecionarNegocioParceiro = lazyRoute(() => import('./pages/SelecionarNegocioParceiro'), 'SelecionarNegocioParceiro');
 const SignupProfessionalResume  = lazyRoute(() => import('./pages/SignupProfessionalResume'), 'SignupProfessionalResume');
 
+function errorChainText(error, depth = 0) {
+  if (!error || depth > 3) return '';
+  const current = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''} ${error?.code || ''} ${error?.status || ''}`;
+  return `${current} ${errorChainText(error?.cause, depth + 1)}`;
+}
+
 function isAuthJwtError(error) {
-  const text = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''} ${error?.code || ''}`.toLowerCase();
+  const text = errorChainText(error).toLowerCase();
   return Number(error?.status) === 401
+    || Number(error?.cause?.status) === 401
+    || text.includes('pgrst301')
+    || text.includes('pgrst303')
     || text.includes('jwt')
     || text.includes('invalid token')
     || text.includes('not authenticated')
@@ -85,16 +93,8 @@ function isAuthJwtError(error) {
     || text.includes('session_not_found');
 }
 
-function isSessionExpiring(session) {
-  const expiresAt = Number(session?.expires_at || 0);
-  if (!expiresAt) return false;
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  return expiresAt <= nowSeconds + SESSION_REFRESH_MARGIN_SECONDS;
-}
-
-async function ensureFreshSession(session) {
+async function refreshStoredSession(session) {
   if (!session?.user?.id) return null;
-  if (!isSessionExpiring(session)) return session;
 
   const { data, error } = await supabase.auth.refreshSession(session);
   if (error) throw error;
@@ -264,6 +264,7 @@ export default function App() {
   const aliveRef        = useRef(true);
   const loadedUserRef   = useRef(null);
   const suppressAuthRef = useRef(false);
+  const profileLoadingUserRef = useRef(null);
   const inRecoveryRef   = useRef(inRecovery);
 
   const isLoggedIn = !!user;
@@ -291,6 +292,8 @@ export default function App() {
 
   const loadProfile = useCallback(async (sessionUser, currentSession = null) => {
     if (!sessionUser?.id) return null;
+    if (profileLoadingUserRef.current === sessionUser.id) return null;
+    profileLoadingUserRef.current = sessionUser.id;
 
     safeSet(() => {
       setTypeLoading(true);
@@ -302,9 +305,15 @@ export default function App() {
 
     try {
       const sessionToCheck = currentSession || (await supabase.auth.getSession()).data?.session;
-      const freshSession = await ensureFreshSession(sessionToCheck);
-      const activeUser = freshSession?.user || sessionUser;
-      if (!activeUser?.id) throw new Error('not_authenticated');
+      suppressAuthRef.current = true;
+      const freshSession = await refreshStoredSession(sessionToCheck);
+      suppressAuthRef.current = false;
+
+      if (!freshSession?.access_token || !freshSession?.user?.id) {
+        throw new Error('not_authenticated');
+      }
+
+      const activeUser = freshSession.user;
 
       if (activeUser.id !== sessionUser.id) {
         throw new Error('auth_session_user_mismatch');
@@ -337,6 +346,7 @@ export default function App() {
       });
       return profile;
     } catch (e) {
+      suppressAuthRef.current = false;
       if (isAuthJwtError(e)) {
         try {
           await supabase.auth.signOut({ scope: 'local' });
@@ -367,6 +377,10 @@ export default function App() {
       console.error('Profile load error:', e);
       return null;
     } finally {
+      if (profileLoadingUserRef.current === sessionUser.id) {
+        profileLoadingUserRef.current = null;
+      }
+      suppressAuthRef.current = false;
       safeSet(() => setTypeLoading(false));
     }
   }, [safeSet]);
