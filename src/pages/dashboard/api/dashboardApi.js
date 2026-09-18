@@ -1,5 +1,6 @@
 import { supabase } from '../../../supabase';
 import { withTimeout } from '../../../utils/withTimeout';
+import { isAuthSessionError, refreshCurrentSession } from '../../../utils/authSession';
 
 function isAdminRemovedProfessional(row) {
   return row?.status === 'excluido';
@@ -37,6 +38,15 @@ async function normalizeFunctionError(error) {
   nextError.context = response;
   nextError.payload = payload;
   return nextError;
+}
+
+async function withAuthRetry(requestFactory, ms, label) {
+  let result = await withTimeout(requestFactory(), ms, label);
+  if (!isAuthSessionError(result?.error)) return result;
+
+  await refreshCurrentSession();
+  result = await withTimeout(requestFactory(), ms, `${label}:auth-retry`);
+  return result;
 }
 
 export function getPublicUrl(bucket, path) {
@@ -85,7 +95,7 @@ export async function fetchOfficialDate(rpcNames) {
 
   for (const rpcName of rpcNames) {
     for (let attempt = 0; attempt < 2; attempt++) {
-      const { data, error } = await withTimeout(supabase.rpc(rpcName), 6000, `data-oficial:${rpcName}`);
+      const { data, error } = await withAuthRetry(() => supabase.rpc(rpcName), 6000, `data-oficial:${rpcName}`);
       if (error) {
         lastErr = error;
         continue;
@@ -108,8 +118,8 @@ export async function fetchOfficialDate(rpcNames) {
 }
 
 export async function fetchOwnerBusinessCount(userId) {
-  const { count, error } = await withTimeout(
-    supabase
+  const { count, error } = await withAuthRetry(
+    () => supabase
       .from('negocios')
       .select('id', { count: 'exact', head: true })
       .eq('owner_id', userId),
@@ -122,8 +132,8 @@ export async function fetchOwnerBusinessCount(userId) {
 }
 
 export async function fetchNegocioById(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('negocios')
       .select('*')
       .eq('id', negocioId)
@@ -137,8 +147,8 @@ export async function fetchNegocioById(negocioId) {
 }
 
 export async function fetchOwnerNegocio(ownerId) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('negocios')
       .select('*')
       .eq('owner_id', ownerId)
@@ -152,8 +162,8 @@ export async function fetchOwnerNegocio(ownerId) {
 }
 
 export async function fetchBillingPlans() {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('billing_plans')
       .select('code, name, price_cents, currency, max_profissionais, trial_days, grace_days, sort_order')
       .eq('active', true)
@@ -167,8 +177,8 @@ export async function fetchBillingPlans() {
 }
 
 export async function fetchBusinessBillingStatus(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_business_billing_status', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_business_billing_status', {
       p_negocio_id: negocioId,
     }),
     6000,
@@ -179,8 +189,8 @@ export async function fetchBusinessBillingStatus(negocioId) {
 }
 
 export async function setBusinessPlan(negocioId, planCode) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('set_business_plan', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('set_business_plan', {
       p_negocio_id: negocioId,
       p_plan_code: planCode,
     }),
@@ -192,8 +202,8 @@ export async function setBusinessPlan(negocioId, planCode) {
 }
 
 export async function createAsaasCheckout(negocioId, planCode) {
-  const { data, error } = await withTimeout(
-    supabase.functions.invoke('asaas-create-checkout', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-create-checkout', {
       body: {
         negocio_id: negocioId,
         plan_code: planCode,
@@ -209,8 +219,8 @@ export async function createAsaasCheckout(negocioId, planCode) {
 }
 
 export async function cancelAsaasSubscription(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.functions.invoke('asaas-cancel-subscription', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-cancel-subscription', {
       body: {
         negocio_id: negocioId,
       },
@@ -224,8 +234,8 @@ export async function cancelAsaasSubscription(negocioId) {
   return data;
 }
 export async function cancelAsaasPlanDowngrade(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.functions.invoke('asaas-cancel-downgrade', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-cancel-downgrade', {
       body: {
         negocio_id: negocioId,
       },
@@ -240,8 +250,8 @@ export async function cancelAsaasPlanDowngrade(negocioId) {
 }
 
 export async function fetchPartnerNegocioIds(userId) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('profissionais')
       .select('negocio_id, created_at')
       .eq('user_id', userId)
@@ -256,27 +266,31 @@ export async function fetchPartnerNegocioIds(userId) {
 }
 
 export async function fetchGaleria(negocioId, { limit = null, offset = 0 } = {}) {
-  let query = supabase
-    .from('galerias')
-    .select('id, path, ordem')
-    .eq('negocio_id', negocioId)
-    .order('ordem', { ascending: true })
-    .order('created_at', { ascending: true });
+  const buildGaleriaQuery = () => {
+    let query = supabase
+      .from('galerias')
+      .select('id, path, ordem')
+      .eq('negocio_id', negocioId)
+      .order('ordem', { ascending: true })
+      .order('created_at', { ascending: true });
 
-  if (limit != null) {
-    const from = Math.max(0, Number(offset) || 0);
-    const to = from + Math.max(1, Number(limit) || 1) - 1;
-    query = query.range(from, to);
-  }
+    if (limit != null) {
+      const from = Math.max(0, Number(offset) || 0);
+      const to = from + Math.max(1, Number(limit) || 1) - 1;
+      query = query.range(from, to);
+    }
 
-  const { data, error } = await withTimeout(query, 6000, 'galerias-dashboard');
+    return query;
+  };
+
+  const { data, error } = await withAuthRetry(() => buildGaleriaQuery(), 6000, 'galerias-dashboard');
 
   return { data: data || [], error };
 }
 
 export async function fetchProfissionaisComStatus(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_profissionais_com_status', { p_negocio_id: negocioId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_profissionais_com_status', { p_negocio_id: negocioId }),
     6000,
     'profissionais-status'
   );
@@ -285,8 +299,8 @@ export async function fetchProfissionaisComStatus(negocioId) {
 }
 
 export async function removeProfissionalSeguramente(profissionalId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('remove_profissional_seguro', { p_profissional_id: profissionalId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('remove_profissional_seguro', { p_profissional_id: profissionalId }),
     6500,
     'remove-profissional'
   );
@@ -295,8 +309,8 @@ export async function removeProfissionalSeguramente(profissionalId) {
 }
 
 export async function removeNegocioSeguramente(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('remove_negocio_seguro', { p_negocio_id: negocioId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('remove_negocio_seguro', { p_negocio_id: negocioId }),
     6500,
     'remove-negocio'
   );
@@ -305,8 +319,8 @@ export async function removeNegocioSeguramente(negocioId) {
 }
 
 export async function removeEntregaSeguramente(entregaId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('remove_entrega_segura', { p_entrega_id: entregaId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('remove_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'remove-entrega'
   );
@@ -315,8 +329,8 @@ export async function removeEntregaSeguramente(entregaId) {
 }
 
 export async function inativarEntregaSeguramente(entregaId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('inativar_entrega_segura', { p_entrega_id: entregaId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('inativar_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'inativar-entrega'
   );
@@ -325,8 +339,8 @@ export async function inativarEntregaSeguramente(entregaId) {
 }
 
 export async function ativarEntregaSeguramente(entregaId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('ativar_entrega_segura', { p_entrega_id: entregaId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('ativar_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'ativar-entrega'
   );
@@ -335,8 +349,8 @@ export async function ativarEntregaSeguramente(entregaId) {
 }
 
 export async function aprovarParceiroProfissional(profissionalId, negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('aprovar_parceiro_profissional', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('aprovar_parceiro_profissional', {
       p_profissional_id: profissionalId,
       p_negocio_id: negocioId,
     }),
@@ -348,8 +362,8 @@ export async function aprovarParceiroProfissional(profissionalId, negocioId) {
 }
 
 export async function concluirAgendamentoProfissional(agendamentoId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('concluir_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('concluir_agendamento_profissional', { p_agendamento_id: agendamentoId }),
     6500,
     'concluir-agendamento'
   );
@@ -358,8 +372,8 @@ export async function concluirAgendamentoProfissional(agendamentoId) {
 }
 
 export async function cancelarAgendamentoProfissional(agendamentoId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('cancelar_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('cancelar_agendamento_profissional', { p_agendamento_id: agendamentoId }),
     6500,
     'cancelar-agendamento-profissional'
   );
@@ -374,8 +388,8 @@ export async function fetchEntregasPage({
   offset = 0,
 }) {
   if (!negocioId || !profissionalId) return { rows: [], totalCount: 0 };
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_entregas_dashboard_paginadas', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_entregas_dashboard_paginadas', {
       p_negocio_id: negocioId,
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
@@ -408,8 +422,8 @@ export async function fetchEntregasFirstPages({
   const ids = Array.isArray(profissionalIds) ? profissionalIds.filter(Boolean) : [];
   if (!negocioId || !ids.length) return [];
 
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_entregas_dashboard_primeiras_paginas', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_entregas_dashboard_primeiras_paginas', {
       p_negocio_id: negocioId,
       p_profissional_ids: ids,
       p_limit: Math.max(1, Number(limit) || 1),
@@ -438,8 +452,8 @@ export async function fetchAgendamentosNegocio({
   limit = null,
   cursor = null,
 }) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_agendamentos_negocio', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_agendamentos_negocio', {
       p_negocio_id: negocioId,
       p_profissional_ids: profissionalIds,
       p_data_inicio: dataInicio,
@@ -463,8 +477,8 @@ export async function fetchClientesDashboard({
   offset = 0,
   search = null,
 }) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_clientes_dashboard', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_clientes_dashboard', {
       p_negocio_id: negocioId,
       p_limit: limit,
       p_offset: offset,
@@ -493,8 +507,8 @@ export async function fetchDashboardOverview({
   };
   if (profissionalId) params.p_profissional_id = profissionalId;
 
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_dashboard_overview', params),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_dashboard_overview', params),
     7000,
     'dashboard-overview'
   );
@@ -513,8 +527,8 @@ export async function fetchDashboardOverview({
 }
 
 export async function fetchUserNome(userId) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('users')
       .select('nome')
       .eq('id', userId)
@@ -527,8 +541,8 @@ export async function fetchUserNome(userId) {
 }
 
 export async function insertProfissional(payload) {
-  const { error } = await withTimeout(
-    supabase.from('profissionais').insert([payload]),
+  const { error } = await withAuthRetry(
+    () => supabase.from('profissionais').insert([payload]),
     6000,
     'profissional-insert'
   );
@@ -536,8 +550,8 @@ export async function insertProfissional(payload) {
 }
 
 export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
-  const { error } = await withTimeout(
-    supabase.from('negocios').update(logoPatch).eq('id', negocioId).eq('owner_id', ownerId),
+  const { error } = await withAuthRetry(
+    () => supabase.from('negocios').update(logoPatch).eq('id', negocioId).eq('owner_id', ownerId),
     6000,
     'negocio-logo-update'
   );
@@ -545,8 +559,8 @@ export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
 }
 
 export async function updateNegocioInfo(negocioId, ownerId, payload) {
-  const { error } = await withTimeout(
-    supabase.from('negocios').update(payload).eq('id', negocioId).eq('owner_id', ownerId),
+  const { error } = await withAuthRetry(
+    () => supabase.from('negocios').update(payload).eq('id', negocioId).eq('owner_id', ownerId),
     6000,
     'negocio-info-update'
   );
@@ -554,8 +568,8 @@ export async function updateNegocioInfo(negocioId, ownerId, payload) {
 }
 
 export async function updateNegocioTema(negocioId, ownerId, tema) {
-  const { error } = await withTimeout(
-    supabase.from('negocios').update({ tema }).eq('id', negocioId).eq('owner_id', ownerId),
+  const { error } = await withAuthRetry(
+    () => supabase.from('negocios').update({ tema }).eq('id', negocioId).eq('owner_id', ownerId),
     6000,
     'negocio-tema-update'
   );
@@ -563,8 +577,8 @@ export async function updateNegocioTema(negocioId, ownerId, tema) {
 }
 
 export async function insertGaleriaItem(negocioId, path) {
-  const { error } = await withTimeout(
-    supabase.from('galerias').insert({ negocio_id: negocioId, path }),
+  const { error } = await withAuthRetry(
+    () => supabase.from('galerias').insert({ negocio_id: negocioId, path }),
     6000,
     'galeria-insert'
   );
@@ -572,8 +586,8 @@ export async function insertGaleriaItem(negocioId, path) {
 }
 
 export async function enqueueGaleriaOrphanDelete(negocioId, path) {
-  const { error } = await withTimeout(
-    supabase.rpc('enqueue_galeria_orphan_storage_delete', {
+  const { error } = await withAuthRetry(
+    () => supabase.rpc('enqueue_galeria_orphan_storage_delete', {
       p_negocio_id: negocioId,
       p_path: path,
     }),
@@ -584,8 +598,8 @@ export async function enqueueGaleriaOrphanDelete(negocioId, path) {
 }
 
 export async function deleteGaleriaItem(itemId) {
-  const { error } = await withTimeout(
-    supabase.from('galerias').delete().eq('id', itemId),
+  const { error } = await withAuthRetry(
+    () => supabase.from('galerias').delete().eq('id', itemId),
     6000,
     'galeria-delete'
   );
@@ -593,8 +607,8 @@ export async function deleteGaleriaItem(itemId) {
 }
 
 export async function insertEntrega(payload) {
-  const { error } = await withTimeout(
-    supabase.from('entregas').insert([payload]),
+  const { error } = await withAuthRetry(
+    () => supabase.from('entregas').insert([payload]),
     6000,
     'entrega-insert'
   );
@@ -602,8 +616,8 @@ export async function insertEntrega(payload) {
 }
 
 export async function updateEntregaById(entregaId, negocioId, payload) {
-  const { error } = await withTimeout(
-    supabase.from('entregas').update(payload).eq('id', entregaId).eq('negocio_id', negocioId),
+  const { error } = await withAuthRetry(
+    () => supabase.from('entregas').update(payload).eq('id', entregaId).eq('negocio_id', negocioId),
     6000,
     'entrega-update'
   );
@@ -611,8 +625,8 @@ export async function updateEntregaById(entregaId, negocioId, payload) {
 }
 
 export async function updateProfissionalStatus(profissionalId, negocioId, status, motivoInativo) {
-  const { error } = await withTimeout(
-    supabase
+  const { error } = await withAuthRetry(
+    () => supabase
       .from('profissionais')
       .update({
         status,
@@ -627,8 +641,8 @@ export async function updateProfissionalStatus(profissionalId, negocioId, status
 }
 
 export async function updateProfissionalComHorarios(profissionalId, payload) {
-  const { error } = await withTimeout(
-    supabase.rpc('update_profissional_com_horarios', {
+  const { error } = await withAuthRetry(
+    () => supabase.rpc('update_profissional_com_horarios', {
       p_profissional_id: profissionalId,
       p_nome: payload.nome,
       p_profissao: payload.profissao,

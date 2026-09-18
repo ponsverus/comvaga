@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ProfessionalIcon, UserIcon } from '../components/icons';
 import { LogOut, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
+import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../utils/authSession';
 
 function getPublicUrl(bucket, path) {
   if (!bucket || !path) return null;
@@ -42,21 +43,35 @@ export default function SelecionarNegocio({ user, onLogout, professionalRole = n
       return () => { active = false; };
     }
 
-    supabase
-      .from('negocios')
-      .select('id, nome, slug, logo_path, tipo_negocio, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: true })
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        await refreshCurrentSession();
+        const { data, error } = await supabase
+          .from('negocios')
+          .select('id, nome, slug, logo_path, tipo_negocio, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: true });
+
         if (!active) return;
-        if (!error) setNegocios(data || []);
+        if (error) throw error;
+        setNegocios(data || []);
         setLoading(false);
-      });
+      } catch (error) {
+        if (!active) return;
+        if (isAuthSessionError(error)) {
+          await signOutLocalSession();
+          navigate('/login', { replace: true });
+          return;
+        }
+        setNegocios([]);
+        setLoading(false);
+      }
+    })();
 
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [navigate, user?.id]);
 
   useEffect(() => {
     if (loading) return;
@@ -108,8 +123,8 @@ export default function SelecionarNegocio({ user, onLogout, professionalRole = n
 
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-10">
-          <h1 className="text-3xl font-normal mb-2 tracking-wide">QUAL NEGÓCIO?</h1>
-          <p className="text-gray-500 text-sm font-normal">SELECIONE O NEGÓCIO QUE DESEJA GERENCIAR</p>
+          <h1 className="text-3xl font-normal mb-2 tracking-wide">QUAL NEGÃ“CIO?</h1>
+          <p className="text-gray-500 text-sm font-normal">SELECIONE O NEGÃ“CIO QUE DESEJA GERENCIAR</p>
           </div>
 
           <div className="space-y-3 mb-6">

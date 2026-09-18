@@ -12,6 +12,7 @@ import {
   fetchProfissionaisComStatus,
 } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
+import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../../../utils/authSession';
 import { flattenEntregaPages } from '../../../utils/entregas';
 import { ptBR } from '../../../feedback/messages/ptBR';
 
@@ -110,7 +111,15 @@ export function useDashboardBootstrap({
   const hojeRef = useRef('');
   const loadDataRunRef = useRef(0);
 
+  const handleAuthSessionLost = useCallback(async () => {
+    await signOutLocalSession();
+    setError('Sessao expirada. Faca login novamente.');
+    setBootstrapState('error');
+    navigate('/login', { replace: true });
+  }, [navigate]);
+
   const fetchNowFromDb = useCallback(async () => {
+    await refreshCurrentSession();
     const payload = await fetchOfficialDate(rpcSequence);
     const date = String(payload.date || '');
     hojeRef.current = date;
@@ -412,7 +421,7 @@ export function useDashboardBootstrap({
         setGaleriaHasMore(false);
         setGaleriaLoadingMore(false);
         clearLastPartnerNegocioId(userId);
-        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : 'Você não tem acesso a este negócio.');
+        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : 'VocÃª nÃ£o tem acesso a este negÃ³cio.');
         setBootstrapState('error');
         return;
       }
@@ -460,6 +469,11 @@ export function useDashboardBootstrap({
       setBootstrapState('ready');
     } catch (e) {
       if (!isCurrentRun()) return;
+      if (isAuthSessionError(e)) {
+        await handleAuthSessionLost();
+        return;
+      }
+
       const requestKey = getRequestErrorKey(e);
       if (requestKey === 'alerts.request_timeout') {
         setError('O carregamento do dashboard demorou demais. Tente novamente em instantes.');
@@ -473,16 +487,20 @@ export function useDashboardBootstrap({
       }
       setBootstrapState('error');
     }
-  }, [applyEntregaFirstPages, applyGaleriaPage, locationNegocioId, navigate, professionalRole, scopeProfissionais, uiAlert, userId]);
+  }, [applyEntregaFirstPages, applyGaleriaPage, handleAuthSessionLost, locationNegocioId, navigate, professionalRole, scopeProfissionais, uiAlert, userId]);
 
   const reloadFull = useCallback(async () => {
     try {
       const data = await fetchNowFromDb();
       await loadData(data);
-    } catch {
+    } catch (error) {
+      if (isAuthSessionError(error)) {
+        await handleAuthSessionLost();
+        return;
+      }
       await loadData('');
     }
-  }, [fetchNowFromDb, loadData]);
+  }, [fetchNowFromDb, handleAuthSessionLost, loadData]);
 
   useEffect(() => {
     let active = true;
@@ -492,15 +510,20 @@ export function useDashboardBootstrap({
       try {
         const data = await fetchNowFromDb();
         if (active) await loadData(data);
-      } catch {
-        if (active) await loadData('');
+      } catch (error) {
+        if (!active) return;
+        if (isAuthSessionError(error)) {
+          await handleAuthSessionLost();
+          return;
+        }
+        await loadData('');
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [userId, fetchNowFromDb, loadData]);
+  }, [userId, fetchNowFromDb, handleAuthSessionLost, loadData]);
 
   return {
     parceiroProfissional,
