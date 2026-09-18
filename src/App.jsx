@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { supabase } from './supabase';
 import { isPasswordRecoveryUrl } from './utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from './utils/profileAccess';
+import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from './utils/authSession';
 import { ptBR } from './feedback/messages/ptBR.js';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
@@ -73,33 +74,6 @@ const SelecionarNegocio         = lazyRoute(() => import('./pages/SelecionarNego
 const SelecionarNegocioParceiro = lazyRoute(() => import('./pages/SelecionarNegocioParceiro'), 'SelecionarNegocioParceiro');
 const SignupProfessionalResume  = lazyRoute(() => import('./pages/SignupProfessionalResume'), 'SignupProfessionalResume');
 
-function errorChainText(error, depth = 0) {
-  if (!error || depth > 3) return '';
-  const current = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''} ${error?.code || ''} ${error?.status || ''}`;
-  return `${current} ${errorChainText(error?.cause, depth + 1)}`;
-}
-
-function isAuthJwtError(error) {
-  const text = errorChainText(error).toLowerCase();
-  return Number(error?.status) === 401
-    || Number(error?.cause?.status) === 401
-    || text.includes('pgrst301')
-    || text.includes('pgrst303')
-    || text.includes('jwt')
-    || text.includes('invalid token')
-    || text.includes('not authenticated')
-    || text.includes('refresh token')
-    || text.includes('session not found')
-    || text.includes('session_not_found');
-}
-
-async function refreshStoredSession(session) {
-  if (!session?.user?.id) return null;
-
-  const { data, error } = await supabase.auth.refreshSession(session);
-  if (error) throw error;
-  return data?.session || null;
-}
 
 function FullScreenLoading({ text = 'CARREGANDO...' }) {
   return (
@@ -209,7 +183,7 @@ function LogoutRedirectResetter({ redirectPath, onClear }) {
   return null;
 }
 
-function SelecionarNegocioRouteGuard({ user, onLogout, professionalRole }) {
+function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, professionalRole }) {
   const [loading, setLoading] = useState(true);
   const [ownerBusinessCount, setOwnerBusinessCount] = useState(0);
 
@@ -222,25 +196,33 @@ function SelecionarNegocioRouteGuard({ user, onLogout, professionalRole }) {
       return () => { active = false; };
     }
 
-    supabase
-      .from('negocios')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', user.id)
-      .then(({ count, error }) => {
+    (async () => {
+      try {
+        await refreshCurrentSession();
+        const { count, error } = await supabase
+          .from('negocios')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id);
+
         if (!active) return;
-        if (error) {
-          setOwnerBusinessCount(0);
-          setLoading(false);
-          return;
-        }
+        if (error) throw error;
         setOwnerBusinessCount(Number(count || 0));
         setLoading(false);
-      });
+      } catch (error) {
+        if (!active) return;
+        if (isAuthSessionError(error)) {
+          await onSessionExpired?.('/login');
+          return;
+        }
+        setOwnerBusinessCount(0);
+        setLoading(false);
+      }
+    })();
 
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [onSessionExpired, user?.id]);
 
   if (loading) return <FullScreenLoading text="CARREGANDO..." />;
   if (professionalRole === 'partner') return <Navigate to="/selecionar-negocio-parceiro" replace />;
@@ -281,6 +263,33 @@ export default function App() {
     setInRecovery(!!next);
   }, []);
 
+  const handleLocalSessionEnded = useCallback(async (redirectTo = '/login') => {
+    const safeRedirect = (
+      typeof redirectTo === 'string'
+      && redirectTo.startsWith('/')
+    )
+      ? redirectTo
+      : '/login';
+
+    try {
+      await signOutLocalSession();
+    } catch (signOutError) {
+      console.warn('Erro ao encerrar sessao local.', signOutError);
+    }
+
+    safeSet(() => {
+      setRecoveryMode(false);
+      setUser(null);
+      setUserType(null);
+      setOnboardingStatus(null);
+      setProfessionalRole(null);
+      setAccessState('active');
+      setFatalError(null);
+      setPostLogoutRedirect(safeRedirect);
+      loadedUserRef.current = null;
+    });
+  }, [safeSet, setRecoveryMode]);
+
   const getPostLoginPath = useCallback((type, currentAccessState, status, role = professionalRole) => {
     if (type !== 'professional') return '/minha-area';
     if (role === 'partner') return '/selecionar-negocio-parceiro';
@@ -306,7 +315,7 @@ export default function App() {
     try {
       const sessionToCheck = currentSession || (await supabase.auth.getSession()).data?.session;
       suppressAuthRef.current = true;
-      const freshSession = await refreshStoredSession(sessionToCheck);
+      const freshSession = await refreshCurrentSession(sessionToCheck);
       suppressAuthRef.current = false;
 
       if (!freshSession?.access_token || !freshSession?.user?.id) {
@@ -347,24 +356,8 @@ export default function App() {
       return profile;
     } catch (e) {
       suppressAuthRef.current = false;
-      if (isAuthJwtError(e)) {
-        try {
-          await supabase.auth.signOut({ scope: 'local' });
-        } catch {
-          try { await supabase.auth.signOut(); } catch (signOutError) {
-            console.warn('Erro ao sair da conta.', signOutError);
-          }
-        }
-        safeSet(() => {
-          setUser(null);
-          setUserType(null);
-          setOnboardingStatus(null);
-          setProfessionalRole(null);
-          setAccessState('active');
-          setFatalError(null);
-          setPostLogoutRedirect('/login');
-          loadedUserRef.current = null;
-        });
+      if (isAuthSessionError(e)) {
+        await handleLocalSessionEnded('/login');
         return null;
       }
       safeSet(() => {
@@ -383,7 +376,7 @@ export default function App() {
       suppressAuthRef.current = false;
       safeSet(() => setTypeLoading(false));
     }
-  }, [safeSet]);
+  }, [handleLocalSessionEnded, safeSet]);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -652,7 +645,7 @@ export default function App() {
                 : userType === 'professional'
                   ? accessState === 'owner_resume'
                     ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-                    : <SelecionarNegocioRouteGuard user={user} onLogout={handleLogout} professionalRole={professionalRole} />
+                    : <SelecionarNegocioRouteGuard user={user} onLogout={handleLogout} onSessionExpired={handleLocalSessionEnded} professionalRole={professionalRole} />
                 : userType ? <Navigate to="/minha-area" />
                 : <Navigate to={postLogoutRedirect || "/login"} />
               ) : <Navigate to={postLogoutRedirect || "/login"} />
