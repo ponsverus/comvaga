@@ -265,11 +265,19 @@ export default function PlanosSection({
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending) && providerSyncStatus !== 'synced';
   const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
   const pendingPlanLabel = billingStatus?.pending_plan_name || billingStatus?.pending_plan_code || '';
+  const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
+  const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
+  const activeCheckoutExpiresLabel = billingStatus?.active_checkout_expires_label || '';
+  const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
   const accessEndDate = getAccessEndDate(billingStatus);
   const renewalDate = getRenewalDate(billingStatus);
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.code === currentPlanCode) || null,
     [currentPlanCode, plans]
+  );
+  const activeCheckoutPlan = useMemo(
+    () => plans.find((plan) => plan.code === activeCheckoutPlanCode) || null,
+    [activeCheckoutPlanCode, plans]
   );
   const billableProfessionalsCount = useMemo(
     () => profissionais.filter((item) => ['ativo', 'pendente'].includes(String(item?.status || '').toLowerCase())).length,
@@ -282,6 +290,10 @@ export default function PlanosSection({
     const targetLimit = getPlanLimit(targetPlan);
     if (targetLimit != null && billableProfessionalsCount > targetLimit) {
       setError(getPlanLimitMessage(targetPlan, billableProfessionalsCount));
+      return;
+    }
+    if (hasActiveCheckout && activeCheckoutPlanCode === planCode && activeCheckoutUrl) {
+      window.location.assign(activeCheckoutUrl);
       return;
     }
 
@@ -405,6 +417,12 @@ export default function PlanosSection({
               {pendingPlanDate ? <span> EM {pendingPlanDate}</span> : null}
             </span>
           )}
+          {hasActiveCheckout && (
+            <span>
+              CHECKOUT ABERTO: <span className="text-primary">{activeCheckoutPlan?.name || activeCheckoutPlanCode}</span>
+              {activeCheckoutExpiresLabel ? <span> ATÉ {activeCheckoutExpiresLabel}</span> : null}
+            </span>
+          )}
           {providerSyncPending && (
             <span className={providerSyncStatus === 'failed' ? 'text-red-300' : 'text-yellow-200'}>
               SINCRONIZANDO PAGAMENTO
@@ -423,6 +441,8 @@ export default function PlanosSection({
         {plans.map((plan) => {
           const active = plan.code === currentPlanCode;
           const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
+          const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
+          const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
           const saving = savingPlan === plan.code;
           const canceling = cancelingPlan === plan.code;
           const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
@@ -454,7 +474,8 @@ export default function PlanosSection({
 
           const hasOferta = Boolean(content.oldPriceLabel);
           const showStatusBadge = active;
-          const showOfertaBadge = hasOferta && !showStatusBadge;
+          const showCheckoutBadge = checkoutForPlan && !showStatusBadge;
+          const showOfertaBadge = hasOferta && !showStatusBadge && !showCheckoutBadge;
 
           return (
             <div
@@ -475,6 +496,12 @@ export default function PlanosSection({
                   {showStatusBadge && (
                     <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
                       {selectedStatusLabel}
+                    </span>
+                  )}
+
+                  {showCheckoutBadge && (
+                    <span className="inline-flex items-center rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 text-[10px] font-normal uppercase tracking-wide text-yellow-200">
+                      Checkout aberto
                     </span>
                   )}
 
@@ -506,22 +533,30 @@ export default function PlanosSection({
                       Troca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
                     </p>
                   )}
+
+                  {checkoutForPlan && (
+                    <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
+                      Checkout aberto{activeCheckoutExpiresLabel ? ` até ${activeCheckoutExpiresLabel}` : ''}
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-3">
                 <button
                   type="button"
-                  disabled={activeWithoutAction || activeFreeAccess || pendingForPlan || !!savingPlan || !!cancelingPlan || cancelingDowngrade || planLimitBlocked}
+                  disabled={planLimitBlocked || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade}
                   onClick={() => handleSelectPlan(plan.code)}
                   className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                     activeFreeAccess
                       ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
                       : activeWithoutAction
                         ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
-                        : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                          ? selectedPaymentButtonClass
-                          : content.buttonClass
+                        : checkoutForPlan
+                          ? 'border border-yellow-400/40 bg-yellow-400/10 text-yellow-100 hover:bg-yellow-400/15'
+                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                            ? selectedPaymentButtonClass
+                            : content.buttonClass
                   }`}
                 >
                   {planLimitBlocked
@@ -534,9 +569,11 @@ export default function PlanosSection({
                           ? 'Plano ativo'
                           : saving
                             ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
-                            : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                              ? selectedPaymentButtonText
-                              : content.buttonText}
+                            : checkoutForPlan
+                              ? (activeCheckoutUrl ? 'Continuar pagamento' : 'Checkout em andamento')
+                              : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                                ? selectedPaymentButtonText
+                                : content.buttonText}
                 </button>
 
                 {canCancelDowngrade && (
