@@ -144,13 +144,18 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('plan_professional_limit_reached')) {
     return messageBody('dashboard.plan_professional_limit_reached');
   }
-  if (raw.includes('checkout_reconciliation_pending')) {
+  if (
+    raw.includes('checkout_reconciliation_pending')
+    || raw.includes('checkout_session_reconciliation_pending')
+    || raw.includes('checkout_session_unknown')
+    || raw.includes('checkout_session_creating')
+  ) {
     return messageBody('dashboard.billing_checkout_reconciliation_pending');
   }
-  if (raw.includes('checkout_conflict')) {
+  if (raw.includes('checkout_conflict') || raw.includes('checkout_session_conflict')) {
     return messageBody('dashboard.billing_checkout_conflict');
   }
-  if (raw.includes('checkout_in_progress')) {
+  if (raw.includes('checkout_in_progress') || raw.includes('checkout_session_in_progress')) {
     return messageBody('dashboard.billing_checkout_in_progress');
   }
   if (raw.includes('asaas_checkout_failed')) {
