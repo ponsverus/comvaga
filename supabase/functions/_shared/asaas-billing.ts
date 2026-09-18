@@ -288,6 +288,13 @@ export async function processAsaasBillingEvent(
   if (checkoutEventError) throw checkoutEventError;
 
   const normalizedEventType = eventType.toUpperCase();
+  const checkoutLifecycleEvents = new Set([
+    'CHECKOUT_CREATED',
+    'CHECKOUT_PAID',
+    'CHECKOUT_CANCELED',
+    'CHECKOUT_EXPIRED',
+  ]);
+
   if (action === 'upgrade' || action === 'upgrade_proration') {
     if (!negocioId || !planCode) throw new Error('upgrade_reference_missing');
     if (normalizedEventType !== 'PAYMENT_CONFIRMED') return { outcome: 'processed' };
@@ -330,6 +337,10 @@ export async function processAsaasBillingEvent(
       },
     });
     if (upgradeError) throw upgradeError;
+    return { outcome: 'processed' };
+  }
+
+  if (action === 'subscription' && checkoutLifecycleEvents.has(normalizedEventType)) {
     return { outcome: 'processed' };
   }
 
