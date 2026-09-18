@@ -23,6 +23,7 @@ import TermsOfUse             from './pages/TermsOfUse';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
+const SESSION_REFRESH_MARGIN_SECONDS = 60;
 
 function isRecoverableLazyLoadError(error) {
   const text = `${error?.name || ''} ${error?.message || ''}`.toLowerCase();
@@ -78,7 +79,26 @@ function isAuthJwtError(error) {
   return Number(error?.status) === 401
     || text.includes('jwt')
     || text.includes('invalid token')
-    || text.includes('not authenticated');
+    || text.includes('not authenticated')
+    || text.includes('refresh token')
+    || text.includes('session not found')
+    || text.includes('session_not_found');
+}
+
+function isSessionExpiring(session) {
+  const expiresAt = Number(session?.expires_at || 0);
+  if (!expiresAt) return false;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return expiresAt <= nowSeconds + SESSION_REFRESH_MARGIN_SECONDS;
+}
+
+async function ensureFreshSession(session) {
+  if (!session?.user?.id) return null;
+  if (!isSessionExpiring(session)) return session;
+
+  const { data, error } = await supabase.auth.refreshSession(session);
+  if (error) throw error;
+  return data?.session || null;
 }
 
 function FullScreenLoading({ text = 'CARREGANDO...' }) {
@@ -269,7 +289,7 @@ export default function App() {
     return '/dashboard';
   }, [professionalRole]);
 
-  const loadProfile = useCallback(async (sessionUser) => {
+  const loadProfile = useCallback(async (sessionUser, currentSession = null) => {
     if (!sessionUser?.id) return null;
 
     safeSet(() => {
@@ -281,7 +301,17 @@ export default function App() {
     });
 
     try {
-      const profile = await getUserProfileRobust(sessionUser);
+      const sessionToCheck = currentSession || (await supabase.auth.getSession()).data?.session;
+      const freshSession = await ensureFreshSession(sessionToCheck);
+      const activeUser = freshSession?.user || sessionUser;
+      if (!activeUser?.id) throw new Error('not_authenticated');
+
+      if (activeUser.id !== sessionUser.id) {
+        throw new Error('auth_session_user_mismatch');
+      }
+
+      safeSet(() => setUser(activeUser));
+      const profile = await getUserProfileRobust(activeUser);
 
       if (!profile) {
         await supabase.auth.signOut();
@@ -297,7 +327,7 @@ export default function App() {
         return null;
       }
 
-      loadedUserRef.current = sessionUser.id;
+      loadedUserRef.current = activeUser.id;
       safeSet(() => {
         setUserType(profile.type);
         setOnboardingStatus(profile.onboardingStatus);
@@ -384,7 +414,7 @@ export default function App() {
           }
 
           setUser(sessionUser);
-          if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser);
+          if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser, session);
           safeSet(() => setBooting(false));
           return;
         }
@@ -416,7 +446,7 @@ export default function App() {
         }
 
         setUser(sessionUser);
-        if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser);
+        if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser, session);
       });
 
     return () => { aliveRef.current = false; subscription?.unsubscribe(); };
