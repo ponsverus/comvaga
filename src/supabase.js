@@ -20,7 +20,7 @@ try {
     window.sessionStorage?.setItem(PASSWORD_RECOVERY_STORAGE_KEY, '1');
   }
 } catch (error) {
-  console.warn('Falha ao marcar recuperacao de senha.', error);
+  console.warn('Falha ao marcar troca de senha.', error);
 }
 
 export const supabase = createClient(
@@ -31,8 +31,7 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: 'comvaga-auth',
-      lock: async (_name, _timeout, fn) => fn()
+      storageKey: 'comvaga-auth'
     },
     global: {
       headers: {
