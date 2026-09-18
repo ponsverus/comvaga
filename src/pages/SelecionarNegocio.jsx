@@ -123,8 +123,8 @@ export default function SelecionarNegocio({ user, onLogout, professionalRole = n
 
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-10">
-          <h1 className="text-3xl font-normal mb-2 tracking-wide">QUAL NEGÃ“CIO?</h1>
-          <p className="text-gray-500 text-sm font-normal">SELECIONE O NEGÃ“CIO QUE DESEJA GERENCIAR</p>
+          <h1 className="text-3xl font-normal mb-2 tracking-wide">QUAL NEGÓCIO?</h1>
+          <p className="text-gray-500 text-sm font-normal">SELECIONE O NEGÓCIO QUE DESEJA GERENCIAR</p>
           </div>
 
           <div className="space-y-3 mb-6">
