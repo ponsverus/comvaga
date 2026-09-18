@@ -140,7 +140,7 @@ async function callAsaas(path: string, body: Record<string, unknown>, method = '
 async function updateAsaasSubscriptionValue(subscriptionId: string, plan: Record<string, unknown>) {
   return callAsaas(`/subscriptions/${encodeURIComponent(subscriptionId)}`, {
     value: centsToReais(Number(plan.price_cents || 0)),
-    updatePendingPayments: false,
+    updatePendingPayments: true,
     externalReference: `comvaga-subscription:${plan.code}`,
     description: `Plano ${plan.name}`,
   }, 'PUT');
