@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
-import { withTimeout } from '../utils/withTimeout';
+import { withAuthRetry } from '../utils/authSession';
 import { getRequestErrorKey } from '../utils/requestError';
 import AccountDataSection from './dashboard/sections/AccountDataSection';
 
@@ -37,7 +37,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     (async () => {
       const fallback = String(user?.user_metadata?.nome || '').trim();
       try {
-        const { data, error } = await withTimeout(
+        const { data, error } = await withAuthRetry(
           supabase
             .from('users')
             .select('nome')
@@ -64,13 +64,13 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     }
     try {
       setSavingPerfil(true);
-      const { error: updErr } = await withTimeout(
+      const { error: updErr } = await withAuthRetry(
         supabase.from('users').update({ nome }).eq('id', user.id),
         6000,
         'professional-account-name-update'
       );
       if (updErr) throw updErr;
-      const { error: metaErr } = await withTimeout(
+      const { error: metaErr } = await withAuthRetry(
         supabase.auth.updateUser({ data: { nome } }),
         6000,
         'professional-account-auth-name-update'
@@ -95,7 +95,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     }
     try {
       setSavingDados(true);
-      const { error } = await withTimeout(
+      const { error } = await withAuthRetry(
         supabase.auth.updateUser({ email }),
         6000,
         'professional-account-email-update'
@@ -124,7 +124,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     }
     try {
       setSavingDados(true);
-      const { error } = await withTimeout(
+      const { error } = await withAuthRetry(
         supabase.auth.updateUser({ password: pass }),
         6000,
         'professional-account-password-update'
@@ -149,7 +149,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
 
     try {
       setDeletingAccount(true);
-      const { error } = await withTimeout(
+      const { error } = await withAuthRetry(
         supabase.rpc('remove_professional_account_seguro'),
         8000,
         'professional-account-delete'
