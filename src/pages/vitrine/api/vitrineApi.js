@@ -235,9 +235,13 @@ export async function removeFavoritoNegocio({ clienteId, negocioId }) {
   if (error) throw error;
 }
 
-export async function createDepoimento(payload) {
+export async function createDepoimento({ negocioId, nota, comentario }) {
   const { error } = await withAuthRetry(
-    () => supabase.from('depoimentos').insert(payload),
+    () => supabase.rpc('create_depoimento_negocio', {
+      p_negocio_id: negocioId,
+      p_nota: nota,
+      p_comentario: comentario ?? null,
+    }),
     7000,
     'enviar-depoimento'
   );
