@@ -9,21 +9,24 @@ export function errorChainText(error, depth = 0) {
   return `${current} ${errorChainText(error?.cause, depth + 1)}`;
 }
 
+function errorChainHas(error, predicate, depth = 0) {
+  if (!error || depth > 3) return false;
+  if (predicate(error)) return true;
+  return errorChainHas(error?.cause, predicate, depth + 1)
+    || errorChainHas(error?.context, predicate, depth + 1);
+}
+
 export function isAuthSessionError(error) {
+  const hasStatus401 = errorChainHas(error, (item) => Number(item?.status) === 401);
+  const hasKnownCode = errorChainHas(error, (item) => (
+    item?.code === 'PGRST301'
+    || item?.code === 'PGRST303'
+  ));
   const text = errorChainText(error).toLowerCase();
-  return Number(error?.status) === 401
-    || Number(error?.cause?.status) === 401
-    || Number(error?.context?.status) === 401
-    || Number(error?.cause?.context?.status) === 401
-    || text.includes('pgrst301')
-    || text.includes('pgrst303')
-    || text.includes('jwt')
-    || text.includes('invalid token')
-    || text.includes('not authenticated')
-    || text.includes('refresh token')
-    || text.includes('session not found')
-    || text.includes('session_not_found')
-    || text.includes('not_authenticated');
+  const hasSpecificAuthText = /\b(?:jwt\s+(?:expired|invalid)|invalid\s+jwt|token\s+is\s+expired|not\s+authenticated)\b/.test(text)
+    || /\b(?:refresh\s+token|session)[\s_-]+(?:not\s+found|expired|invalid|revoked)\b/.test(text);
+
+  return hasStatus401 || hasKnownCode || hasSpecificAuthText;
 }
 
 function authSessionError(message, cause = null) {
