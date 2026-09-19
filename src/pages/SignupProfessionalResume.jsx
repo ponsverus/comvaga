@@ -6,7 +6,7 @@ import { useFeedback } from '../feedback/useFeedback';
 import { ProfessionalIcon } from '../components/icons';
 import { DEFAULT_PLAN_CODE, clearSelectedPlanIntent, getSelectedPlanIntent, normalizePlanCode } from '../utils/plans';
 import { formatPhoneForDisplay, normalizeBrazilPhone } from '../utils/phone';
-import { withTimeout } from '../utils/withTimeout';
+import { withAuthRetry } from '../utils/authSession';
 import { fetchUserAccessProfile } from '../utils/profileAccess';
 
 function onlyTrim(v) {
@@ -90,13 +90,13 @@ export default function SignupProfessionalResume({ user, onLogin }) {
           { data: userData, error: userErr },
           { data: negocioRows, error: negocioErr },
         ] = await Promise.all([
-          withTimeout(
-            supabase.from('users').select('nome').eq('id', user.id).maybeSingle(),
+          withAuthRetry(
+            () => supabase.from('users').select('nome').eq('id', user.id).maybeSingle(),
             6000,
             'resume-user-profile'
           ),
-          withTimeout(
-            supabase.from('negocios')
+          withAuthRetry(
+            () => supabase.from('negocios')
               .select('id, nome, slug, tipo_negocio, telefone, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado, created_at')
               .eq('owner_id', user.id)
               .order('created_at', { ascending: true }),
@@ -217,8 +217,8 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       const enderecoKey = validarEnderecoCompleto();
       if (enderecoKey) { showMessage(enderecoKey); return; }
 
-      const { data, error } = await withTimeout(
-        supabase.rpc('complete_owner_business_onboarding', {
+      const { data, error } = await withAuthRetry(
+        () => supabase.rpc('complete_owner_business_onboarding', {
           p_negocio_id: isWaitingRoom ? null : negocioId,
           p_nome_usuario: nome,
           p_nome_negocio: nomeNegocio,
@@ -270,8 +270,8 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       const selectedPlanCode = normalizePlanCode(user?.user_metadata?.selected_plan)
         || getSelectedPlanIntent()
         || DEFAULT_PLAN_CODE;
-      const { error: planError } = await withTimeout(
-        supabase.rpc('set_business_plan', {
+      const { error: planError } = await withAuthRetry(
+        () => supabase.rpc('set_business_plan', {
           p_negocio_id: data.negocio_id,
           p_plan_code: selectedPlanCode,
         }),
