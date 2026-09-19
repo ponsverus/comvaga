@@ -303,7 +303,7 @@ export function useDashboardMutations({
         let uploaded = false;
         try {
           const { error: upErr } = await withAuthRetry(
-            () => supabase.storage.from('galerias').upload(filePath, convertedFile, { contentType: convertedFile.type }),
+            () => supabase.storage.from('galerias').upload(filePath, convertedFile, { upsert: true, contentType: convertedFile.type }),
             10000,
             'galeria-upload'
           );
