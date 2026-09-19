@@ -1,6 +1,5 @@
 import { supabase } from '../../../supabase';
-import { withTimeout } from '../../../utils/withTimeout';
-import { isAuthSessionError, refreshCurrentSession } from '../../../utils/authSession';
+import { withAuthRetry } from '../../../utils/authSession';
 
 function isAdminRemovedProfessional(row) {
   return row?.status === 'excluido';
@@ -40,14 +39,6 @@ async function normalizeFunctionError(error) {
   return nextError;
 }
 
-async function withAuthRetry(requestFactory, ms, label) {
-  let result = await withTimeout(requestFactory(), ms, label);
-  if (!isAuthSessionError(result?.error)) return result;
-
-  await refreshCurrentSession();
-  result = await withTimeout(requestFactory(), ms, `${label}:auth-retry`);
-  return result;
-}
 
 export function getPublicUrl(bucket, path) {
   if (!bucket || !path) return null;
