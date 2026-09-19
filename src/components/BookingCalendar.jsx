@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
-import { withTimeout } from '../utils/withTimeout';
+import { withAuthRetry } from '../utils/authSession';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -126,8 +126,8 @@ export default function BookingCalendar({
     try {
       const dur = Number(entrega.duracao_minutos);
 
-      const { data, error } = await withTimeout(
-        supabase.rpc('rpc_get_slots_v4', {
+      const { data, error } = await withAuthRetry(
+        () => supabase.rpc('rpc_get_slots_v4', {
           p_profissional_id: profissional.id,
           p_dia:             dayISO,
           p_entrega_min:     dur,
@@ -192,7 +192,7 @@ export default function BookingCalendar({
     setConfirmError(null);
     try {
       const isMultiplo = entregaIds.length > 1;
-      const bookingRequest = isMultiplo
+      const bookingRequest = () => isMultiplo
         ? supabase.rpc(assistedBooking ? 'rpc_criar_agendamentos_multiplos_assistido' : 'rpc_criar_agendamentos_multiplos', {
             ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
             p_negocio_id:      negocioId,
@@ -209,7 +209,7 @@ export default function BookingCalendar({
             p_data:            selectedDay,
             p_horario_inicio:  selectedSlot.hora,
           });
-      const { data, error } = await withTimeout(
+      const { data, error } = await withAuthRetry(
         bookingRequest,
         8000,
         'booking-confirm'
