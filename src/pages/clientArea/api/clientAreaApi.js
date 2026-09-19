@@ -81,7 +81,7 @@ export async function fetchReviewedBookings(agendamentoIds) {
 
 export async function createBookingReview({ agendamentoId, nota, comentario }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('create_depoimento_agendamento', {
+    () => supabase.rpc('create_depoimento_profissional', {
       p_agendamento_id: agendamentoId,
       p_nota: nota,
       p_comentario: comentario ?? null,
