@@ -81,15 +81,11 @@ export function useVitrineInteractions({
     if (!currentClienteId) return false;
     setDepoimentoLoading(true);
     try {
-      const payload = {
-        cliente_id: currentClienteId,
-        tipo: 'negocio',
+      await createDepoimento({
+        negocioId,
         nota: depoimentoNota,
         comentario: depoimentoTexto || null,
-        negocio_id: negocioId,
-        profissional_id: null,
-      };
-      await createDepoimento(payload);
+      });
       await refreshDepoimentos(negocioId);
       return true;
     } finally {
