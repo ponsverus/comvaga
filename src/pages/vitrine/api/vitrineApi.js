@@ -1,5 +1,6 @@
 import { supabase } from '../../../supabase';
 import { withTimeout } from '../../../utils/withTimeout';
+import { withAuthRetry } from '../../../utils/authSession';
 
 export function getPublicUrl(bucket, path) {
   if (!path) return null;
@@ -184,8 +185,8 @@ export async function fetchVitrineDepoimentos(negocioId, { limit = null, offset 
 }
 
 export async function fetchFavoritoNegocio({ clienteId, negocioId }) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('favoritos')
       .select('id')
       .eq('cliente_id', clienteId)
@@ -200,8 +201,8 @@ export async function fetchFavoritoNegocio({ clienteId, negocioId }) {
 }
 
 export async function fetchCurrentClienteId() {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_current_cliente_id'),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_current_cliente_id'),
     6000,
     'cliente-atual'
   );
@@ -210,8 +211,8 @@ export async function fetchCurrentClienteId() {
 }
 
 export async function addFavoritoNegocio({ clienteId, negocioId }) {
-  const { error } = await withTimeout(
-    supabase
+  const { error } = await withAuthRetry(
+    () => supabase
       .from('favoritos')
       .insert({ cliente_id: clienteId, tipo: 'negocio', negocio_id: negocioId, profissional_id: null }),
     6000,
@@ -221,8 +222,8 @@ export async function addFavoritoNegocio({ clienteId, negocioId }) {
 }
 
 export async function removeFavoritoNegocio({ clienteId, negocioId }) {
-  const { error } = await withTimeout(
-    supabase
+  const { error } = await withAuthRetry(
+    () => supabase
       .from('favoritos')
       .delete()
       .eq('cliente_id', clienteId)
@@ -235,8 +236,8 @@ export async function removeFavoritoNegocio({ clienteId, negocioId }) {
 }
 
 export async function createDepoimento(payload) {
-  const { error } = await withTimeout(
-    supabase.from('depoimentos').insert(payload),
+  const { error } = await withAuthRetry(
+    () => supabase.from('depoimentos').insert(payload),
     7000,
     'enviar-depoimento'
   );

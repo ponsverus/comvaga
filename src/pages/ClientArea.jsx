@@ -9,7 +9,7 @@ import { convertImageToWebp, isImageFile } from '../utils/media';
 import { normalizeBrazilPhone, formatPhoneForDisplay } from '../utils/phone';
 import { getRequestErrorKey } from '../utils/requestError';
 import { searchHome } from '../utils/searchHome';
-import { withTimeout } from '../utils/withTimeout';
+import { withAuthRetry } from '../utils/authSession';
 import {
   cancelarAgendamentoCliente,
   createBookingReview,
@@ -347,15 +347,15 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       setUploadingAvatar(true);
       const convertedFile = await convertImageToWebp(file);
       const path = `${user.id}/avatar-${Date.now()}.webp`;
-      const { error: upErr } = await withTimeout(
-        supabase.storage.from('avatars').upload(path, convertedFile, { upsert: false, contentType: convertedFile.type }),
+      const { error: upErr } = await withAuthRetry(
+        () => supabase.storage.from('avatars').upload(path, convertedFile, { upsert: false, contentType: convertedFile.type }),
         10000,
         'avatar-upload'
       );
       if (upErr) throw upErr;
       uploadedPath = path;
-      const { error: updErr } = await withTimeout(
-        supabase
+      const { error: updErr } = await withAuthRetry(
+        () => supabase
           .from('clientes')
           .update({ avatar_path: path })
           .eq('user_id', user.id)
@@ -370,8 +370,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     } catch {
       if (uploadedPath) {
         try {
-          await withTimeout(
-            supabase.storage.from('avatars').remove([uploadedPath]),
+          await withAuthRetry(
+            () => supabase.storage.from('avatars').remove([uploadedPath]),
             6000,
             'avatar-remove-failed-upload'
           );
@@ -390,14 +390,14 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     if (!nome) { uiAlert('clientArea.profile_name_required', 'error'); return false; }
     try {
       setSavingPerfil(true);
-      const { error: updErr } = await withTimeout(
-        supabase.from('users').update({ nome }).eq('id', user.id),
+      const { error: updErr } = await withAuthRetry(
+        () => supabase.from('users').update({ nome }).eq('id', user.id),
         6000,
         'cliente-nome-update'
       );
       if (updErr) throw updErr;
-      const { error: metaErr } = await withTimeout(
-        supabase.auth.updateUser({ data: { nome } }),
+      const { error: metaErr } = await withAuthRetry(
+        () => supabase.auth.updateUser({ data: { nome } }),
         6000,
         'cliente-auth-nome-update'
       );
@@ -419,8 +419,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     if (!email || !email.includes('@')) { uiAlert('clientArea.account_email_invalid', 'error'); return false; }
     try {
       setSavingDados(true);
-      const { error } = await withTimeout(
-        supabase.auth.updateUser({ email }),
+      const { error } = await withAuthRetry(
+        () => supabase.auth.updateUser({ email }),
         6000,
         'cliente-email-update'
       );
@@ -444,8 +444,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
 
     try {
       setSavingDados(true);
-      const { error } = await withTimeout(
-        supabase
+      const { error } = await withAuthRetry(
+        () => supabase
           .from('clientes')
           .update({ telefone: telefone || null })
           .eq('user_id', user.id)
@@ -471,8 +471,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     if (pass !== conf)   { uiAlert('clientArea.account_password_mismatch',  'error'); return false; }
     try {
       setSavingDados(true);
-      const { error } = await withTimeout(
-        supabase.auth.updateUser({ password: pass }),
+      const { error } = await withAuthRetry(
+        () => supabase.auth.updateUser({ password: pass }),
         6000,
         'cliente-password-update'
       );

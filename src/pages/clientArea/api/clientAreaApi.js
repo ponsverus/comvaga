@@ -1,9 +1,9 @@
 import { supabase } from '../../../supabase';
-import { withTimeout } from '../../../utils/withTimeout';
+import { withAuthRetry } from '../../../utils/authSession';
 
 export async function fetchClientePerfil(userId) {
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('clientes')
       .select('nome, avatar_path, telefone')
       .eq('user_id', userId)
@@ -22,8 +22,8 @@ export async function fetchClientePerfil(userId) {
 }
 
 export async function fetchCurrentClienteId() {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_current_cliente_id'),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_current_cliente_id'),
     6000,
     'cliente-atual'
   );
@@ -33,8 +33,8 @@ export async function fetchCurrentClienteId() {
 }
 
 export async function fetchAgendamentosCliente({ clienteId, limit, offset }) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_agendamentos_cliente', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_agendamentos_cliente', {
       p_cliente_id: clienteId,
       p_limit: limit,
       p_offset: offset,
@@ -48,8 +48,8 @@ export async function fetchAgendamentosCliente({ clienteId, limit, offset }) {
 }
 
 export async function fetchFavoritosCliente({ clienteId, limit, offset }) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_favoritos_cliente', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_favoritos_cliente', {
       p_cliente_id: clienteId,
       p_limit: limit,
       p_offset: offset,
@@ -66,8 +66,8 @@ export async function fetchReviewedBookings(agendamentoIds) {
   const ids = Array.isArray(agendamentoIds) ? agendamentoIds.filter(Boolean) : [];
   if (!ids.length) return [];
 
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withAuthRetry(
+    () => supabase
       .from('depoimentos')
       .select('id, agendamento_id')
       .in('agendamento_id', ids),
@@ -80,8 +80,8 @@ export async function fetchReviewedBookings(agendamentoIds) {
 }
 
 export async function createBookingReview({ agendamentoId, nota, comentario }) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('create_depoimento_agendamento', {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('create_depoimento_agendamento', {
       p_agendamento_id: agendamentoId,
       p_nota: nota,
       p_comentario: comentario ?? null,
@@ -95,8 +95,8 @@ export async function createBookingReview({ agendamentoId, nota, comentario }) {
 }
 
 export async function cancelarAgendamentoCliente(agendamentoId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('cancelar_agendamento', { p_agendamento_id: agendamentoId }),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('cancelar_agendamento', { p_agendamento_id: agendamentoId }),
     6500,
     'cancelar-agendamento'
   );
@@ -106,8 +106,8 @@ export async function cancelarAgendamentoCliente(agendamentoId) {
 }
 
 export async function removerContaCliente() {
-  const { data, error } = await withTimeout(
-    supabase.rpc('remove_cliente_seguro'),
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('remove_cliente_seguro'),
     6500,
     'excluir-conta'
   );
@@ -117,8 +117,8 @@ export async function removerContaCliente() {
 }
 
 export async function removerFavoritoCliente({ favoritoId, clienteId }) {
-  const { error } = await withTimeout(
-    supabase
+  const { error } = await withAuthRetry(
+    () => supabase
       .from('favoritos')
       .delete()
       .eq('id', favoritoId)

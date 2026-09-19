@@ -26,7 +26,7 @@ import {
 import { convertImageToWebp, isImageFile } from '../../../utils/media';
 import { normalizeBrazilPhone } from '../../../utils/phone';
 import { getRequestErrorKey } from '../../../utils/requestError';
-import { withTimeout } from '../../../utils/withTimeout';
+import { withAuthRetry } from '../../../utils/authSession';
 
 export function useDashboardMutations({
   userId,
@@ -141,8 +141,8 @@ export function useDashboardMutations({
       const convertedFile = await convertImageToWebp(file);
       const oldPath = negocio?.logo_path || null;
       const filePath = `${negocio.id}/logo.webp`;
-      const { error: upErr } = await withTimeout(
-        supabase.storage.from('logos').upload(filePath, convertedFile, { upsert: true, contentType: convertedFile.type }),
+      const { error: upErr } = await withAuthRetry(
+        () => supabase.storage.from('logos').upload(filePath, convertedFile, { upsert: true, contentType: convertedFile.type }),
         10000,
         'logo-upload'
       );
@@ -151,8 +151,8 @@ export function useDashboardMutations({
       if (oldPath && String(oldPath).replace(/^logos\//, '') !== filePath) {
         const normalizedOldPath = String(oldPath).replace(/^logos\//, '');
         try {
-          await withTimeout(
-            supabase.storage.from('logos').remove([normalizedOldPath]),
+          await withAuthRetry(
+            () => supabase.storage.from('logos').remove([normalizedOldPath]),
             6000,
             'logo-remove-old'
           );
@@ -302,8 +302,8 @@ export function useDashboardMutations({
         const filePath = `${negocio.id}/${crypto.randomUUID()}.webp`;
         let uploaded = false;
         try {
-          const { error: upErr } = await withTimeout(
-            supabase.storage.from('galerias').upload(filePath, convertedFile, { contentType: convertedFile.type }),
+          const { error: upErr } = await withAuthRetry(
+            () => supabase.storage.from('galerias').upload(filePath, convertedFile, { contentType: convertedFile.type }),
             10000,
             'galeria-upload'
           );
@@ -315,8 +315,8 @@ export function useDashboardMutations({
           failedCount += 1;
           if (!uploaded) continue;
           try {
-            await withTimeout(
-              supabase.storage.from('galerias').remove([filePath]),
+            await withAuthRetry(
+              () => supabase.storage.from('galerias').remove([filePath]),
               6000,
               'galeria-remove-orphan'
             );
