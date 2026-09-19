@@ -9,6 +9,32 @@ function getClienteTelefone(row) {
   return String(row?.cliente_telefone ?? '').trim();
 }
 
+function newStableRowId() {
+  return globalThis.crypto.randomUUID();
+}
+
+async function insertWithStableId(table, payload, ms, label) {
+  const stablePayload = { id: payload.id || newStableRowId(), ...payload };
+  const { error } = await withAuthRetry(
+    () => supabase.from(table).insert([stablePayload]),
+    ms,
+    label
+  );
+
+  if (!error) return stablePayload.id;
+
+  if (error.code === '23505') {
+    const { data: existing, error: lookupError } = await withAuthRetry(
+      () => supabase.from(table).select('id').eq('id', stablePayload.id).maybeSingle(),
+      ms,
+      `${label}:confirm`
+    );
+    if (!lookupError && existing?.id === stablePayload.id) return stablePayload.id;
+  }
+
+  throw error;
+}
+
 async function normalizeFunctionError(error) {
   if (!error) return error;
 
@@ -532,12 +558,7 @@ export async function fetchUserNome(userId) {
 }
 
 export async function insertProfissional(payload) {
-  const { error } = await withAuthRetry(
-    () => supabase.from('profissionais').insert([payload]),
-    6000,
-    'profissional-insert'
-  );
-  if (error) throw error;
+  return insertWithStableId('profissionais', payload, 6000, 'profissional-insert');
 }
 
 export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
@@ -568,12 +589,7 @@ export async function updateNegocioTema(negocioId, ownerId, tema) {
 }
 
 export async function insertGaleriaItem(negocioId, path) {
-  const { error } = await withAuthRetry(
-    () => supabase.from('galerias').insert({ negocio_id: negocioId, path }),
-    6000,
-    'galeria-insert'
-  );
-  if (error) throw error;
+  return insertWithStableId('galerias', { negocio_id: negocioId, path }, 6000, 'galeria-insert');
 }
 
 export async function enqueueGaleriaOrphanDelete(negocioId, path) {
