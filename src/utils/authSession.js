@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { withTimeout } from './withTimeout';
 
 let refreshPromise = null;
 
@@ -55,6 +56,15 @@ export async function refreshCurrentSession(currentSession = null) {
   } finally {
     refreshPromise = null;
   }
+}
+
+export async function withAuthRetry(requestFactory, ms = 7000, label = 'auth-request') {
+  let result = await withTimeout(requestFactory(), ms, label);
+  if (!isAuthSessionError(result?.error)) return result;
+
+  await refreshCurrentSession();
+  result = await withTimeout(requestFactory(), ms, `${label}:auth-retry`);
+  return result;
 }
 
 export async function signOutLocalSession() {
