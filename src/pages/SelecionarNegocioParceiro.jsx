@@ -4,6 +4,7 @@ import { ArrowRight, LogOut, RefreshCw, Send } from 'lucide-react';
 import { ProfessionalIcon, SearchIcon, UserIcon } from '../components/icons';
 import { ptBR } from '../feedback/messages/ptBR';
 import { supabase } from '../supabase';
+import { withAuthRetry } from '../utils/authSession';
 
 const msgs = ptBR.partnerBusinessCenter;
 
@@ -118,11 +119,11 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     }
 
     if (!user?.id) return;
-    const { data } = await supabase
+    const { data } = await withAuthRetry(() => supabase
       .from('users')
       .select('nome')
       .eq('id', user.id)
-      .maybeSingle();
+      .maybeSingle(), 6000, 'partner-profile-name');
 
     const nome = String(data?.nome || '').trim();
     if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitacao(nome);
@@ -132,7 +133,11 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     if (!silent) setLoading(true);
     setAlert(null);
     try {
-      const { data, error } = await supabase.rpc('get_partner_business_center');
+      const { data, error } = await withAuthRetry(
+        () => supabase.rpc('get_partner_business_center'),
+        7000,
+        'partner-business-center'
+      );
       if (error) throw error;
       setLinks(data || []);
     } catch (error) {
@@ -193,10 +198,14 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
     setSearching(true);
     try {
-      const { data, error } = await supabase.rpc('search_partner_businesses', {
-        p_term: clean,
-        p_limit: 10,
-      });
+      const { data, error } = await withAuthRetry(
+        () => supabase.rpc('search_partner_businesses', {
+          p_term: clean,
+          p_limit: 10,
+        }),
+        7000,
+        'partner-business-search'
+      );
       if (error) throw error;
       setSearchRows(data || []);
       if (!data?.length) setAlert({ type: 'warning', message: msgs.search_empty });
@@ -234,10 +243,14 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     setRequestingId(row.negocio_id);
     setAlert(null);
     try {
-      const { data, error } = await supabase.rpc('solicitar_acesso_parceiro', {
-        p_negocio_id: row.negocio_id,
-        p_nome: nome,
-      });
+      const { data, error } = await withAuthRetry(
+        () => supabase.rpc('solicitar_acesso_parceiro', {
+          p_negocio_id: row.negocio_id,
+          p_nome: nome,
+        }),
+        8000,
+        'partner-access-request'
+      );
       if (error) throw error;
 
       const status = String(data?.status || '');
@@ -249,10 +262,14 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
       await loadCenter({ silent: true });
       if (term.trim().length >= 3) {
-        const { data: refreshedRows } = await supabase.rpc('search_partner_businesses', {
-          p_term: term.trim(),
-          p_limit: 10,
-        });
+        const { data: refreshedRows } = await withAuthRetry(
+          () => supabase.rpc('search_partner_businesses', {
+            p_term: term.trim(),
+            p_limit: 10,
+          }),
+          7000,
+          'partner-business-search-refresh'
+        );
         setSearchRows(refreshedRows || []);
       }
     } catch (error) {
