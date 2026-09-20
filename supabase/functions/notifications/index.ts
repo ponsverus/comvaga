@@ -24,14 +24,27 @@ const BORDER = '#1f2937';
 const PRIMARY = '#FFD700';
 const FONT_STACK = "'Roboto Condensed', -apple-system, 'Segoe UI', Roboto, sans-serif";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function baseLayout(accentColor: string, headerTitle: string, headerSub: string, badgeText: string, body: string): string {
+  const safeHeaderTitle = escapeHtml(headerTitle);
+  const safeHeaderSub = escapeHtml(headerSub);
+  const safeBadgeText = escapeHtml(badgeText);
+
   return `<div style="font-family:${FONT_STACK};max-width:480px;margin:0 auto;background:${DARK_300};color:#fff;border-radius:3px;overflow:hidden;border:1px solid ${BORDER}">` +
     `<div style="background:${accentColor};padding:20px 24px">` +
     `<table role="presentation" style="width:100%;border-collapse:collapse"><tr>` +
-    `<td style="vertical-align:middle"><h1 style="margin:0;font-size:18px;color:#000;font-weight:700;letter-spacing:0.3px">${headerTitle}</h1>` +
-    `<p style="margin:2px 0 0;font-size:12px;color:#000;opacity:0.7;text-transform:uppercase">${headerSub}</p></td>` +
+    `<td style="vertical-align:middle"><h1 style="margin:0;font-size:18px;color:#000;font-weight:700;letter-spacing:0.3px">${safeHeaderTitle}</h1>` +
+    `<p style="margin:2px 0 0;font-size:12px;color:#000;opacity:0.7;text-transform:uppercase">${safeHeaderSub}</p></td>` +
     `<td style="text-align:right;vertical-align:middle;white-space:nowrap">` +
-    `<span style="display:inline-block;padding:4px 12px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:0.5px;background:rgba(0,0,0,0.15);color:#000;border:1px solid rgba(0,0,0,0.3)">${badgeText}</span>` +
+    `<span style="display:inline-block;padding:4px 12px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:0.5px;background:rgba(0,0,0,0.15);color:#000;border:1px solid rgba(0,0,0,0.3)">${safeBadgeText}</span>` +
     `</td></tr></table></div>` +
     `<div style="padding:28px 24px;background:${DARK_200}">${body}</div>` +
     `<div style="padding:14px 24px;background:${DARK_300};font-size:10px;color:#555;text-align:center;letter-spacing:1.5px">COMVAGA</div>` +
@@ -39,7 +52,7 @@ function baseLayout(accentColor: string, headerTitle: string, headerSub: string,
 }
 
 function strong(text: string): string {
-  return `<strong style="color:${PRIMARY};font-weight:700">${text}</strong>`;
+  return `<strong style="color:${PRIMARY};font-weight:700">${escapeHtml(text)}</strong>`;
 }
 
 function paragraph(html: string): string {
@@ -47,7 +60,7 @@ function paragraph(html: string): string {
 }
 
 function note(text: string): string {
-  return `<p style="margin:18px 0 0;font-size:13px;color:#9ca3af;line-height:1.5">${text}</p>`;
+  return `<p style="margin:18px 0 0;font-size:13px;color:#9ca3af;line-height:1.5">${escapeHtml(text)}</p>`;
 }
 
 type AgData = {
