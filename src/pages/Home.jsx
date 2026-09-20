@@ -12,8 +12,10 @@ const planSignupTo = (planCode) => `/cadastro/profissional?plano=${planCode}`;
 function getBusinessLogoUrl(path) {
   if (!path) return null;
   try {
-    if (/^https?:\/\//i.test(path)) return path;
-    const stripped = path.replace(/^logos\//, '');
+    const normalizedPath = String(path).trim();
+    if (!normalizedPath || /^https?:\/\//i.test(normalizedPath)) return null;
+
+    const stripped = normalizedPath.replace(/^logos\//, '');
     const { data } = supabase.storage.from('logos').getPublicUrl(stripped);
     return data?.publicUrl || null;
   } catch {
