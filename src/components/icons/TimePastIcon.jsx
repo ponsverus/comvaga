@@ -1,16 +1,15 @@
 export default function TimePastIcon({
   className = '',
   title,
-  style = {},
   ...props
 }) {
+  delete props.style;
   return (
     <svg
       viewBox="0 0 512 512"
       fill="currentColor"
       className={className}
-      style={{ display: 'inline-block', ...style }}
-      aria-hidden={!title}
+            aria-hidden={!title}
       role={title ? 'img' : undefined}
       {...props}
     >
