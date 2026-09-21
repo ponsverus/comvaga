@@ -1,11 +1,12 @@
-export default function TimeIcon({ className = '', title, style = {}, ...props }) {
+export default function TimeIcon({ className = '', title,
+  ...props }) {
+  delete props.style;
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       className={className}
-      style={{ display: 'inline-block', ...style }}
-      {...props}
+            {...props}
     >
       {title && <title>{title}</title>}
 
