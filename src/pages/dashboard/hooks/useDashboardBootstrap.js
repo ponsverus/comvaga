@@ -421,7 +421,7 @@ export function useDashboardBootstrap({
         setGaleriaHasMore(false);
         setGaleriaLoadingMore(false);
         clearLastPartnerNegocioId(userId);
-        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : 'VocÃª nÃ£o tem acesso a este negÃ³cio.');
+        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : 'Seu acesso a este negócio foi negado.');
         setBootstrapState('error');
         return;
       }
