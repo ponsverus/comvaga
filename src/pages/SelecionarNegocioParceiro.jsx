@@ -362,7 +362,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     <div className="min-h-screen bg-black text-white px-4 py-10 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse animation-delay-1s" />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-4xl">
