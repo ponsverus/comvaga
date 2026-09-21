@@ -163,8 +163,7 @@ function SearchBox({
 function MoneyGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
   return (
     <span
-      style={{ fontFamily: 'Roboto Condensed, sans-serif' }}
-      className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className}`}
+      className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className} font-condensed`}
     >
       $
     </span>
@@ -174,8 +173,7 @@ function MoneyGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
 function SmileGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
   return (
     <span
-      style={{ fontFamily: 'Roboto Condensed, sans-serif' }}
-      className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className}`}
+      className={`inline-flex items-center justify-center font-normal leading-none text-primary ${sizeClass} ${className} font-condensed`}
     >
       :)
     </span>
@@ -262,22 +260,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
             </div>
           ))}
         </div>
-
-        <style>{`
-          @keyframes announcement-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .announcement-bar-wrapper {
-            display: flex;
-            width: max-content;
-            animation: announcement-scroll 50s linear infinite;
-          }
-          .announcement-bar-wrapper:hover { animation-play-state: paused; }
-          @media (prefers-reduced-motion: reduce) {
-            .announcement-bar-wrapper { animation: none; }
-          }
-        `}</style>
       </div>
 
       <header className="absolute top-20 left-0 w-full z-40 bg-transparent border-none">
