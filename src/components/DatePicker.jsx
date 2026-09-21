@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 function parseISO(iso) {
@@ -46,42 +45,10 @@ export default function DatePicker({ value, onChange, todayISO }) {
   const [viewYear, setViewYear] = useState(initYear);
   const [viewMonth, setViewMonth] = useState(initMonth);
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
 
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
-  useEffect(() => {
-
-    if (!open) return;
-
-    const rect = buttonRef.current.getBoundingClientRect();
-
-    const calendarWidth = 300;
-    const calendarHeight = 360;
-
-    const spaceBelow = window.innerHeight - rect.bottom;
-
-    let top;
-
-    if (spaceBelow >= calendarHeight) {
-      top = rect.bottom + 8;
-    } else {
-      top = rect.top - calendarHeight - 8;
-    }
-
-    let left = rect.right - calendarWidth;
-
-    if (left < 16 || left + calendarWidth > window.innerWidth - 16) {
-      left = (window.innerWidth / 2) - (calendarWidth / 2);
-    }
-
-    setPosition({
-      top,
-      left
-    });
-
-  }, [open]);
 
   useEffect(() => {
 
@@ -146,12 +113,7 @@ export default function DatePicker({ value, onChange, todayISO }) {
   const calendar = (
     <div
       ref={containerRef}
-      style={{
-        position: 'fixed',
-        top: position.top,
-        left: position.left
-      }}
-      className="z-50 bg-dark-100 border border-gray-800 rounded-custom shadow-2xl p-5 w-[300px]"
+      className="absolute right-0 top-[calc(100%+0.5rem)] z-50 bg-dark-100 border border-gray-800 rounded-custom shadow-2xl p-5 w-[300px]"
     >
 
       <div className="flex items-center justify-between mb-4">
@@ -251,7 +213,7 @@ export default function DatePicker({ value, onChange, todayISO }) {
   );
 
   return (
-    <div className="inline-block">
+    <div className="relative inline-block">
 
       <button
         ref={buttonRef}
@@ -265,7 +227,7 @@ export default function DatePicker({ value, onChange, todayISO }) {
         </span>
       </button>
 
-      {open && createPortal(calendar, document.body)}
+      {open && calendar}
 
     </div>
   );
