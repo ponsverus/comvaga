@@ -29,7 +29,8 @@ function HeartIcon({ filled = false, className = '', size = 20 }) {
 }
 
 function StarChar({ size = 18, className = '' }) {
-  return <span className={className || 'text-primary'} style={{ fontSize: size, lineHeight: 1 }} aria-hidden="true">★</span>;
+  const sizeClass = size === 15 ? 'text-[15px]' : size === 16 ? 'text-base' : 'text-lg';
+  return <span className={`${className || 'text-primary'} ${sizeClass} leading-none`} aria-hidden="true">★</span>;
 }
 
 export default function VitrineTopSection({ header, business, actions }) {
@@ -56,7 +57,6 @@ export default function VitrineTopSection({ header, business, actions }) {
             </div>
           </div>
         </div>
-        <style>{`@keyframes marquee-sync{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.animate-marquee-sync{display:flex;animation:marquee-sync 40s linear infinite}.announcement-bar-marquee:hover .animate-marquee-sync{animation-play-state:paused}@media(prefers-reduced-motion:reduce){.animate-marquee-sync{animation:none}}`}</style>
       </div>
 
       <header className="bg-vcard border-b border-vborder sticky top-0 z-40">

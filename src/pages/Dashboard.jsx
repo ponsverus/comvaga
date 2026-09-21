@@ -826,7 +826,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-start">
           <DashboardTopCard
             highlight
-            icon={<span style={{ fontFamily: 'Roboto Condensed, sans-serif' }} className="text-green-400 font-normal text-3xl leading-none">$</span>}
+            icon={<span className="font-condensed text-green-400 font-normal text-3xl leading-none">$</span>}
             label="FATURAMENTO HOJE"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? formatCurrency(topFaturamento.valor) : '--'}
           >
@@ -883,16 +883,9 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               </div>
             ))}
           </div>
-          <style>{`
-            @keyframes announcement-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-            .announcement-bar-wrapper { display: flex; width: max-content; animation: announcement-scroll 50s linear infinite; }
-            .announcement-bar-wrapper:hover { animation-play-state: paused; }
-            .announcement-bar-track a { position: relative; z-index: 10; cursor: pointer; display: inline-block; }
-            @media (prefers-reduced-motion: reduce) { .announcement-bar-wrapper { animation: none; } }
-          `}</style>
         </div>
 
-        <div className="bg-dark-100 border border-gray-800 rounded-custom overflow-hidden">
+        <div className="bg-dark-100 border border-gray-800 rounded-custom overflow-visible">
           <div className="flex overflow-x-auto border-b border-gray-800">
             {tabs.map(tab => {
               const notif = tab === 'agendamentos' ? notifAgendamentos : 0;

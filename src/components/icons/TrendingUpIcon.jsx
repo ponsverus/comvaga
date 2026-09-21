@@ -1,21 +1,16 @@
 export default function TrendingUpIcon({
   className = '',
   title,
-  style = {},
   ...props
 }) {
+  delete props.style;
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 26 26"
       fill="none"
       className={className}
-      style={{
-        display: 'inline-block',
-        overflow: 'visible',
-        ...style,
-      }}
-      aria-hidden={title ? undefined : 'true'}
+            aria-hidden={title ? undefined : 'true'}
       role={title ? 'img' : 'presentation'}
       {...props}
     >

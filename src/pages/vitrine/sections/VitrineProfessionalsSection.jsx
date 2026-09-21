@@ -9,7 +9,8 @@ import {
 const PROFISSIONAIS_POR_PAGINA = 3;
 
 function StarChar({ size = 16, className = 'text-primary' }) {
-  return <span className={className} style={{ fontSize: size, lineHeight: 1 }} aria-hidden="true">★</span>;
+  const sizeClass = size === 15 ? 'text-[15px]' : size === 18 ? 'text-lg' : 'text-base';
+  return <span className={`${className} ${sizeClass} leading-none`} aria-hidden="true">★</span>;
 }
 
 export default function VitrineProfessionalsDashboardSection({

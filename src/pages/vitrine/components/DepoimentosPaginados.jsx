@@ -5,13 +5,13 @@ const DEPOIMENTOS_POR_PAGINA = 12;
 
 function Stars5Char({ value = 0, size = 14 }) {
   const v = Math.max(0, Math.min(5, Number(value || 0)));
+  const sizeClass = size === 16 ? 'text-base' : size === 18 ? 'text-lg' : 'text-sm';
   return (
     <div className="flex items-center gap-1" aria-label={`Nota ${v} de 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          style={{ fontSize: size, lineHeight: 1 }}
-          className={i <= v ? 'text-primary' : 'text-gray-300'}
+          className={`${sizeClass} leading-none ${i <= v ? 'text-primary' : 'text-gray-300'}`}
           aria-hidden="true"
         >
           ★

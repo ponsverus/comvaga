@@ -1,9 +1,9 @@
 export default function CheckedIcon({
   className = '',
   title,
-  style = {},
   ...props
 }) {
+  delete props.style;
   const cx = 12;
   const cy = 12;
   const baseRadius = 9;
@@ -42,8 +42,7 @@ export default function CheckedIcon({
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       className={className}
-      style={{ display: 'inline-block', overflow: 'visible', ...style }}
-      aria-hidden={title ? undefined : 'true'}
+            aria-hidden={title ? undefined : 'true'}
       role={title ? 'img' : 'presentation'}
       {...props}
     >

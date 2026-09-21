@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -54,7 +53,6 @@ export default function MesSelect({ value, onChange, todayISO }) {
 
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(selected.year);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
 
   const buttonRef = useRef(null);
   const popoverRef = useRef(null);
@@ -64,21 +62,6 @@ export default function MesSelect({ value, onChange, todayISO }) {
     setViewYear(nextSelected?.year ?? todayYear);
   }, [todayYear, value]);
 
-  useEffect(() => {
-    if (!open || !buttonRef.current) return;
-
-    const rect = buttonRef.current.getBoundingClientRect();
-    const popoverWidth = 284;
-    const popoverHeight = 252;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const top = spaceBelow >= popoverHeight ? rect.bottom + 8 : Math.max(16, rect.top - popoverHeight - 8);
-    let left = rect.right - popoverWidth;
-
-    if (left < 16) left = 16;
-    if (left + popoverWidth > window.innerWidth - 16) left = Math.max(16, window.innerWidth - popoverWidth - 16);
-
-    setPosition({ top, left });
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -111,8 +94,7 @@ export default function MesSelect({ value, onChange, todayISO }) {
   const popover = (
     <div
       ref={popoverRef}
-      style={{ position: 'fixed', top: position.top, left: position.left }}
-      className="z-50 w-[284px] rounded-custom border border-gray-800 bg-dark-100 p-4 shadow-2xl"
+      className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[284px] rounded-custom border border-gray-800 bg-dark-100 p-4 shadow-2xl"
     >
       <div className="mb-4 flex items-center justify-between">
         <button
@@ -173,7 +155,7 @@ export default function MesSelect({ value, onChange, todayISO }) {
   );
 
   return (
-    <div className="inline-block">
+    <div className="relative inline-block">
       <button
         ref={buttonRef}
         type="button"
@@ -184,7 +166,7 @@ export default function MesSelect({ value, onChange, todayISO }) {
         <span className="truncate uppercase">{displayValue}</span>
       </button>
 
-      {open && createPortal(popover, document.body)}
+      {open && popover}
     </div>
   );
 }

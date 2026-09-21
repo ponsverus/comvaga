@@ -40,7 +40,7 @@ function clampPercent(value) {
 }
 
 function ProfessionalMetricBar({ label, value, percent, barClass = 'bg-white' }) {
-  const width = clampPercent(percent);
+  const width = Math.round(clampPercent(percent));
   return (
     <div className="min-w-0">
       <div className="flex items-center justify-between gap-3">
@@ -48,7 +48,7 @@ function ProfessionalMetricBar({ label, value, percent, barClass = 'bg-white' })
         <span className="text-sm font-normal text-gray-200">{value}</span>
       </div>
       <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-800 overflow-hidden">
-        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${width}%` }} />
+        <div className={`h-full rounded-full ${barClass} metric-bar-width-${width}`} />
       </div>
     </div>
   );

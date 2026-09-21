@@ -111,3 +111,165 @@ body {
 ::-webkit-scrollbar-track { background: #111; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+.animation-delay-1s { animation-delay: 1s; }
+.font-condensed { font-family: 'Roboto Condensed', sans-serif; }
+
+@keyframes announcement-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.announcement-bar-wrapper {
+  display: flex;
+  width: max-content;
+  animation: announcement-scroll 50s linear infinite;
+}
+
+.announcement-bar-wrapper:hover { animation-play-state: paused; }
+.announcement-bar-track a {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  display: inline-block;
+}
+
+@keyframes marquee-sync {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-sync {
+  display: flex;
+  animation: marquee-sync 40s linear infinite;
+}
+
+.announcement-bar-marquee:hover .animate-marquee-sync { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-bar-wrapper,
+  .animate-marquee-sync {
+    animation: none;
+  }
+}
+
+.vitrine-offer-badge {
+  background: var(--voferta-bg);
+  border: 1px solid var(--voferta-border);
+  color: var(--voferta-text);
+}
+
+.vitrine-selection-bar {
+  background: rgba(10,10,10,0.97);
+  border-top: 1px solid rgba(212,160,23,0.25);
+}
+
+.vitrine-light .vitrine-selection-bar {
+  background: rgba(255,255,255,0.96);
+  border-top-color: rgba(214,203,182,0.9);
+}
+.metric-bar-width-0 { width: 0%; }
+.metric-bar-width-1 { width: 1%; }
+.metric-bar-width-2 { width: 2%; }
+.metric-bar-width-3 { width: 3%; }
+.metric-bar-width-4 { width: 4%; }
+.metric-bar-width-5 { width: 5%; }
+.metric-bar-width-6 { width: 6%; }
+.metric-bar-width-7 { width: 7%; }
+.metric-bar-width-8 { width: 8%; }
+.metric-bar-width-9 { width: 9%; }
+.metric-bar-width-10 { width: 10%; }
+.metric-bar-width-11 { width: 11%; }
+.metric-bar-width-12 { width: 12%; }
+.metric-bar-width-13 { width: 13%; }
+.metric-bar-width-14 { width: 14%; }
+.metric-bar-width-15 { width: 15%; }
+.metric-bar-width-16 { width: 16%; }
+.metric-bar-width-17 { width: 17%; }
+.metric-bar-width-18 { width: 18%; }
+.metric-bar-width-19 { width: 19%; }
+.metric-bar-width-20 { width: 20%; }
+.metric-bar-width-21 { width: 21%; }
+.metric-bar-width-22 { width: 22%; }
+.metric-bar-width-23 { width: 23%; }
+.metric-bar-width-24 { width: 24%; }
+.metric-bar-width-25 { width: 25%; }
+.metric-bar-width-26 { width: 26%; }
+.metric-bar-width-27 { width: 27%; }
+.metric-bar-width-28 { width: 28%; }
+.metric-bar-width-29 { width: 29%; }
+.metric-bar-width-30 { width: 30%; }
+.metric-bar-width-31 { width: 31%; }
+.metric-bar-width-32 { width: 32%; }
+.metric-bar-width-33 { width: 33%; }
+.metric-bar-width-34 { width: 34%; }
+.metric-bar-width-35 { width: 35%; }
+.metric-bar-width-36 { width: 36%; }
+.metric-bar-width-37 { width: 37%; }
+.metric-bar-width-38 { width: 38%; }
+.metric-bar-width-39 { width: 39%; }
+.metric-bar-width-40 { width: 40%; }
+.metric-bar-width-41 { width: 41%; }
+.metric-bar-width-42 { width: 42%; }
+.metric-bar-width-43 { width: 43%; }
+.metric-bar-width-44 { width: 44%; }
+.metric-bar-width-45 { width: 45%; }
+.metric-bar-width-46 { width: 46%; }
+.metric-bar-width-47 { width: 47%; }
+.metric-bar-width-48 { width: 48%; }
+.metric-bar-width-49 { width: 49%; }
+.metric-bar-width-50 { width: 50%; }
+.metric-bar-width-51 { width: 51%; }
+.metric-bar-width-52 { width: 52%; }
+.metric-bar-width-53 { width: 53%; }
+.metric-bar-width-54 { width: 54%; }
+.metric-bar-width-55 { width: 55%; }
+.metric-bar-width-56 { width: 56%; }
+.metric-bar-width-57 { width: 57%; }
+.metric-bar-width-58 { width: 58%; }
+.metric-bar-width-59 { width: 59%; }
+.metric-bar-width-60 { width: 60%; }
+.metric-bar-width-61 { width: 61%; }
+.metric-bar-width-62 { width: 62%; }
+.metric-bar-width-63 { width: 63%; }
+.metric-bar-width-64 { width: 64%; }
+.metric-bar-width-65 { width: 65%; }
+.metric-bar-width-66 { width: 66%; }
+.metric-bar-width-67 { width: 67%; }
+.metric-bar-width-68 { width: 68%; }
+.metric-bar-width-69 { width: 69%; }
+.metric-bar-width-70 { width: 70%; }
+.metric-bar-width-71 { width: 71%; }
+.metric-bar-width-72 { width: 72%; }
+.metric-bar-width-73 { width: 73%; }
+.metric-bar-width-74 { width: 74%; }
+.metric-bar-width-75 { width: 75%; }
+.metric-bar-width-76 { width: 76%; }
+.metric-bar-width-77 { width: 77%; }
+.metric-bar-width-78 { width: 78%; }
+.metric-bar-width-79 { width: 79%; }
+.metric-bar-width-80 { width: 80%; }
+.metric-bar-width-81 { width: 81%; }
+.metric-bar-width-82 { width: 82%; }
+.metric-bar-width-83 { width: 83%; }
+.metric-bar-width-84 { width: 84%; }
+.metric-bar-width-85 { width: 85%; }
+.metric-bar-width-86 { width: 86%; }
+.metric-bar-width-87 { width: 87%; }
+.metric-bar-width-88 { width: 88%; }
+.metric-bar-width-89 { width: 89%; }
+.metric-bar-width-90 { width: 90%; }
+.metric-bar-width-91 { width: 91%; }
+.metric-bar-width-92 { width: 92%; }
+.metric-bar-width-93 { width: 93%; }
+.metric-bar-width-94 { width: 94%; }
+.metric-bar-width-95 { width: 95%; }
+.metric-bar-width-96 { width: 96%; }
+.metric-bar-width-97 { width: 97%; }
+.metric-bar-width-98 { width: 98%; }
+.metric-bar-width-99 { width: 99%; }
+.metric-bar-width-100 { width: 100%; }
+
+
+.carousel-slide-transition { transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1); }
+.carousel-slide-no-transition { transition: none; }

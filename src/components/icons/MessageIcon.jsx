@@ -1,10 +1,10 @@
 export default function MessageIcon({
   className = '',
   title,
-  style = {},
   size = 24,
   ...props
 }) {
+  delete props.style;
   return (
     <svg
       viewBox="0 0 23 23"
@@ -12,12 +12,7 @@ export default function MessageIcon({
       width={size}
       height={size}
       className={className}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        ...style,
-      }}
-      xmlns="http://www.w3.org/2000/svg"
+            xmlns="http://www.w3.org/2000/svg"
       role={title ? 'img' : 'presentation'}
       aria-hidden={!title}
       {...props}

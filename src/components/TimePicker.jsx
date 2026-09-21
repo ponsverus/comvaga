@@ -145,8 +145,6 @@ export default function TimePicker({ value, onChange, triggerClassName = '' }) {
     if (canvas.width !== size * dpr || canvas.height !== size * dpr) {
       canvas.width = size * dpr;
       canvas.height = size * dpr;
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
     }
 
     const ctx = canvas.getContext('2d');
@@ -281,46 +279,17 @@ export default function TimePicker({ value, onChange, triggerClassName = '' }) {
     <>
       <div
         onClick={closePicker}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.55)',
-          zIndex: 9998,
-        }}
+        className="fixed inset-0 z-[9998] bg-black/55"
       />
 
       <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 9999,
-          background: '#1c1c1e',
-          border: '1px solid #2e2e30',
-          borderRadius: 3,
-          padding: '16px 16px 14px',
-          width: 292,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.75)',
-        }}
+        className="fixed left-1/2 top-1/2 z-[9999] w-[292px] -translate-x-1/2 -translate-y-1/2 rounded-custom border border-[#2e2e30] bg-[#1c1c1e] px-4 pb-3.5 pt-4 shadow-[0_20px_60px_rgba(0,0,0,0.75)]"
       >
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <div className="mb-2.5 flex justify-end">
           <button
             type="button"
             onClick={closePicker}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#888',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              transition: 'color .15s',
-            }}
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-[#888] transition-colors hover:text-white"
           >
             <X size={18} />
           </button>
@@ -328,13 +297,7 @@ export default function TimePicker({ value, onChange, triggerClassName = '' }) {
 
         <canvas
           ref={canvasRef}
-          style={{
-            display: 'block',
-            cursor: 'pointer',
-            touchAction: 'none',
-            borderRadius: '50%',
-            margin: '0 auto',
-          }}
+          className="mx-auto block h-[256px] w-[256px] cursor-pointer rounded-full touch-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -343,40 +306,18 @@ export default function TimePicker({ value, onChange, triggerClassName = '' }) {
           onTouchEnd={handlePointerUp}
         />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14 }}>
+        <div className="mt-3.5 flex justify-between">
           <button
             type="button"
             onClick={clearPicker}
-            style={{
-              background: 'transparent',
-              border: '1px solid #3a3a3c',
-              color: '#888',
-              borderRadius: 9999,
-              padding: '8px 20px',
-              fontSize: 12,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '.06em',
-              cursor: 'pointer',
-            }}
+            className="cursor-pointer rounded-full border border-[#3a3a3c] bg-transparent px-5 py-2 text-xs font-medium uppercase tracking-[0.06em] text-[#888]"
           >
             LIMPAR
           </button>
           <button
             type="button"
             onClick={confirmPicker}
-            style={{
-              background: '#d4a017',
-              border: 'none',
-              color: '#000',
-              borderRadius: 9999,
-              padding: '8px 24px',
-              fontSize: 12,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '.06em',
-              cursor: 'pointer',
-            }}
+            className="cursor-pointer rounded-full border-0 bg-[#d4a017] px-6 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-black"
           >
             DEFINIR
           </button>
