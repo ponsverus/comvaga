@@ -106,8 +106,7 @@ function EntregaCard({
           <div className="flex items-start justify-between gap-3">
             <div className="font-normal text-sm leading-tight">{entrega.nome}</div>
             <span
-              className="inline-block px-1.5 py-0.5 rounded-button text-[9px] font-normal uppercase shrink-0"
-              style={{ background: 'var(--voferta-bg)', border: '1px solid var(--voferta-border)', color: 'var(--voferta-text)' }}
+              className="inline-block px-1.5 py-0.5 rounded-button text-[9px] font-normal uppercase shrink-0 vitrine-offer-badge"
             >
               OFERTA
             </span>
@@ -118,7 +117,7 @@ function EntregaCard({
               {entrega.duracao_minutos} MIN
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-normal text-base" style={{ color: 'var(--vpromo-text)' }}>R$ {precoFinal.toFixed(2)}</span>
+              <span className="font-normal text-base text-vpromo">R$ {precoFinal.toFixed(2)}</span>
             </div>
           </div>
         </>
@@ -259,25 +258,24 @@ export default function EntregasCarousel({
   const itensAntigos = getPageItems(paginaAnterior);
   const itensNovos = getPageItems(paginaAlvo);
   const itensMostrados = animando ? itensAntigos : itensNovos;
-  const translateSaindo = animDir === 'left' ? '-100%' : animDir === 'right' ? '100%' : '0%';
-  const translateEntrando = animDir === 'left' ? '100%' : animDir === 'right' ? '-100%' : '0%';
+  const slideOutClass = animDir === 'left' ? '-translate-x-full' : animDir === 'right' ? 'translate-x-full' : 'translate-x-0';
+  const slideInClass = animando
+    ? animDir === 'left'
+      ? 'translate-x-full'
+      : animDir === 'right'
+        ? '-translate-x-full'
+        : 'translate-x-0'
+    : 'translate-x-0';
+  const slideTransitionClass = animando ? 'carousel-slide-transition' : 'carousel-slide-no-transition';
   const dotInactive = isLight ? 'bg-vborder hover:bg-vsub/40' : 'bg-gray-700 hover:bg-gray-500';
   const navBtnCl = isLight ? 'hover:bg-vcard2 text-vmuted hover:text-vtext' : 'hover:bg-vcard2 text-vsub hover:text-vtext';
 
   return (
     <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div style={{ overflow: 'hidden', position: 'relative' }}>
+      <div className="relative overflow-hidden">
         {animando && (
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              transform: `translateX(${translateSaindo})`,
-              transition: 'transform 320ms cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            className={`absolute inset-x-0 top-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${slideOutClass} carousel-slide-transition`}
           >
             {itensAntigos.map((item) => (
               <EntregaCard
@@ -295,11 +293,7 @@ export default function EntregasCarousel({
           </div>
         )}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-          style={{
-            transform: animando ? `translateX(${translateEntrando})` : 'translateX(0%)',
-            transition: animando ? 'transform 320ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-          }}
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${slideInClass} ${slideTransitionClass}`}
         >
           {(animando ? itensNovos : itensMostrados).map((item) => (
             <EntregaCard
