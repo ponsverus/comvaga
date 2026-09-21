@@ -236,17 +236,15 @@ function SelectionBar({ itens, counterSingular, counterPlural, onConfirm, onClea
   const durTotal = itens.reduce((sum, x) => sum + Number(x.duracao_minutos || 0), 0);
   const valTotal = itens.reduce((sum, x) => sum + getPrecoFinalEntrega(x), 0);
   const label = qtd === 1 ? counterSingular : counterPlural;
-  const bg = isLight ? 'rgba(255,255,255,0.96)' : 'rgba(10,10,10,0.97)';
-  const border = isLight ? 'rgba(214,203,182,0.9)' : 'rgba(212,160,23,0.25)';
   const textMain = isLight ? 'text-vtext' : 'text-white';
   const textSub = isLight ? 'text-vsub' : 'text-gray-500';
   const clearBtn = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-600 hover:text-gray-400';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60]" style={{ background: bg, borderTop: `1px solid ${border}` }}>
+    <div className="fixed bottom-0 left-0 right-0 z-[60] vitrine-selection-bar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-vprimary flex items-center justify-center text-vprimary-text text-xs font-normal shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>{qtd}</div>
+          <div className="w-8 h-8 rounded-full bg-vprimary flex items-center justify-center text-vprimary-text text-xs font-normal shrink-0 tabular-nums">{qtd}</div>
           <div className="min-w-0">
             <div className={`text-sm font-normal truncate ${textMain}`}>{qtd} {label} SELECIONADO{qtd > 1 ? 's' : ''}</div>
             <div className={`text-xs font-normal ${textSub}`}>{durTotal} MIN • R$ {valTotal.toFixed(2)}</div>
@@ -557,7 +555,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   );
 
   return (
-    <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}`} style={hasSelecao ? { paddingBottom: 72 } : undefined}>
+    <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}${hasSelecao ? ' pb-[72px]' : ''}`}>
       <AlertModal open={nativeAlertOpen} onClose={closeAlert} title={nativeAlertData.title} body={nativeAlertData.body} buttonText={nativeAlertData.buttonText} isLight={isLight} />
       <ConfirmModal open={nativeConfirmOpen} onCancel={() => closeConfirm(false)} onConfirm={() => closeConfirm(true)} title={nativeConfirmData.title} body={nativeConfirmData.body} confirmText={nativeConfirmData.confirmText} cancelText={nativeConfirmData.cancelText} isLight={isLight} />
 
