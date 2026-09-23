@@ -1293,7 +1293,7 @@ export const ptBR = {
     profile_access_unavailable: {
       title: 'Houve um erro ao carregar seu acesso',
       body:
-        'Sua senha foi aceita, mas houve um erro confirmar seu perfil agora.\n' +
+        'Sua senha foi aceita, mas houve um erro ao confirmar seu perfil agora.\n' +
         'Tente novamente em alguns segundos.\n' +
         'Se persistir, acesse SUPORTE no rodapé da página.',
       variant: 'warning',
