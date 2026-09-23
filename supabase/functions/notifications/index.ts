@@ -162,7 +162,7 @@ function tplLembrete(d: AgData) {
     d.entregaNome
       ? `Seu agendamento de ${strong(d.entregaNome)} com ${strong(d.profNome)} é hoje, dia ${strong(d.dataBR)}, às ${strong(d.horario)}.`
       : `Seu agendamento com ${strong(d.profNome)} é hoje, dia ${strong(d.dataBR)}, às ${strong(d.horario)}.`
-  ) + note('Faltam aproximadamente 30 minutos. Não se atrase.');
+  ) + note('Faltam aproximadamente 30 minutos. Fique atento ao horário.');
   return { subject: `Lembrete: seu agendamento é em ${d.horario} - ${d.dataBR}`, html: baseLayout('#3B82F6', 'Lembrete de agendamento', d.negocioNome, 'LEMBRETE', body) };
 }
 
