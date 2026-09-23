@@ -100,18 +100,17 @@ const sections = [
     ],
   },
   {
-    title: '13. Alterações dos termos',
+    title: '13. Ajustes dos termos',
     body: [
-      'Podemos atualizar estes termos para refletir mudanças legais, técnicas, comerciais ou operacionais.',
-      'Quando a alteração for relevante, poderemos comunicar pelos canais disponíveis. O uso continuado da plataforma após a atualização indica ciência dos novos termos.',
+      'Podemos reescrever estes termos para refletir ajustes legais, técnicos, comerciais ou operacionais.',
+      'Quando o ajuste for relevante, poderemos comunicar pelos canais disponíveis. O uso continuado da plataforma após o novo texto indica ciência dos novos termos.',
     ],
   },
   {
     title: '14. Lei aplicável e contato',
     body: [
-      'Estes termos são regidos pelas leis da República Federativa do Brasil.',
-      'Para dúvidas, suporte, pedidos de remoção de conteúdo, cancelamento, privacidade ou reclamações, use o link de suporte disponível no rodapé desta página.',
-      'Antes da publicação definitiva, os dados jurídicos da empresa, como razão social, CNPJ, endereço e e-mail oficial, devem ser preenchidos conforme a estrutura formal da Comvaga. Para falar com a Comvaga sobre estes termos, acesse o link de suporte disponível no rodapé.',
+      'Estes termos seguem as leis da República Federativa do Brasil.',
+      'Para dúvidas, suporte, pedidos de retirada de conteúdo, cancelamento, privacidade ou queixas, use o link de suporte disponível no rodapé desta página.',
     ],
   },
 ];
