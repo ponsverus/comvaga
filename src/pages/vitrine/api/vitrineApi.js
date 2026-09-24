@@ -85,13 +85,15 @@ function normalizeEntregaPageRows(rows) {
   });
 }
 
-export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, offset = 0 } = {}) {
+export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, cursor = null } = {}) {
   if (!profissionalId) return { rows: [], totalCount: 0 };
   const { data, error } = await withTimeout(
     supabase.rpc('get_entregas_vitrine_paginadas', {
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
-      p_offset: Math.max(0, Number(offset) || 0),
+      p_cursor_preco_final: cursor?.preco_final ?? null,
+      p_cursor_nome: cursor?.nome ?? null,
+      p_cursor_id: cursor?.id ?? null,
     }),
     7000,
     'entregas-vitrine'
@@ -146,12 +148,14 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   };
 }
 
-export async function fetchVitrineGaleria(negocioId, { limit = null, offset = 0 } = {}) {
+export async function fetchVitrineGaleria(negocioId, { limit = null, cursor = null } = {}) {
   const { data, error } = await withTimeout(
     supabase.rpc('get_galerias_vitrine', {
       p_negocio_id: negocioId,
       p_limit: limit == null ? null : Math.max(1, Number(limit) || 1),
-      p_offset: Math.max(0, Number(offset) || 0),
+      p_cursor_ordem: cursor?.ordem ?? null,
+      p_cursor_created_at: cursor?.created_at ?? null,
+      p_cursor_id: cursor?.id ?? null,
     }),
     7000,
     'galerias'
@@ -160,11 +164,12 @@ export async function fetchVitrineGaleria(negocioId, { limit = null, offset = 0 
   return data || [];
 }
 
-export async function fetchVitrineDepoimentos(negocioId, { limit = null, offset = 0 } = {}) {
+export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor = null } = {}) {
   const params = { p_negocio_id: negocioId };
-  if (limit != null) {
-    params.p_limit = Math.max(1, Number(limit) || 1);
-    params.p_offset = Math.max(0, Number(offset) || 0);
+  if (limit != null) params.p_limit = Math.max(1, Number(limit) || 1);
+  if (cursor?.id) {
+    params.p_cursor_created_at = cursor.created_at ?? null;
+    params.p_cursor_id = cursor.id;
   }
 
   const { data, error } = await withTimeout(
