@@ -18,7 +18,7 @@ import {
   fetchCurrentClienteId,
   fetchFavoritosCliente,
   fetchReviewedBookings,
-  removerContaCliente,
+  excluirContaCliente,
   removerFavoritoCliente,
 } from './clientArea/api/clientAreaApi';
 import Heart from './clientArea/components/Heart';
@@ -653,7 +653,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
 
     try {
       setDeletingAccount(true);
-      await removerContaCliente();
+      await excluirContaCliente();
       await uiAlert('clientArea.account_deleted', 'success');
       const logoutResult = onLogout?.('/');
       if (logoutResult?.catch) logoutResult.catch(() => {});

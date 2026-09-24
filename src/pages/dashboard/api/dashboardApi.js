@@ -1,7 +1,7 @@
 import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
 
-function isAdminRemovedProfessional(row) {
+function isAdminExcludedProfessional(row) {
   return row?.status === 'excluido';
 }
 
@@ -316,34 +316,34 @@ export async function fetchProfissionaisComStatus(negocioId) {
     'profissionais-status'
   );
   if (error) throw error;
-  return (data || []).filter((row) => !isAdminRemovedProfessional(row));
+  return (data || []).filter((row) => !isAdminExcludedProfessional(row));
 }
 
-export async function removeProfissionalSeguramente(profissionalId) {
+export async function excluirProfissionalParceiroSeguramente(profissionalId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('remove_profissional_seguro', { p_profissional_id: profissionalId }),
+    () => supabase.rpc('excluir_profissional_parceiro_seguro', { p_profissional_id: profissionalId }),
     6500,
-    'remove-profissional'
+    'excluir-profissional-parceiro'
   );
   if (error) throw error;
   return data;
 }
 
-export async function removeNegocioSeguramente(negocioId) {
+export async function excluirNegocioSeguramente(negocioId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('remove_negocio_seguro', { p_negocio_id: negocioId }),
+    () => supabase.rpc('excluir_negocio_seguro', { p_negocio_id: negocioId }),
     6500,
-    'remove-negocio'
+    'excluir-negocio'
   );
   if (error) throw error;
   return data;
 }
 
-export async function removeEntregaSeguramente(entregaId) {
+export async function excluirEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('remove_entrega_segura', { p_entrega_id: entregaId }),
+    () => supabase.rpc('excluir_entrega_segura', { p_entrega_id: entregaId }),
     6500,
-    'remove-entrega'
+    'excluir-entrega'
   );
   if (error) throw error;
   return data;

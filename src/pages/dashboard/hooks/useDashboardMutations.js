@@ -12,9 +12,9 @@ import {
   insertEntrega,
   insertGaleriaItem,
   insertProfissional,
-  removeEntregaSeguramente,
-  removeNegocioSeguramente,
-  removeProfissionalSeguramente,
+  excluirEntregaSeguramente,
+  excluirNegocioSeguramente,
+  excluirProfissionalParceiroSeguramente,
   updateEntregaById,
   updateNegocioInfo,
   updateNegocioLogo,
@@ -236,7 +236,7 @@ export function useDashboardMutations({
     if (!ok) return;
     try {
       setDeletingBusiness(true);
-      const result = await removeNegocioSeguramente(negocio.id);
+      const result = await excluirNegocioSeguramente(negocio.id);
       await uiAlert('dashboard.business_deleted', 'success');
 
       const remaining = Number(result?.remaining_owner_businesses || 0);
@@ -489,7 +489,7 @@ export function useDashboardMutations({
       return;
     }
     try {
-      await removeEntregaSeguramente(entrega.id);
+      await excluirEntregaSeguramente(entrega.id);
       await uiAlert(`dashboard.business.${businessGroup}.entrega_deleted`, 'success');
       await reloadEntregas(negocio.id, [entrega.profissional_id]);
     } catch (error) {
@@ -582,7 +582,7 @@ export function useDashboardMutations({
       return;
     }
     try {
-      await removeProfissionalSeguramente(p.id);
+      await excluirProfissionalParceiroSeguramente(p.id);
       await uiAlert(isSelfProfessional ? 'dashboard.professional_self_deleted' : 'dashboard.professional_deleted', 'success');
       const profs = await reloadProfissionais();
       if (profs?.length) await reloadEntregas(negocio.id, profs.map((item) => item.id));
