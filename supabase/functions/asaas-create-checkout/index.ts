@@ -55,12 +55,8 @@ function checkoutUrlFor(id: string) {
   return url.toString();
 }
 
-function publicSiteUrl(req: Request) {
-  const configured = Deno.env.get('PUBLIC_SITE_URL') || Deno.env.get('APP_URL');
-  if (configured) return configured.replace(/\/+$/, '');
-  const origin = req.headers.get('origin');
-  if (origin) return origin.replace(/\/+$/, '');
-  throw new Error('missing_public_site_url');
+function publicSiteUrl() {
+  return requiredEnv('PUBLIC_SITE_URL').replace(/\/+$/, '');
 }
 
 function centsToReais(cents: number) {
@@ -432,7 +428,7 @@ Deno.serve(async (req) => {
         const sessionId = String(beginData.session_id);
         const externalReference = String(beginData.external_reference);
 
-        const siteUrl = publicSiteUrl(req);
+        const siteUrl = publicSiteUrl();
         const checkoutPayload: Record<string, unknown> = {
           billingTypes: ['CREDIT_CARD'],
           chargeTypes: ['DETACHED'],
@@ -552,7 +548,7 @@ Deno.serve(async (req) => {
     const sessionIdSub = String(beginDataSub.session_id);
     const externalReferenceSub = String(beginDataSub.external_reference);
 
-    const siteUrl = publicSiteUrl(req);
+    const siteUrl = publicSiteUrl();
     const nextDueDate = asAsaasDateTime(new Date());
     const checkoutPayload: Record<string, unknown> = {
       billingTypes: ['CREDIT_CARD'],
