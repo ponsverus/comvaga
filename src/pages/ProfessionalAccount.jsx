@@ -150,7 +150,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setDeletingAccount(true);
       const { error } = await withAuthRetry(
-        supabase.rpc('remove_professional_account_seguro'),
+        supabase.rpc('excluir_conta_profissional_seguro'),
         8000,
         'professional-account-delete'
       );
