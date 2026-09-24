@@ -400,7 +400,7 @@ export const ptBR = {
     },
 
     billing_status_load_error_inline: {
-      body: 'Não foi possível verificar a cobrança agora.',
+      body: 'Houve um erro ao verificar o pagamento agora.',
     },
     billing_status_retry_action: {
       body: 'TENTAR DE NOVO',
@@ -1321,7 +1321,7 @@ export const ptBR = {
     profile_access_unavailable: {
       title: 'Houve um erro ao carregar seu acesso',
       body:
-        'Sua senha foi aceita, mas houve um erro confirmar seu perfil agora.\n' +
+        'Sua senha foi aceita, mas houve um erro ao confirmar seu perfil agora.\n' +
         'Tente novamente em alguns segundos.\n' +
         'Se persistir, acesse SUPORTE no rodapé da página.',
       variant: 'warning',
@@ -1773,7 +1773,7 @@ export const ptBR = {
         aulas:     'Sem aulas para este profissional.',
       },
       load_more_error: {
-        servicos:  'Erro ao carregar mais serviços. Tente novamente.',
+        servicos:  'Erro ao carregar mais servs. Tente novamente.',
         consultas: 'Erro ao carregar mais consultas. Tente novamente.',
         aulas:     'Erro ao carregar mais aulas. Tente novamente.',
       },
