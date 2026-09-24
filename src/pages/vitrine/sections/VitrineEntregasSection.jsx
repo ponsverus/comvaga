@@ -7,6 +7,7 @@ export default function VitrineEntregasSection({
   counterSingular,
   counterPlural,
   onLoadPage,
+  onLoadPageError,
   booking,
 }) {
   return (
@@ -31,6 +32,7 @@ export default function VitrineEntregasSection({
                     loadingPage={card.loadingPage}
                     version={card.version}
                     onLoadPage={onLoadPage}
+                    onLoadPageError={onLoadPageError}
                     profissional={card.profissional}
                     selecaoProfId={booking.selecaoProfId}
                     entregasSelecionadas={booking.entregasSelecionadas}
