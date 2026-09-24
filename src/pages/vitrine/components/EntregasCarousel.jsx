@@ -154,6 +154,7 @@ export default function EntregasCarousel({
   loadingPage = null,
   version = 0,
   onLoadPage,
+  onLoadPageError,
   profissional,
   selecaoProfId,
   entregasSelecionadas,
@@ -215,7 +216,8 @@ export default function EntregasCarousel({
       setLoadingTargetPage(idx);
       await onLoadPage(profissional.id, idx);
       return true;
-    } catch {
+    } catch (error) {
+      if (typeof onLoadPageError === 'function') onLoadPageError({ error, profissional, page: idx });
       return false;
     } finally {
       setLoadingTargetPage(null);
