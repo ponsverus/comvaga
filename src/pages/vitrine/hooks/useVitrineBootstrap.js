@@ -17,6 +17,15 @@ const GALERIA_PAGE_SIZE = 12;
 const DEPOIMENTOS_PAGE_SIZE = 12;
 const ENTREGAS_PAGE_SIZE = 6;
 
+function getLastItem(rows) {
+  return Array.isArray(rows) && rows.length ? rows[rows.length - 1] : null;
+}
+
+function getEntregaCursor(rows) {
+  const last = getLastItem(rows);
+  return last ? { preco_final: last.preco_final, nome: last.nome, id: last.id } : null;
+}
+
 function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
   const next = {};
   const grouped = new Map();
@@ -73,7 +82,8 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
   const loadEntregasPage = useCallback(async (profissionalId, page = 0, { force = false } = {}) => {
     if (!profissionalId) return [];
     const pageIndex = Math.max(0, Number(page) || 0);
-    const cached = entregaPagesByProf?.[profissionalId]?.pages?.[pageIndex];
+    const currentState = entregaPagesByProf?.[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
+    const cached = currentState.pages?.[pageIndex];
     if (cached && !force) return cached;
 
     setEntregaPagesByProf((current) => ({
@@ -85,27 +95,41 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
     }));
 
     try {
-      const { rows, totalCount } = await fetchVitrineEntregasPage(profissionalId, {
-        limit: ENTREGAS_PAGE_SIZE,
-        offset: pageIndex * ENTREGAS_PAGE_SIZE,
-      });
+      const pages = force ? {} : { ...(currentState.pages || {}) };
+      let totalCount = force ? 0 : Number(currentState.totalCount || 0);
+
+      for (let index = 0; index <= pageIndex; index += 1) {
+        if (pages[index] && !force) continue;
+
+        const cursor = index === 0 ? null : getEntregaCursor(pages[index - 1]);
+        if (index > 0 && !cursor) {
+          pages[index] = [];
+          break;
+        }
+
+        const { rows, totalCount: nextTotalCount } = await fetchVitrineEntregasPage(profissionalId, {
+          limit: ENTREGAS_PAGE_SIZE,
+          cursor,
+        });
+        pages[index] = rows;
+        if (rows.length > 0 || index === 0) totalCount = nextTotalCount;
+      }
+
+      const targetRows = pages[pageIndex] || [];
       setEntregaPagesByProf((current) => {
         const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
         return {
           ...current,
           [profissionalId]: {
             ...previous,
-            pages: {
-              ...(force ? {} : previous.pages),
-              [pageIndex]: rows,
-            },
-            totalCount: rows.length > 0 || pageIndex === 0 ? totalCount : previous.totalCount,
+            pages,
+            totalCount: targetRows.length > 0 || pageIndex === 0 ? totalCount : previous.totalCount,
             loadingPage: null,
             version: force ? previous.version + 1 : previous.version,
           },
         };
       });
-      return rows;
+      return targetRows;
     } catch (error) {
       setEntregaPagesByProf((current) => {
         const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
@@ -122,7 +146,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
   }, [entregaPagesByProf]);
 
   const refreshDepoimentos = useCallback(async (negocioId) => {
-    const deps = await fetchVitrineDepoimentos(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, offset: 0 });
+    const deps = await fetchVitrineDepoimentos(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null });
     const visibleRows = deps.slice(0, DEPOIMENTOS_PAGE_SIZE);
     setDepoimentos(visibleRows);
     setDepoimentosHasMore(deps.length > DEPOIMENTOS_PAGE_SIZE);
@@ -172,13 +196,13 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
       setGaleriaLoadingMore(true);
       const rows = await fetchVitrineGaleria(negocio.id, {
         limit: GALERIA_PAGE_SIZE + 1,
-        offset: galeriaItems.length,
+        cursor: getLastItem(galeriaItems),
       });
       applyGaleriaPage(rows, 'append');
     } finally {
       setGaleriaLoadingMore(false);
     }
-  }, [applyGaleriaPage, galeriaHasMore, galeriaItems.length, galeriaLoadingMore, negocio?.id]);
+  }, [applyGaleriaPage, galeriaHasMore, galeriaItems, galeriaLoadingMore, negocio?.id]);
 
   const loadMoreDepoimentos = useCallback(async () => {
     if (!negocio?.id || depoimentosLoadingMore || !depoimentosHasMore) return;
@@ -187,14 +211,14 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
       setDepoimentosLoadingMore(true);
       const rows = await fetchVitrineDepoimentos(negocio.id, {
         limit: DEPOIMENTOS_PAGE_SIZE + 1,
-        offset: depoimentos.length,
+        cursor: getLastItem(depoimentos),
       });
       applyDepoimentosPage(rows, 'append');
       return rows.slice(0, DEPOIMENTOS_PAGE_SIZE).length > 0;
     } finally {
       setDepoimentosLoadingMore(false);
     }
-  }, [applyDepoimentosPage, depoimentos.length, depoimentosHasMore, depoimentosLoadingMore, negocio?.id]);
+  }, [applyDepoimentosPage, depoimentos, depoimentosHasMore, depoimentosLoadingMore, negocio?.id]);
 
   const loadVitrine = useCallback(async () => {
     const runId = loadRunRef.current + 1;
@@ -249,8 +273,8 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
         fetchVitrineEntregasFirstPages(negocioData.id, profissionalIds, {
           limit: ENTREGAS_PAGE_SIZE,
         }),
-        fetchVitrineGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, offset: 0 }),
-        fetchVitrineDepoimentos(negocioData.id, { limit: DEPOIMENTOS_PAGE_SIZE + 1, offset: 0 }),
+        fetchVitrineGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null }),
+        fetchVitrineDepoimentos(negocioData.id, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
       ]);
       if (loadRunRef.current !== runId) return;
 
