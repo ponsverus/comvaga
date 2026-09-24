@@ -282,20 +282,24 @@ export async function fetchPartnerNegocioIds(userId) {
   return [...new Set((data || []).map((item) => item.negocio_id).filter(Boolean))];
 }
 
-export async function fetchGaleria(negocioId, { limit = null, offset = 0 } = {}) {
+export async function fetchGaleria(negocioId, { limit = null, cursor = null } = {}) {
   const buildGaleriaQuery = () => {
     let query = supabase
       .from('galerias')
-      .select('id, path, ordem')
+      .select('id, path, ordem, created_at')
       .eq('negocio_id', negocioId)
       .order('ordem', { ascending: true })
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true });
 
-    if (limit != null) {
-      const from = Math.max(0, Number(offset) || 0);
-      const to = from + Math.max(1, Number(limit) || 1) - 1;
-      query = query.range(from, to);
+    if (cursor?.id) {
+      const ordem = Number(cursor.ordem ?? 0);
+      query = query.or(
+        `ordem.gt.${ordem},and(ordem.eq.${ordem},created_at.gt.${cursor.created_at}),and(ordem.eq.${ordem},created_at.eq.${cursor.created_at},id.gt.${cursor.id})`
+      );
     }
+
+    if (limit != null) query = query.limit(Math.max(1, Number(limit) || 1));
 
     return query;
   };
@@ -402,7 +406,7 @@ export async function fetchEntregasPage({
   negocioId,
   profissionalId,
   limit = 6,
-  offset = 0,
+  cursor = null,
 }) {
   if (!negocioId || !profissionalId) return { rows: [], totalCount: 0 };
   const { data, error } = await withAuthRetry(
@@ -410,7 +414,9 @@ export async function fetchEntregasPage({
       p_negocio_id: negocioId,
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
-      p_offset: Math.max(0, Number(offset) || 0),
+      p_cursor_ativo: cursor?.ativo ?? null,
+      p_cursor_preco: cursor?.preco ?? null,
+      p_cursor_id: cursor?.id ?? null,
     }),
     7000,
     'entregas-dashboard-page'
@@ -491,15 +497,19 @@ export async function fetchAgendamentosNegocio({
 export async function fetchClientesDashboard({
   negocioId,
   limit = 50,
-  offset = 0,
   search = null,
+  cursor = null,
 }) {
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('get_clientes_dashboard', {
       p_negocio_id: negocioId,
       p_limit: limit,
-      p_offset: offset,
       p_search: search,
+      p_cursor_ultimo_data: cursor?.ultimo_data ?? null,
+      p_cursor_ultimo_horario: cursor?.ultimo_horario_inicio ?? null,
+      p_cursor_ultimo_created_at: cursor?.ultimo_created_at ?? null,
+      p_cursor_ultimo_agendamento_id: cursor?.ultimo_agendamento_id ?? null,
+      p_cursor_cliente_id: cursor?.cliente_id ?? null,
     }),
     7000,
     'clientes-dashboard'
