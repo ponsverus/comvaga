@@ -241,16 +241,29 @@ function getBillingAnnouncement(status) {
   return null;
 }
 
-function BillingAnnouncementBar({ announcement }) {
+function BillingAnnouncementBar({ announcement, onAction, actionLoading = false }) {
   if (!announcement) return null;
   const toneClass = announcement.tone === 'danger'
     ? 'border-red-500/30 bg-[#1a0b0b] text-red-100'
     : 'border-primary/25 bg-[#151106] text-primary';
+  const canAct = !!announcement.actionLabel && typeof onAction === 'function';
 
   return (
     <div className={`border-b ${toneClass}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-center text-xs sm:text-sm font-normal">
-        {announcement.text}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs sm:text-sm font-normal">
+        <div className="flex flex-col items-center justify-center gap-2 text-center sm:flex-row">
+          <span>{announcement.text}</span>
+          {canAct ? (
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={actionLoading}
+              className="inline-flex items-center justify-center rounded-button border border-current px-3 py-1 text-[11px] font-normal uppercase transition-opacity disabled:cursor-wait disabled:opacity-60"
+            >
+              {actionLoading ? 'VERIFICANDO...' : announcement.actionLabel}
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -295,6 +308,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const [activeTab, setActiveTab] = useState('agendamentos');
   const [billingStatus, setBillingStatus] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [billingStatusLoadError, setBillingStatusLoadError] = useState(false);
   const {
     parceiroProfissional,
     negocio,
@@ -339,16 +353,24 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     let active = true;
     if (!negocio?.id || !souDono) {
       setBillingStatus(null);
+      setBillingStatusLoadError(false);
       setBillingLoading(false);
       return () => { active = false; };
     }
+    setBillingStatusLoadError(false);
     setBillingLoading(true);
     fetchBusinessBillingStatus(negocio.id)
       .then((status) => {
-        if (active) setBillingStatus(status);
+        if (active) {
+          setBillingStatus(status);
+          setBillingStatusLoadError(false);
+        }
       })
       .catch(() => {
-        if (active) setBillingStatus(null);
+        if (active) {
+          setBillingStatus(null);
+          setBillingStatusLoadError(true);
+        }
       })
       .finally(() => {
         if (active) setBillingLoading(false);
@@ -359,17 +381,21 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const reloadBillingStatus = useCallback(async () => {
     if (!negocio?.id || !souDono) {
       setBillingStatus(null);
+      setBillingStatusLoadError(false);
       setBillingLoading(false);
       return null;
     }
 
+    setBillingStatusLoadError(false);
     setBillingLoading(true);
     try {
       const status = await fetchBusinessBillingStatus(negocio.id);
       setBillingStatus(status);
+      setBillingStatusLoadError(false);
       return status;
     } catch {
       setBillingStatus(null);
+      setBillingStatusLoadError(true);
       return null;
     } finally {
       setBillingLoading(false);
@@ -389,6 +415,9 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const [faturamentoData, setFaturamentoData]             = useState('');
   const [faturamentoMes, setFaturamentoMes]             = useState('');
+  const handleMetricsLoadError = useCallback(() => {
+    uiAlert('dashboard.metrics_load_error', 'warning');
+  }, [uiAlert]);
   const {
     metricsHoje,
     metricsTopCards,
@@ -409,6 +438,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     faturamentoData,
     faturamentoMes,
     parceiroProfissionalId,
+    onLoadError: handleMetricsLoadError,
   });
 
   const [showNovaEntrega, setShowNovaEntrega]       = useState(false);
@@ -467,6 +497,10 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const counterSingular  = useMemo(() => getBizLabel(businessGroup, 'counter_singular'), [businessGroup]);
   const counterPlural    = useMemo(() => getBizLabel(businessGroup, 'counter_plural'), [businessGroup]);
   const emptyListMsg     = useMemo(() => getBizLabel(businessGroup, 'empty_list'), [businessGroup]);
+  const entregaLoadMoreErrorKey = useMemo(() => `dashboard.business.${businessGroup}.load_more_error`, [businessGroup]);
+  const handleEntregasPageError = useCallback(() => {
+    uiAlert(entregaLoadMoreErrorKey, 'warning');
+  }, [entregaLoadMoreErrorKey, uiAlert]);
 
   const adminJaEhProfissional = useMemo(() =>
     profissionais.some(p => p.user_id === user?.id),
@@ -774,13 +808,25 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     </div>
   );
 
-  const billingAnnouncement = souDono ? getBillingAnnouncement(billingStatus) : null;
+  const billingAnnouncement = souDono
+    ? billingStatusLoadError
+      ? {
+        tone: 'warning',
+        text: dashboardBillingMessage('billing_status_load_error_inline'),
+        actionLabel: dashboardBillingMessage('billing_status_retry_action'),
+      }
+      : getBillingAnnouncement(billingStatus)
+    : null;
 
   return (
     <div className="min-h-screen bg-black text-white">
 
       <div className="sticky top-0 z-50">
-        <BillingAnnouncementBar announcement={billingAnnouncement} />
+        <BillingAnnouncementBar
+          announcement={billingAnnouncement}
+          onAction={billingStatusLoadError ? reloadBillingStatus : undefined}
+          actionLoading={billingLoading}
+        />
 
         <header className="bg-dark-100 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -980,6 +1026,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 entregasPorProf={entregasPorProf}
                 entregaPagesByProf={entregaPagesByProf}
                 loadEntregasPage={loadEntregasPage}
+                onLoadPageError={handleEntregasPageError}
                 counterSingular={counterSingular}
                 counterPlural={counterPlural}
                 emptyListMsg={emptyListMsg}
