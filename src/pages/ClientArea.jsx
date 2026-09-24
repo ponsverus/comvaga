@@ -124,11 +124,11 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     }
   }, []);
 
-  const fetchAgendamentos = useCallback(async ({ page = 0, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
+  const fetchAgendamentos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
     const data = await fetchAgendamentosCliente({
       clienteId: clienteIdParam,
       limit,
-      offset: page * PAGE_SIZE,
+      cursor,
     });
     return (data || []).map(a => ({
       ...a,
@@ -153,11 +153,11 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     }));
   }, [clienteId]);
 
-  const fetchFavoritos = useCallback(async ({ page = 0, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
+  const fetchFavoritos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
     const data = await fetchFavoritosCliente({
       clienteId: clienteIdParam,
       limit,
-      offset: page * PAGE_SIZE,
+      cursor,
     });
     return (data || []).map(f => ({
       ...f,
@@ -675,7 +675,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     try {
       setAgendamentosLoadingMore(true);
       const nextPage = agendamentosPage + 1;
-      const rows = await fetchAgendamentos({ page: nextPage, limit: PAGE_SIZE + 1 });
+      const cursor = agendamentos.length ? agendamentos[agendamentos.length - 1] : null;
+      const rows = await fetchAgendamentos({ cursor, limit: PAGE_SIZE + 1 });
       const visibleRows = getVisiblePageRows(rows);
       const merged = mergeById(agendamentos, visibleRows);
       setAgendamentos(merged);
@@ -694,7 +695,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     try {
       setFavoritosLoadingMore(true);
       const nextPage = favoritosPage + 1;
-      const rows = await fetchFavoritos({ page: nextPage, limit: PAGE_SIZE + 1 });
+      const cursor = favoritos.length ? favoritos[favoritos.length - 1] : null;
+      const rows = await fetchFavoritos({ cursor, limit: PAGE_SIZE + 1 });
       setFavoritos(prev => mergeById(prev, getVisiblePageRows(rows)));
       setFavoritosPage(nextPage);
       setFavoritosHasMore(getHasMoreRows(rows));
