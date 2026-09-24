@@ -8,7 +8,7 @@ export const SUPORTE_PHONE_E164 = SUPPORT_PHONE_E164;
 export const SUPORTE_MSG = 'Olá, sou cadastrado como Profissional e gostaria de uma ajuda especializada para o meu perfil. Pode me orientar?';
 export const SUPORTE_HREF = getSupportHref('professional');
 
-export const AG_PAGE_SIZE = 15;
+export const AG_PAGE_SIZE = 50;
 export const IMAGE_EXT_BY_MIME = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
