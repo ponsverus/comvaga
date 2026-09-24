@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const MONTH_NAMES = [
   'Janeiro',
   'Fevereiro',
-  'Março',
+  'Mar',
   'Abril',
   'Maio',
   'Junho',
