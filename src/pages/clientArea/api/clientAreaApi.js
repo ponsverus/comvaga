@@ -32,12 +32,14 @@ export async function fetchCurrentClienteId() {
   return data || null;
 }
 
-export async function fetchAgendamentosCliente({ clienteId, limit, offset }) {
+export async function fetchAgendamentosCliente({ clienteId, limit, cursor = null }) {
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('get_agendamentos_cliente', {
       p_cliente_id: clienteId,
       p_limit: limit,
-      p_offset: offset,
+      p_cursor_data: cursor?.data ?? null,
+      p_cursor_horario: cursor?.horario_inicio ?? null,
+      p_cursor_id: cursor?.id ?? null,
     }),
     7000,
     'agendamentos-cliente'
@@ -47,12 +49,13 @@ export async function fetchAgendamentosCliente({ clienteId, limit, offset }) {
   return data || [];
 }
 
-export async function fetchFavoritosCliente({ clienteId, limit, offset }) {
+export async function fetchFavoritosCliente({ clienteId, limit, cursor = null }) {
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('get_favoritos_cliente', {
       p_cliente_id: clienteId,
       p_limit: limit,
-      p_offset: offset,
+      p_cursor_created_at: cursor?.created_at ?? null,
+      p_cursor_id: cursor?.id ?? null,
     }),
     7000,
     'favoritos-cliente'

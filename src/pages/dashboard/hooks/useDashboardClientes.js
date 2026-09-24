@@ -6,18 +6,17 @@ const CLIENTES_PAGE_SIZE = 50;
 
 export function useDashboardClientes({ negocioId }) {
   const [clientes, setClientes] = useState([]);
-  const [clientesPage, setClientesPage] = useState(0);
   const [clientesHasMore, setClientesHasMore] = useState(false);
   const [clientesLoading, setClientesLoading] = useState(false);
   const [clientesLoadingMore, setClientesLoadingMore] = useState(false);
   const [clientesError, setClientesError] = useState('');
 
-  const loadClientes = useCallback(async ({ page = 0, append = false } = {}) => {
+  const loadClientes = useCallback(async ({ cursor = null, append = false } = {}) => {
     if (!negocioId) return;
     const rows = await fetchClientesDashboard({
       negocioId,
       limit: CLIENTES_PAGE_SIZE + 1,
-      offset: page * CLIENTES_PAGE_SIZE,
+      cursor,
     });
     const visibleRows = rows.slice(0, CLIENTES_PAGE_SIZE);
 
@@ -36,7 +35,6 @@ export function useDashboardClientes({ negocioId }) {
   useEffect(() => {
     if (!negocioId) {
       setClientes([]);
-      setClientesPage(0);
       setClientesHasMore(false);
       return;
     }
@@ -44,10 +42,9 @@ export function useDashboardClientes({ negocioId }) {
     let active = true;
     setClientesLoading(true);
     setClientesError('');
-    setClientesPage(0);
     setClientesHasMore(false);
 
-      loadClientes({ page: 0, append: false })
+      loadClientes({ cursor: null, append: false })
       .catch((error) => {
         if (!active) return;
         setClientes([]);
@@ -74,9 +71,8 @@ export function useDashboardClientes({ negocioId }) {
     if (clientesLoadingMore || !clientesHasMore || !negocioId) return;
     try {
       setClientesLoadingMore(true);
-      const nextPage = clientesPage + 1;
-      await loadClientes({ page: nextPage, append: true });
-      setClientesPage(nextPage);
+      const cursor = clientes.length ? clientes[clientes.length - 1] : null;
+      await loadClientes({ cursor, append: true });
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
       if (requestKey === 'alerts.request_timeout') {
@@ -90,7 +86,7 @@ export function useDashboardClientes({ negocioId }) {
     } finally {
       setClientesLoadingMore(false);
     }
-  }, [clientesHasMore, clientesLoadingMore, clientesPage, loadClientes, negocioId]);
+  }, [clientes, clientesHasMore, clientesLoadingMore, loadClientes, negocioId]);
 
   return {
     clientes,
