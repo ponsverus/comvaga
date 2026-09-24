@@ -28,6 +28,7 @@ export default function DepoimentosPaginados({
   hasMore = false,
   loadingMore = false,
   onLoadMore,
+  onLoadMoreError,
 }) {
   const [pagina, setPagina] = useState(0);
   const loadedPages = Math.max(1, Math.ceil(depoimentos.length / DEPOIMENTOS_POR_PAGINA));
@@ -55,7 +56,8 @@ export default function DepoimentosPaginados({
     try {
       const didLoad = await onLoadMore();
       if (didLoad !== false) setPagina(safeTarget);
-    } catch {
+    } catch (error) {
+      if (typeof onLoadMoreError === 'function') onLoadMoreError(error);
       // Keep the current page if the next batch fails.
     }
   };
