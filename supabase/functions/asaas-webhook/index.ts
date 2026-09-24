@@ -7,8 +7,8 @@ import {
   providerCustomerId,
   providerStatus,
   providerSubscriptionId,
-  timingSafeTokenMatch,
 } from '../_shared/asaas-billing.ts';
+import { timingSafeTokenMatch } from '../_shared/security.ts';
 import { createAdminClient } from '../_shared/supabase.ts';
 
 const ASAAS_PROVIDER = 'asaas';
