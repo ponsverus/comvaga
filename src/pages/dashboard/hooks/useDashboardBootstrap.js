@@ -57,6 +57,15 @@ function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
   return next;
 }
 
+function getLastItem(rows) {
+  return Array.isArray(rows) && rows.length ? rows[rows.length - 1] : null;
+}
+
+function getEntregaCursor(rows) {
+  const last = getLastItem(rows);
+  return last ? { ativo: last.ativo, preco: last.preco, id: last.id } : null;
+}
+
 function getLastPartnerNegocioId(userId) {
   if (!userId) return null;
   try {
@@ -162,7 +171,8 @@ export function useDashboardBootstrap({
     const id = negocio?.id;
     if (!id || !profissionalId) return [];
     const pageIndex = Math.max(0, Number(page) || 0);
-    const cached = entregaPagesByProf?.[profissionalId]?.pages?.[pageIndex];
+    const currentState = entregaPagesByProf?.[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
+    const cached = currentState.pages?.[pageIndex];
     if (cached && !force) return cached;
 
     setEntregaPagesByProf((current) => ({
@@ -174,29 +184,43 @@ export function useDashboardBootstrap({
     }));
 
     try {
-      const { rows, totalCount } = await fetchEntregasPage({
-        negocioId: id,
-        profissionalId,
-        limit: ENTREGAS_PAGE_SIZE,
-        offset: pageIndex * ENTREGAS_PAGE_SIZE,
-      });
+      const pages = force ? {} : { ...(currentState.pages || {}) };
+      let totalCount = force ? 0 : Number(currentState.totalCount || 0);
+
+      for (let index = 0; index <= pageIndex; index += 1) {
+        if (pages[index] && !force) continue;
+
+        const cursor = index === 0 ? null : getEntregaCursor(pages[index - 1]);
+        if (index > 0 && !cursor) {
+          pages[index] = [];
+          break;
+        }
+
+        const { rows, totalCount: nextTotalCount } = await fetchEntregasPage({
+          negocioId: id,
+          profissionalId,
+          limit: ENTREGAS_PAGE_SIZE,
+          cursor,
+        });
+        pages[index] = rows;
+        if (rows.length > 0 || index === 0) totalCount = nextTotalCount;
+      }
+
+      const targetRows = pages[pageIndex] || [];
       setEntregaPagesByProf((current) => {
         const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
         return {
           ...current,
           [profissionalId]: {
             ...previous,
-            pages: {
-              ...(force ? {} : previous.pages),
-              [pageIndex]: rows,
-            },
-            totalCount: rows.length > 0 || pageIndex === 0 ? totalCount : previous.totalCount,
+            pages,
+            totalCount: targetRows.length > 0 || pageIndex === 0 ? totalCount : previous.totalCount,
             loadingPage: null,
             version: force ? previous.version + 1 : previous.version,
           },
         };
       });
-      return rows;
+      return targetRows;
     } catch (error) {
       setEntregaPagesByProf((current) => {
         const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
@@ -306,7 +330,7 @@ export function useDashboardBootstrap({
   const reloadGaleria = useCallback(async (negocioId) => {
     const id = negocioId || negocio?.id;
     if (!id) return;
-    const { data } = await fetchGaleria(id, { limit: GALERIA_PAGE_SIZE + 1, offset: 0 });
+    const { data } = await fetchGaleria(id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
     applyGaleriaPage(data || []);
     return (data || []).slice(0, GALERIA_PAGE_SIZE);
   }, [applyGaleriaPage, negocio?.id]);
@@ -319,13 +343,13 @@ export function useDashboardBootstrap({
       setGaleriaLoadingMore(true);
       const { data } = await fetchGaleria(id, {
         limit: GALERIA_PAGE_SIZE + 1,
-        offset: galeriaItems.length,
+        cursor: getLastItem(galeriaItems),
       });
       applyGaleriaPage(data || [], 'append');
     } finally {
       setGaleriaLoadingMore(false);
     }
-  }, [applyGaleriaPage, galeriaHasMore, galeriaItems.length, galeriaLoadingMore, negocio?.id]);
+  }, [applyGaleriaPage, galeriaHasMore, galeriaItems, galeriaLoadingMore, negocio?.id]);
 
   const loadData = useCallback(async (dataRef) => {
     if (!userId) {
@@ -430,7 +454,7 @@ export function useDashboardBootstrap({
       setParceiroProfissional(meuProfissional);
       setProfissionais(scopedProfs);
 
-      const galeriaResult = await fetchGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, offset: 0 });
+      const galeriaResult = await fetchGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
       if (!isCurrentRun()) return;
       if (galeriaResult.error) {
         await uiAlert('dashboard.gallery_load_warning', 'warning');
