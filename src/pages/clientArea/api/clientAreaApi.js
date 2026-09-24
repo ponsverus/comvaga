@@ -108,9 +108,9 @@ export async function cancelarAgendamentoCliente(agendamentoId) {
   return data;
 }
 
-export async function removerContaCliente() {
+export async function excluirContaCliente() {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('remove_cliente_seguro'),
+    () => supabase.rpc('excluir_conta_cliente_seguro'),
     6500,
     'excluir-conta'
   );
