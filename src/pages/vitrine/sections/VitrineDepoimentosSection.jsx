@@ -87,6 +87,7 @@ export default function VitrineDepoimentosSection({
           hasMore={!!pagination?.hasMore}
           loadingMore={!!pagination?.loadingMore}
           onLoadMore={pagination?.onLoadMore}
+          onLoadMoreError={pagination?.onLoadMoreError}
         />
       </div>
     </section>

@@ -302,6 +302,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   const counterSingular = ptBR?.vitrine?.business?.counter_singular?.[businessGroup] ?? 'SERV.';
   const counterPlural = ptBR?.vitrine?.business?.counter_plural?.[businessGroup] ?? 'SERVS';
   const emptyListMsg = ptBR?.vitrine?.business?.empty_list?.[businessGroup] ?? ':(';
+  const loadMoreErrorMsg = ptBR?.vitrine?.business?.load_more_error?.[businessGroup] ?? 'Erro ao carregar mais itens. Tente novamente.';
 
   const [nativeAlertOpen, setNativeAlertOpen] = useState(false);
   const [nativeAlertData, setNativeAlertData] = useState({ title: '', body: '', buttonText: 'OK' });
@@ -335,6 +336,18 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
       return;
     }
     openAlert({ title: fallbackTitle || getMsg('generic_title', 'Aviso'), body: fallbackBody || '', buttonText: fallbackBtn || 'OK' });
+  };
+
+  const handleEntregasPageError = () => {
+    openAlert({
+      title: 'Erro ao carregar',
+      body: loadMoreErrorMsg,
+      buttonText: 'OK',
+    });
+  };
+
+  const handleDepoimentosLoadMoreError = () => {
+    alertKey('depoimentos_load_more_error', 'Erro ao carregar', 'Erro ao carregar mais depoimentos. Tente novamente.', 'OK');
   };
 
   const confirmKey = (key, fallbackTitle, fallbackBody, fallbackConfirm = 'CONFIRMAR', fallbackCancel = 'CANCELAR') => (
@@ -602,6 +615,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
         counterSingular={counterSingular}
         counterPlural={counterPlural}
         onLoadPage={loadEntregasPage}
+        onLoadPageError={handleEntregasPageError}
         booking={{
           ...bookingSectionState,
           isProfessional: isProfessional && !bookingSectionState.isAssistedBooking,
@@ -636,6 +650,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
           hasMore: depoimentosHasMore,
           loadingMore: depoimentosLoadingMore,
           onLoadMore: loadMoreDepoimentos,
+          onLoadMoreError: handleDepoimentosLoadMoreError,
         }}
       />
 

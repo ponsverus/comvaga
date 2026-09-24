@@ -14,6 +14,7 @@ export function useDashboardMetrics({
   faturamentoData,
   faturamentoMes,
   parceiroProfissionalId,
+  onLoadError,
 }) {
   const [metricsHoje, setMetricsHoje] = useState(null);
   const [metricsTopCards, setMetricsTopCards] = useState(null);
@@ -77,8 +78,9 @@ export function useDashboardMetrics({
       setMetricsUtilizacao(overview.metricsUtilizacao);
       setMetricsFutureBookings(overview.metricsFutureBookings);
       setProximoAgendamento(overview.proximoAgendamento);
-    } catch {
+    } catch (error) {
       clearOverview();
+      if (!silent && typeof onLoadError === 'function') onLoadError(error);
     } finally {
       if (!silent) setOverviewLoading(false);
     }
@@ -88,6 +90,7 @@ export function useDashboardMetrics({
     faturamentoMes,
     hoje,
     negocioId,
+    onLoadError,
     parceiroProfissionalId,
     setOverviewLoading,
   ]);

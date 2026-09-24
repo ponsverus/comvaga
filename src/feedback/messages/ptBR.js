@@ -399,6 +399,19 @@ export const ptBR = {
       buttonText: 'OK',
     },
 
+    billing_status_load_error_inline: {
+      body: 'Não foi possível verificar a cobrança agora.',
+    },
+    billing_status_retry_action: {
+      body: 'TENTAR DE NOVO',
+    },
+    metrics_load_error: {
+      title: 'Erro ao carregar métricas',
+      body: 'Erro ao carregar as métricas agora. Tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
     entrega_promo_invalid: {
       title: 'Oferta inválida',
       body: 'O valor promocional precisa ser menor que o valor original.',
@@ -515,6 +528,11 @@ export const ptBR = {
           body: 'Erro ao alterar o status do serv. agora. Tente novamente.',
           variant: 'danger', screen: 'dark', buttonText: 'OK',
         },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar esta página. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
         entrega_delete_error: {
           title: 'Erro',
           body: 'Houve um erro ao excluir o serv. Tente novamente.',
@@ -586,6 +604,11 @@ export const ptBR = {
           body: 'Erro ao alterar o status da consulta agora. Tente novamente.',
           variant: 'danger', screen: 'dark', buttonText: 'OK',
         },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar mais consultas. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
         entrega_delete_error: {
           title: 'Erro',
           body: 'Houve um erro ao excluir a consulta. Tente novamente.',
@@ -656,6 +679,11 @@ export const ptBR = {
           title: 'Erro',
           body: 'Erro ao alterar o status da aula agora. Tente novamente.',
           variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar mais aulas. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
         },
         entrega_delete_error: {
           title: 'Erro',
@@ -1293,7 +1321,7 @@ export const ptBR = {
     profile_access_unavailable: {
       title: 'Houve um erro ao carregar seu acesso',
       body:
-        'Sua senha foi aceita, mas houve um erro ao confirmar seu perfil agora.\n' +
+        'Sua senha foi aceita, mas houve um erro confirmar seu perfil agora.\n' +
         'Tente novamente em alguns segundos.\n' +
         'Se persistir, acesse SUPORTE no rodapé da página.',
       variant: 'warning',
@@ -1744,8 +1772,20 @@ export const ptBR = {
         consultas: 'Sem consultas para este profissional.',
         aulas:     'Sem aulas para este profissional.',
       },
+      load_more_error: {
+        servicos:  'Erro ao carregar mais serviços. Tente novamente.',
+        consultas: 'Erro ao carregar mais consultas. Tente novamente.',
+        aulas:     'Erro ao carregar mais aulas. Tente novamente.',
+      },
     },
 
+    depoimentos_load_more_error: {
+      title: 'Erro ao carregar',
+      body: 'Erro ao carregar mais depoimentos. Tente novamente.',
+      variant: 'warning',
+      screen: 'light',
+      buttonText: 'OK',
+    },
     depoimento_need_login_confirm: {
       title: 'Login necessário',
       body: 'Você precisa fazer login para deixar um depoimento. Deseja fazer login agora?',

@@ -24,6 +24,7 @@ import TermsOfUse             from './pages/TermsOfUse';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
+const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
 
 function isRecoverableLazyLoadError(error) {
   const text = `${error?.name || ''} ${error?.message || ''}`.toLowerCase();
@@ -365,7 +366,7 @@ export default function App() {
         setOnboardingStatus(null);
         setProfessionalRole(null);
         setAccessState('active');
-        setFatalError('Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.');
+        setFatalError(PROFILE_CONFIRM_ERROR_MESSAGE);
       });
       console.error('Profile load error:', e);
       return null;
@@ -524,6 +525,7 @@ export default function App() {
         setOnboardingStatus(null);
         setProfessionalRole(null);
         setAccessState('active');
+        setFatalError(PROFILE_CONFIRM_ERROR_MESSAGE);
         setBooting(false);
       });
     }

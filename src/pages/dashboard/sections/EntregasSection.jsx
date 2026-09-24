@@ -8,6 +8,7 @@ function ProfissionalEntregasBlock({
   lista,
   pageState,
   onLoadPage,
+  onLoadPageError,
   counterSingular,
   counterPlural,
   emptyListMsg,
@@ -46,7 +47,8 @@ function ProfissionalEntregasBlock({
     if (!Object.prototype.hasOwnProperty.call(pages, nextPage) && typeof onLoadPage === 'function') {
       try {
         await onLoadPage(profissional.id, nextPage);
-      } catch {
+      } catch (error) {
+        if (typeof onLoadPageError === 'function') onLoadPageError({ error, profissional, page: nextPage });
         return;
       }
     }
@@ -171,6 +173,7 @@ export default function EntregasSection({
   entregasPorProf,
   entregaPagesByProf = {},
   loadEntregasPage,
+  onLoadPageError,
   counterSingular,
   counterPlural,
   emptyListMsg,
@@ -203,6 +206,7 @@ export default function EntregasSection({
                 lista={lista}
                 pageState={pageState}
                 onLoadPage={loadEntregasPage}
+                onLoadPageError={onLoadPageError}
                 counterSingular={counterSingular}
                 counterPlural={counterPlural}
                 emptyListMsg={emptyListMsg}
