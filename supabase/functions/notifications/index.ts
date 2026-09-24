@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { timingSafeTokenMatch } from '../_shared/security.ts';
 
 const ONESIGNAL_APP_ID = Deno.env.get('ONESIGNAL_APP_ID') ?? '';
 const ONESIGNAL_API_KEY = Deno.env.get('ONESIGNAL_API_KEY') ?? '';
@@ -168,7 +169,7 @@ function tplLembrete(d: AgData) {
 
 Deno.serve(async (req: Request) => {
   const reqSecret = req.headers.get('x-webhook-secret') ?? '';
-  if (!WEBHOOK_SECRET || reqSecret !== WEBHOOK_SECRET) return new Response('Unauthorized', { status: 401 });
+  if (!WEBHOOK_SECRET || !(await timingSafeTokenMatch(reqSecret, WEBHOOK_SECRET))) return new Response('Unauthorized', { status: 401 });
 
   let body: Record<string, unknown>;
   try { body = await req.json(); }
