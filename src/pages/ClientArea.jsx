@@ -118,7 +118,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     } catch (error) {
       setSearchRows([]);
       console.error('Client search error:', error);
-      setSearchError('Não foi possível realizar a busca agora.');
+      setSearchError('Houve um erro ao realizar a busca agora.');
     } finally {
       setSearching(false);
     }
@@ -646,7 +646,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     }
   };
 
-  const excluirContaCliente = async () => {
+  const handleExcluirContaCliente = async () => {
     if (deletingAccount) return;
     const ok = await uiConfirm('clientArea.account_delete_confirm', 'danger');
     if (!ok) return;
@@ -1004,7 +1004,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
                 <div className="border-t border-gray-800 px-4 py-4 sm:px-6">
                   <button
                     type="button"
-                    onClick={excluirContaCliente}
+                    onClick={handleExcluirContaCliente}
                     disabled={deletingAccount}
                     className="w-full rounded-full border border-red-500/30 py-3 text-center text-[12px] font-normal uppercase text-red-400 transition-colors hover:border-red-400/60 hover:text-red-300 disabled:opacity-50"
                   >
