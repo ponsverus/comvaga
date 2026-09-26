@@ -171,11 +171,11 @@ function mapEvent(eventType: string, entity: Record<string, unknown>) {
     return { status: 'payment_grace', paymentMethodStatus: 'missing' };
   }
   if (event === 'SUBSCRIPTION_DELETED' || event === 'SUBSCRIPTION_INACTIVATED') {
-    return { status: 'canceled', paymentMethodStatus: 'expired' };
+    return { status: 'canceled', paymentMethodStatus: null };
   }
   if (event === 'SUBSCRIPTION_CREATED' || event === 'SUBSCRIPTION_UPDATED') {
     if (status === 'INACTIVE' || status === 'EXPIRED') {
-      return { status: 'canceled', paymentMethodStatus: 'expired' };
+      return { status: 'canceled', paymentMethodStatus: null };
     }
     return { status: null, paymentMethodStatus: null };
   }
@@ -358,10 +358,7 @@ export async function processAsaasBillingEvent(
     p_status: mapped.status,
     p_current_period_start: currentPeriodStart(normalizedEventType, entity),
     p_current_period_end: currentPeriodEnd(normalizedEventType, entity),
-    p_canceled_at: normalizedEventType === 'SUBSCRIPTION_DELETED'
-        || normalizedEventType === 'SUBSCRIPTION_INACTIVATED'
-      ? new Date().toISOString()
-      : null,
+    p_canceled_at: null,
   });
 
   if (processError) {
