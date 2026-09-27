@@ -157,6 +157,9 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('checkout_in_progress') || raw.includes('checkout_session_in_progress')) {
     return messageBody('dashboard.billing_checkout_in_progress');
   }
+  if (raw.includes('provider_subscription_recovery_required')) {
+    return messageBody('dashboard.billing_existing_subscription_recovery');
+  }
   if (raw.includes('plan_downgrade_pending')) {
     return messageBody('dashboard.billing_plan_movement_pending');
   }
@@ -172,6 +175,9 @@ function getPlanChangeErrorMessage(error) {
 
 function getCheckoutCancelErrorMessage(error) {
   const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  if (raw.includes('checkout_creation_in_progress')) {
+    return messageBody('dashboard.billing_checkout_cancel_wait');
+  }
   if (raw.includes('payment_already_confirmed')) {
     return messageBody('dashboard.billing_checkout_payment_confirmed');
   }
