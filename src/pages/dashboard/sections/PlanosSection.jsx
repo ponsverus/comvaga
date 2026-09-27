@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
+  cancelAsaasCheckout,
   cancelAsaasPlanDowngrade,
   cancelAsaasSubscription,
   createAsaasCheckout,
@@ -11,7 +12,6 @@ import { getRequestErrorKey } from '../../../utils/requestError';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import { isCancellationScheduled } from '../utils';
-
 function getByPath(obj, path) {
   const parts = String(path || '').split('.');
   let cur = obj;
@@ -115,6 +115,9 @@ function getPlanCancelErrorMessage(error) {
   if (raw.includes('subscription_not_cancelable')) {
     return messageBody('dashboard.billing_cancel_not_cancelable');
   }
+  if (raw.includes('checkout_in_progress') || raw.includes('plan_downgrade_pending') || raw.includes('provider_sync_in_progress')) {
+    return messageBody('dashboard.billing_provider_sync_in_progress');
+  }
   if (raw.includes('asaas_cancel_failed')) {
     return messageBody('dashboard.billing_cancel_gateway_error');
   }
@@ -154,12 +157,32 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('checkout_in_progress') || raw.includes('checkout_session_in_progress')) {
     return messageBody('dashboard.billing_checkout_in_progress');
   }
+  if (raw.includes('plan_downgrade_pending')) {
+    return messageBody('dashboard.billing_plan_movement_pending');
+  }
+  if (raw.includes('provider_sync_in_progress')) {
+    return messageBody('dashboard.billing_provider_sync_in_progress');
+  }
   if (raw.includes('asaas_checkout_failed')) {
     return messageBody('dashboard.billing_checkout_error');
   }
   return messageBody('dashboard.billing_plan_change_error');
 }
 
+
+function getCheckoutCancelErrorMessage(error) {
+  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  if (raw.includes('payment_already_confirmed')) {
+    return messageBody('dashboard.billing_checkout_payment_confirmed');
+  }
+  if (raw.includes('checkout_not_found')) {
+    return messageBody('dashboard.billing_checkout_not_found');
+  }
+  if (raw.includes('asaas_checkout_cancel_failed')) {
+    return messageBody('dashboard.billing_checkout_cancel_gateway_error');
+  }
+  return messageBody('dashboard.billing_checkout_cancel_error');
+}
 function getPlanLimit(plan) {
   if (plan?.max_profissionais == null) return null;
   const value = Number(plan.max_profissionais);
@@ -220,6 +243,7 @@ export default function PlanosSection({
   const [savingPlan, setSavingPlan] = useState('');
   const [cancelingPlan, setCancelingPlan] = useState('');
   const [cancelingDowngrade, setCancelingDowngrade] = useState(false);
+  const [cancelingCheckout, setCancelingCheckout] = useState(false);
   const [error, setError] = useState('');
 
   const loadPlans = useCallback(async () => {
@@ -261,6 +285,7 @@ export default function PlanosSection({
   const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
+  const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
   const accessEndDate = getAccessEndDate(billingStatus);
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.code === currentPlanCode) || null,
@@ -272,7 +297,11 @@ export default function PlanosSection({
   );
 
   const handleSelectPlan = async (planCode) => {
-    if (!negocioId || savingPlan) return;
+    if (!negocioId || savingPlan || cancelingCheckout) return;
+    if (providerSyncPending) {
+      setError(messageBody('dashboard.billing_provider_sync_in_progress'));
+      return;
+    }
     const targetPlan = plans.find((plan) => plan.code === planCode);
     const targetLimit = getPlanLimit(targetPlan);
     if (targetLimit != null && billableProfessionalsCount > targetLimit) {
@@ -320,7 +349,11 @@ export default function PlanosSection({
   };
 
   const handleCancelPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingPlan) return;
+    if (!negocioId || savingPlan || cancelingPlan || cancelingCheckout) return;
+    if (hasActiveCheckout || providerSyncPending) {
+      setError(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'));
+      return;
+    }
     const confirmed = await feedback.confirm('dashboard.billing_cancel_confirm');
     if (!confirmed) return;
 
@@ -349,7 +382,7 @@ export default function PlanosSection({
   };
 
   const handleCancelDowngrade = async () => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade) return;
+    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
     const confirmed = await feedback.confirm('dashboard.billing_cancel_downgrade_confirm');
     if (!confirmed) return;
 
@@ -377,6 +410,35 @@ export default function PlanosSection({
     }
   };
 
+
+  const handleCancelCheckout = async () => {
+    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
+    const confirmed = await feedback.confirm('dashboard.billing_cancel_checkout_confirm');
+    if (!confirmed) return;
+
+    setCancelingCheckout(true);
+    setError('');
+    try {
+      const result = await cancelAsaasCheckout(negocioId);
+      if (result?.billing_status) {
+        onBillingStatusChange?.(result.billing_status);
+      } else {
+        await reloadBillingStatus?.();
+      }
+    } catch (err) {
+      console.error('cancelAsaasCheckout error:', err);
+      const requestKey = getRequestErrorKey(err);
+      if (requestKey === 'alerts.request_timeout') {
+        setError(messageBody('dashboard.billing_cancel_timeout'));
+      } else if (requestKey === 'alerts.rate_limit_exceeded') {
+        setError(messageBody('alerts.rate_limit_exceeded'));
+      } else {
+        setError(getCheckoutCancelErrorMessage(err));
+      }
+    } finally {
+      setCancelingCheckout(false);
+    }
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center py-14 text-gray-500">
@@ -410,6 +472,8 @@ export default function PlanosSection({
           const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
           const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
           const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
+          const checkoutBlocksPlan = hasActiveCheckout && !checkoutCanResume;
+          const movementBlocked = providerSyncPending || checkoutBlocksPlan;
           const saving = savingPlan === plan.code;
           const canceling = cancelingPlan === plan.code;
           const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
@@ -500,7 +564,7 @@ export default function PlanosSection({
               <div className="flex flex-col gap-3">
                 <button
                   type="button"
-                  disabled={planLimitBlocked || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade}
+                  disabled={planLimitBlocked || movementBlocked || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
                   onClick={() => handleSelectPlan(plan.code)}
                   className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                     activeFreeAccess
@@ -531,10 +595,20 @@ export default function PlanosSection({
                                 : content.buttonText}
                 </button>
 
+                {checkoutForPlan && (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
+                    onClick={handleCancelCheckout}
+                    className="flex w-full items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-yellow-100 transition-all hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente'}
+                  </button>
+                )}
                 {canCancelDowngrade && (
                   <button
                     type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade}
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
                     onClick={handleCancelDowngrade}
                     className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                   >
@@ -545,7 +619,7 @@ export default function PlanosSection({
                 {canCancel && (
                   <button
                     type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade}
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending}
                     onClick={() => handleCancelPlan(plan.code)}
                     className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                   >
