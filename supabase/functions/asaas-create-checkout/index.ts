@@ -1,5 +1,4 @@
 import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
-import { runImmediateSubscriptionProviderSync } from '../_shared/billing-provider-sync.ts';
 import { createAdminClient, createUserClient } from '../_shared/supabase.ts';
 
 type BillingPlan = {
@@ -138,65 +137,6 @@ function asText(value: unknown) {
   return String(value || '').trim();
 }
 
-async function cancelAsaasCheckout(checkoutId: string) {
-  return callAsaas(`/checkouts/${encodeURIComponent(checkoutId)}/cancel`, {}, 'POST');
-}
-
-async function cancelBlockingCheckoutSession(
-  admin: ReturnType<typeof createAdminClient>,
-  beginData: Record<string, unknown>,
-  negocioId: string,
-  action: string,
-  requestedPlanCode: string,
-) {
-  const sessionId = asText(beginData?.session_id);
-  if (!sessionId || asText(beginData?.result) !== 'conflict') return false;
-
-  const { data: session, error: sessionError } = await admin
-    .from('billing_checkout_sessions')
-    .select('id, status, provider, provider_checkout_id, plan_code, action, amount_cents, metadata')
-    .eq('id', sessionId)
-    .eq('negocio_id', negocioId)
-    .eq('action', action)
-    .maybeSingle();
-  if (sessionError) throw sessionError;
-
-  if (
-    !session
-    || session.status !== 'active'
-    || String(session.provider || '').toLowerCase() !== ASAAS_PROVIDER
-    || !session.provider_checkout_id
-  ) {
-    return false;
-  }
-
-  const providerResponse = await cancelAsaasCheckout(String(session.provider_checkout_id));
-  const metadata = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
-  const { data: canceled, error: updateError } = await admin
-    .from('billing_checkout_sessions')
-    .update({
-      status: 'canceled',
-      last_error: 'checkout_replaced_by_new_selection',
-      metadata: {
-        ...metadata,
-        replaced_by_new_selection: {
-          at: new Date().toISOString(),
-          from_plan_code: session.plan_code,
-          to_plan_code: requestedPlanCode,
-          action,
-          provider_response: providerResponse,
-        },
-      },
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', session.id)
-    .eq('status', 'active')
-    .select('id')
-    .maybeSingle();
-  if (updateError) throw updateError;
-
-  return Boolean(canceled?.id);
-}
 
 async function fetchBillingStatus(userClient: ReturnType<typeof createUserClient>, negocioId: string) {
   const { data, error } = await userClient.rpc('get_business_billing_status', {
@@ -217,26 +157,10 @@ async function beginBillingCheckoutSession(
     p_expires_at: string;
   },
 ) {
-  const { data: firstBeginData, error: firstBeginError } = await admin.rpc('begin_billing_checkout_session', args);
-  if (firstBeginError) throw firstBeginError;
-
-  const replaced = await cancelBlockingCheckoutSession(
-    admin,
-    firstBeginData || {},
-    args.p_negocio_id,
-    args.p_action,
-    args.p_plan_code,
-  );
-  if (!replaced) return firstBeginData;
-
-  const { data: secondBeginData, error: secondBeginError } = await admin.rpc('begin_billing_checkout_session', {
-    ...args,
-    p_expires_at: checkoutExpiresAtIso(),
-  });
-  if (secondBeginError) throw secondBeginError;
-  return secondBeginData;
+  const { data, error } = await admin.rpc('begin_billing_checkout_session', args);
+  if (error) throw error;
+  return data;
 }
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
   if (req.method !== 'POST') return jsonResponse({ error: 'method_not_allowed' }, 405, req);
@@ -290,6 +214,10 @@ Deno.serve(async (req) => {
     }
 
     const statusData = await fetchBillingStatus(userClient, negocioId);
+    const activeCheckoutPlanCode = normalizePlanCode(statusData?.active_checkout_plan_code);
+    if (Boolean(statusData?.has_active_checkout) && activeCheckoutPlanCode && activeCheckoutPlanCode !== selectedPlan.code) {
+      return jsonResponse({ error: 'checkout_in_progress', billing_status: statusData }, 409, req);
+    }
 
     const { data: subscription, error: subscriptionCustomerError } = await admin
       .from('business_subscriptions')
@@ -337,24 +265,20 @@ Deno.serve(async (req) => {
           },
         });
         if (downgradeError) throw downgradeError;
-
-        const syncResult = await runImmediateSubscriptionProviderSync(
-          admin,
-          downgradeStatus,
-          'downgrade_schedule',
-        );
-        if (syncResult.providerSyncError) {
-          console.error('downgrade provider sync deferred:', syncResult.providerSyncError);
-        }
-
         return jsonResponse({
           action: 'downgrade_scheduled',
-          billing_status: syncResult.billingStatus || downgradeStatus,
-          provider_sync_deferred: Boolean(syncResult.providerSyncError),
+          billing_status: downgradeStatus,
+          provider_sync_deferred: Boolean(downgradeStatus?.provider_sync_pending),
         }, 200, req);
       }
 
       if (selectedPlan.sort_order > typedCurrentPlan.sort_order) {
+        if (Boolean(statusData?.provider_sync_pending)) {
+          return jsonResponse({ error: 'provider_sync_in_progress', billing_status: statusData }, 409, req);
+        }
+        if (Boolean(statusData?.plan_change_scheduled) && String(statusData?.pending_plan_change_type || '').toLowerCase() === 'downgrade') {
+          return jsonResponse({ error: 'plan_downgrade_pending', billing_status: statusData }, 409, req);
+        }
         if (!existingCustomerId) return jsonResponse({ error: 'provider_customer_missing' }, 409, req);
         if (!providerSubscriptionId && String(subscription?.provider || '').toLowerCase() === ASAAS_PROVIDER) {
           return jsonResponse({ error: 'provider_subscription_missing' }, 409, req);
@@ -520,6 +444,15 @@ Deno.serve(async (req) => {
         billing_status: statusData,
       }, 409, req);
     }
+
+    if (Boolean(statusData?.provider_sync_pending)) {
+      return jsonResponse({ error: 'provider_sync_in_progress', billing_status: statusData }, 409, req);
+    }
+    if (Boolean(statusData?.plan_change_scheduled)) {
+      return jsonResponse({ error: 'plan_downgrade_pending', billing_status: statusData }, 409, req);
+    }
+
+
 
     const beginDataSub = await beginBillingCheckoutSession(admin, {
       p_negocio_id: negocioId,
