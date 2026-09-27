@@ -125,7 +125,19 @@ export const ptBR = {
       cancelText: 'VOLTAR',
       buttonText: 'CANCELAR PAGAMENTO',
     },
-    billing_checkout_cancel_error: {
+    billing_existing_subscription_recovery: {
+      title: 'Assinatura atual precisa ser regularizada',
+      body: 'A assinatura anterior permanece ativa no gateway. De modo a evitar pagamento duplicado, mantemos a abertura de um novo plano suspensa. Favor regularizar a conta atual ou contatar o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },    billing_checkout_cancel_wait: {
+      title: 'Checkout sendo preparado',
+      body: 'A abertura do checkout ainda está sendo confirmada pelo gateway. Aguarde alguns instantes e tente cancelar novamente',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },    billing_checkout_cancel_error: {
       title: 'Erro ao cancelar pagamento',
       body: 'Houve uma falha ao cancelar o pagamento pendente. Tente novamente em instantes.',
       variant: 'danger',
