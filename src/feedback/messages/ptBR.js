@@ -147,7 +147,7 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_checkout_not_found: {
-      title: 'Pagamento indisponivel',
+      title: 'Pagamento indisponível',
       body: 'Nenhum pagamento pendente foi encontrado para este negócio.',
       variant: 'warning',
       screen: 'dark',
@@ -383,7 +383,7 @@ export const ptBR = {
     },
     gallery_partial_upload: {
       title: 'Galeria atualizada parcialmente',
-      body: 'Algumas imagens foram adicionadas, mas outras falharam em ser enviadas. Tente novamente com as imagens que faltaram.',
+      body: 'Algumas imagens foram adicionadas, mas outras falharam ao ser enviadas. Tente novamente com as imagens que faltaram.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'OK',
