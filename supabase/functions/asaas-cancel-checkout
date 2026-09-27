@@ -92,13 +92,12 @@ Deno.serve(async (req) => {
     if (sessionError) throw sessionError;
     if (!session) return jsonResponse({ error: 'checkout_not_found' }, 404, req);
     if (session.status === 'paid') return jsonResponse({ error: 'payment_already_confirmed' }, 409, req);
+    if (session.status === 'creating' || !session.provider_checkout_id) {
+      return jsonResponse({ error: 'checkout_creation_in_progress', retry_after_creation: true }, 409, req);
+    }
 
-    let providerResponse: Record<string, unknown> = { skipped: true, reason: 'provider_checkout_missing' };
-    if (
-      String(session.provider || '').toLowerCase() === ASAAS_PROVIDER
-      && session.provider_checkout_id
-      && session.status !== 'creating'
-    ) {
+    let providerResponse: Record<string, unknown> = { skipped: true, reason: 'provider_not_asaas' };
+    if (String(session.provider || '').toLowerCase() === ASAAS_PROVIDER) {
       providerResponse = await callAsaas(`/checkouts/${encodeURIComponent(String(session.provider_checkout_id))}/cancel`, {}, 'POST');
     }
 
