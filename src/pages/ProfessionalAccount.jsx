@@ -38,7 +38,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
       const fallback = String(user?.user_metadata?.nome || '').trim();
       try {
         const { data, error } = await withAuthRetry(
-          supabase
+          () => supabase
             .from('users')
             .select('nome')
             .eq('id', user.id)
@@ -65,13 +65,13 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setSavingPerfil(true);
       const { error: updErr } = await withAuthRetry(
-        supabase.from('users').update({ nome }).eq('id', user.id),
+        () => supabase.from('users').update({ nome }).eq('id', user.id),
         6000,
         'professional-account-name-update'
       );
       if (updErr) throw updErr;
       const { error: metaErr } = await withAuthRetry(
-        supabase.auth.updateUser({ data: { nome } }),
+        () => supabase.auth.updateUser({ data: { nome } }),
         6000,
         'professional-account-auth-name-update'
       );
@@ -96,7 +96,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setSavingDados(true);
       const { error } = await withAuthRetry(
-        supabase.auth.updateUser({ email }),
+        () => supabase.auth.updateUser({ email }),
         6000,
         'professional-account-email-update'
       );
@@ -125,7 +125,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setSavingDados(true);
       const { error } = await withAuthRetry(
-        supabase.auth.updateUser({ password: pass }),
+        () => supabase.auth.updateUser({ password: pass }),
         6000,
         'professional-account-password-update'
       );
@@ -150,7 +150,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setDeletingAccount(true);
       const { error } = await withAuthRetry(
-        supabase.rpc('excluir_conta_profissional_seguro'),
+        () => supabase.rpc('excluir_conta_profissional_seguro'),
         8000,
         'professional-account-delete'
       );
@@ -193,7 +193,6 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
 
         <div className="mb-8">
           <h1 className="text-3xl font-normal uppercase tracking-wide">Minha conta</h1>
-          <p className="mt-2 text-sm uppercase text-gray-500">CLIQUE, EDITE E SALVE</p>
         </div>
 
         <div className="overflow-hidden rounded-custom border border-gray-800 bg-dark-100 p-6">
