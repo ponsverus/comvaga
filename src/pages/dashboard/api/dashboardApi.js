@@ -266,6 +266,22 @@ export async function cancelAsaasPlanDowngrade(negocioId) {
   return data;
 }
 
+export async function cancelAsaasCheckout(negocioId) {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-cancel-checkout', {
+      body: {
+        negocio_id: negocioId,
+      },
+    }),
+    25000,
+    'asaas-cancel-checkout'
+  );
+
+  if (error) throw await normalizeFunctionError(error);
+  if (!data?.billing_status) throw new Error('billing_status_missing');
+  return data;
+}
+
 export async function fetchPartnerNegocioIds(userId) {
   const { data, error } = await withAuthRetry(
     () => supabase
