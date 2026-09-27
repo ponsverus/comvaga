@@ -246,7 +246,8 @@ function BillingAnnouncementBar({ announcement, onAction, actionLoading = false 
   const toneClass = announcement.tone === 'danger'
     ? 'border-red-500/30 bg-[#1a0b0b] text-red-100'
     : 'border-primary/25 bg-[#151106] text-primary';
-  const canAct = !!announcement.actionLabel && typeof onAction === 'function';
+  const actionLabel = announcement.actionLabel || 'VER PLANOS';
+  const canAct = typeof onAction === 'function';
 
   return (
     <div className={`border-b ${toneClass}`}>
@@ -258,9 +259,9 @@ function BillingAnnouncementBar({ announcement, onAction, actionLoading = false 
               type="button"
               onClick={onAction}
               disabled={actionLoading}
-              className="inline-flex items-center justify-center text-[11px] font-normal uppercase text-white transition-colors hover:text-primary disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center justify-center text-[11px] font-normal uppercase text-sky-300 transition-colors hover:text-sky-200 disabled:cursor-wait disabled:opacity-60"
             >
-              {actionLoading ? 'VERIFICANDO...' : announcement.actionLabel}
+              {actionLoading ? 'VERIFICANDO...' : actionLabel}
             </button>
           ) : null}
         </div>
@@ -824,8 +825,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       <div className="sticky top-0 z-50">
         <BillingAnnouncementBar
           announcement={billingAnnouncement}
-          onAction={billingStatusLoadError ? reloadBillingStatus : undefined}
-          actionLoading={billingLoading}
+          onAction={billingStatusLoadError ? reloadBillingStatus : billingAnnouncement ? () => setActiveTab('planos') : undefined}
+          actionLoading={billingStatusLoadError && billingLoading}
         />
 
         <header className="bg-dark-100 border-b border-gray-800">
