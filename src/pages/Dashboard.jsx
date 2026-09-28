@@ -135,6 +135,15 @@ function getPendingPlanChangeSuffix(status) {
   });
 }
 
+function hasPaymentHistory(status) {
+  return Boolean(
+    status?.provider_subscription_id
+    || status?.current_period_start
+    || status?.current_period_end
+    || Number(status?.current_period_price_cents || 0) > 0
+  );
+}
+
 function getBillingAnnouncement(status) {
   if (!status) return null;
   const providerSyncStatus = String(status.provider_sync_status || '').toLowerCase();
@@ -185,7 +194,7 @@ function getBillingAnnouncement(status) {
     return {
       tone: 'danger',
       text: joinBillingMessages(
-        dashboardBillingMessage('billing_blocked_header'),
+        dashboardBillingMessage(hasPaymentHistory(status) ? 'billing_blocked_header' : 'billing_blocked_never_paid_header'),
         pendingPlanChangeSuffix
       ),
     };
