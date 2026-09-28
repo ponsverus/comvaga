@@ -12,7 +12,7 @@ import {
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
-import { isCancellationScheduled } from '../utils';
+import { isCancellationScheduled, isScheduledDowngradeSync } from '../utils';
 function getByPath(obj, path) {
   const parts = String(path || '').split('.');
   let cur = obj;
@@ -309,6 +309,8 @@ export default function PlanosSection({
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
+  const providerSyncFailed = String(billingStatus?.provider_sync_status || '').toLowerCase() === 'failed';
+  const replaceableScheduledDowngrade = isScheduledDowngradeSync(billingStatus);
   const accessEndDate = getAccessEndDate(billingStatus);
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.code === currentPlanCode) || null,
@@ -321,11 +323,16 @@ export default function PlanosSection({
 
   const handleSelectPlan = async (planCode) => {
     if (!negocioId || savingPlan || cancelingCheckout) return;
-    if (providerSyncPending) {
+    const targetPlan = plans.find((plan) => plan.code === planCode);
+    const replacingDowngrade = replaceableScheduledDowngrade
+      && selectedPlan
+      && targetPlan
+      && planCode !== billingStatus?.pending_plan_code
+      && Number(targetPlan.sort_order) < Number(selectedPlan.sort_order);
+    if (providerSyncPending && !replacingDowngrade) {
       setError(messageBody('dashboard.billing_provider_sync_in_progress'));
       return;
     }
-    const targetPlan = plans.find((plan) => plan.code === planCode);
     const targetLimit = getPlanLimit(targetPlan);
     if (targetLimit != null && billableProfessionalsCount > targetLimit) {
       setError(getPlanLimitMessage(targetPlan, billableProfessionalsCount));
@@ -505,14 +512,21 @@ export default function PlanosSection({
           const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
           const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
           const checkoutBlocksPlan = hasActiveCheckout && !checkoutCanResume;
-          const movementBlocked = providerSyncPending || checkoutBlocksPlan;
+          const replacementDowngradeAllowed = replaceableScheduledDowngrade
+            && selectedPlan
+            && !active
+            && !pendingForPlan
+            && Number(plan.sort_order) < Number(selectedPlan.sort_order);
+          const movementBlocked = (providerSyncPending && !replacementDowngradeAllowed) || checkoutBlocksPlan;
           const saving = savingPlan === plan.code;
           const canceling = cancelingPlan === plan.code;
           const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
           const currentStatus = String(billingStatus?.status || '').toLowerCase();
           const freeAccessOpen = currentStatus === 'trialing';
           const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
-          const canCancelDowngrade = active && Boolean(billingStatus?.can_cancel_plan_downgrade);
+          const canCancelDowngrade = active
+            && !providerSyncFailed
+            && Boolean(billingStatus?.can_cancel_plan_downgrade);
           const canCancel = active
             && !selectedCanceledOrCancellationScheduled
             && Boolean(billingStatus?.can_cancel_subscription);
