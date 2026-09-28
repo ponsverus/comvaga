@@ -889,7 +889,11 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       <div className="sticky top-0 z-50">
         <BillingAnnouncementBar
           announcement={billingAnnouncement}
-          onAction={billingStatusLoadError ? reloadBillingStatus : billingAnnouncement ? () => setActiveTab('planos') : undefined}
+          onAction={billingStatusLoadError
+            ? reloadBillingStatus
+            : billingAnnouncement && activeTab !== 'planos'
+              ? () => setActiveTab('planos')
+              : undefined}
           actionLoading={billingStatusLoadError && billingLoading}
         />
 
