@@ -145,6 +145,12 @@ export const isCancelStatus = (s) => normalizeStatus(s).includes('cancelado');
 export const isDoneStatus = (s) => normalizeStatus(s) === 'concluido';
 export const computeStatusFromDb = (a) => String(a?.status || '');
 
+export function isScheduledDowngradeSync(status) {
+  return Boolean(status?.plan_change_scheduled)
+    && String(status?.pending_plan_change_type || '').toLowerCase() === 'downgrade'
+    && String(status?.provider_sync_operation || '').toLowerCase() === 'apply_downgrade'
+    && ['pending', 'retryable'].includes(String(status?.provider_sync_status || '').toLowerCase());
+}
 export function isCancellationScheduled(status) {
   return Boolean(status?.cancellation_scheduled)
     || (
