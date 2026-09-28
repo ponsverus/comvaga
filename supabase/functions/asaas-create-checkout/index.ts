@@ -231,6 +231,8 @@ Deno.serve(async (req) => {
     const currentPlanCode = normalizePlanCode(statusData?.plan_code || subscription?.plan_code);
     const currentStatus = String(statusData?.status || '').toLowerCase();
     const paymentStatus = String(statusData?.payment_method_status || '').toLowerCase();
+    const providerStatus = String(statusData?.provider_status || '').toUpperCase();
+    const providerSubscriptionTerminal = ['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED'].includes(providerStatus);
     const activePaidSubscription = currentStatus === 'active'
       && ['valid', 'none'].includes(paymentStatus)
       && !Boolean(statusData?.cancellation_scheduled)
@@ -454,6 +456,14 @@ Deno.serve(async (req) => {
 
 
 
+    if (
+      String(subscription?.provider || '').toLowerCase() === ASAAS_PROVIDER
+      && providerSubscriptionId
+      && !providerSubscriptionTerminal
+      && !Boolean(statusData?.cancellation_scheduled)
+    ) {
+      return jsonResponse({ error: 'provider_subscription_recovery_required', billing_status: statusData }, 409, req);
+    }
     const beginDataSub = await beginBillingCheckoutSession(admin, {
       p_negocio_id: negocioId,
       p_plan_code: selectedPlan.code,
@@ -482,7 +492,14 @@ Deno.serve(async (req) => {
     const externalReferenceSub = String(beginDataSub.external_reference);
 
     const siteUrl = publicSiteUrl();
-    const nextDueDate = asAsaasDateTime(new Date());
+    const scheduledAccessEnd = statusData?.cancellation_scheduled
+      ? asDate(statusData?.access_ends_at || statusData?.current_period_end)
+      : null;
+    const nextDueDate = asAsaasDateTime(
+      scheduledAccessEnd && scheduledAccessEnd.getTime() > Date.now()
+        ? scheduledAccessEnd
+        : new Date(),
+    );
     const checkoutPayload: Record<string, unknown> = {
       billingTypes: ['CREDIT_CARD'],
       chargeTypes: ['RECURRENT'],
@@ -525,6 +542,7 @@ Deno.serve(async (req) => {
             externalReference: externalReferenceSub,
             planCode: selectedPlan.code,
             nextDueDate,
+            reactivationAfterPaidAccess: Boolean(scheduledAccessEnd && scheduledAccessEnd.getTime() > Date.now()),
             customer: existingCustomerId,
           },
         },
