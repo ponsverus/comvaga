@@ -282,6 +282,19 @@ export async function cancelAsaasCheckout(negocioId) {
   return data;
 }
 
+export async function recoverAsaasSubscriptionPayment(negocioId) {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-recover-subscription-payment', {
+      body: { negocio_id: negocioId },
+    }),
+    12000,
+    'asaas-subscription-payment-recovery'
+  );
+
+  if (error) throw await normalizeFunctionError(error);
+  if (!data?.invoice_url) throw new Error('subscription_invoice_url_missing');
+  return data;
+}
 export async function fetchPartnerNegocioIds(userId) {
   const { data, error } = await withAuthRetry(
     () => supabase
