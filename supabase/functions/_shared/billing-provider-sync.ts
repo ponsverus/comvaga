@@ -28,7 +28,7 @@ function centsToReais(cents: number) {
   return Number((Number(cents || 0) / 100).toFixed(2));
 }
 
-async function callAsaas(path: string, body: Record<string, unknown>, method = 'POST') {
+async function callAsaas(path: string, body: Record<string, unknown> | null, method = 'POST') {
   const apiKey = requiredEnv('ASAAS_API_KEY');
   const baseUrl = (Deno.env.get('ASAAS_BASE_URL') || DEFAULT_ASAAS_BASE_URL).replace(/\/+$/, '');
 
@@ -40,7 +40,7 @@ async function callAsaas(path: string, body: Record<string, unknown>, method = '
       'content-type': 'application/json',
       'User-Agent': 'Comvaga/1.0',
     },
-    body: JSON.stringify(body),
+    ...(body ? { body: JSON.stringify(body) } : {}),
     signal: AbortSignal.timeout(20_000),
   });
 
@@ -97,6 +97,46 @@ export async function updateAsaasSubscriptionValueFromSync(status: ProviderSyncS
   }, 'PUT');
 }
 
+async function getAsaasSubscription(subscriptionId: string) {
+  return callAsaas(`/subscriptions/${encodeURIComponent(subscriptionId)}`, null, 'GET');
+}
+
+async function reconcileProviderSyncAfterUpdateError(
+  admin: AdminClient,
+  status: ProviderSyncStatus,
+  source: string,
+  updateError: string,
+) {
+  const subscriptionId = asText(
+    status?.provider_sync_provider_subscription_id || status?.provider_subscription_id,
+  );
+  const targetPriceCents = Number(status?.provider_sync_target_price_cents);
+  if (!subscriptionId || !Number.isFinite(targetPriceCents)) return null;
+
+  const providerSubscription = await getAsaasSubscription(subscriptionId);
+  const providerPriceCents = Math.round(Number(providerSubscription?.value) * 100);
+  if (String(providerSubscription?.status || '').toUpperCase() !== 'ACTIVE'
+    || !Number.isFinite(providerPriceCents)
+    || providerPriceCents !== targetPriceCents) return null;
+
+  const { data, error } = await admin.rpc('finish_subscription_provider_sync', {
+    p_subscription_id: asText(status?.id || status?.subscription_id),
+    p_expected_operation: asText(status?.provider_sync_operation),
+    p_provider_payload: {
+      source: `${source}_reconciled_after_update_error`,
+      update_error: updateError,
+      provider_snapshot: {
+        id: providerSubscription.id,
+        status: providerSubscription.status,
+        value: providerSubscription.value,
+      },
+    },
+  });
+  if (error) throw error;
+  return data?.provider_sync_finished === false ? null : data || null;
+}
+
+
 export async function runImmediateSubscriptionProviderSync(
   admin: AdminClient,
   status: ProviderSyncStatus,
@@ -135,9 +175,18 @@ export async function runImmediateSubscriptionProviderSync(
     return { billingStatus: finished || status, providerSyncError: null };
   } catch (error) {
     const message = providerSyncErrorMessage(error);
+    let retryMessage = message;
+    try {
+      const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, started, source, message);
+      if (reconciledStatus) return { billingStatus: reconciledStatus, providerSyncError: null };
+    } catch (reconciliationError) {
+      const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
+      console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
+      retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
+    }
     const { data: retryStatus, error: retryError } = await admin.rpc('retry_subscription_provider_sync', {
       p_subscription_id: subscriptionId,
-      p_error: message,
+      p_error: retryMessage,
       p_expected_operation: operation,
     });
     if (retryError) throw retryError;
@@ -183,9 +232,21 @@ export async function processPendingSubscriptionProviderSyncs(
     } catch (error) {
       const message = providerSyncErrorMessage(error);
       console.error(`subscription provider sync ${subscriptionId} failed:`, error);
+      let retryMessage = message;
+      try {
+        const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, sync, 'billing_worker_retry', message);
+        if (reconciledStatus) {
+          summary.synced += 1;
+          continue;
+        }
+      } catch (reconciliationError) {
+        const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
+        console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
+        retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
+      }
       const { data: retryStatus, error: retryError } = await admin.rpc('retry_subscription_provider_sync', {
         p_subscription_id: subscriptionId,
-        p_error: message,
+        p_error: retryMessage,
         p_expected_operation: operation,
       });
       if (retryError) {
