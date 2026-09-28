@@ -6,6 +6,7 @@ import {
   cancelAsaasSubscription,
   createAsaasCheckout,
   fetchBillingPlans,
+  recoverAsaasSubscriptionPayment,
   setBusinessPlan,
 } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
@@ -86,6 +87,13 @@ function statusBadgeClass(status) {
 }
 
 function statusButtonText(status) {
+  const providerStatus = String(status?.provider_status || '').toUpperCase();
+  const subscriptionIsRecoverable = String(status?.provider || '').toLowerCase() === 'asaas'
+    && Boolean(status?.provider_subscription_id)
+    && !Boolean(status?.cancellation_scheduled)
+    && !['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED'].includes(providerStatus)
+    && ['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase());
+  if (subscriptionIsRecoverable) return 'Pagar fatura';
   if (isCancellationScheduled(status)) return 'Reativar plano';
   const current = String(status?.status || '').toLowerCase();
   if (current === 'blocked' || current === 'past_due') {
@@ -159,6 +167,15 @@ function getPlanChangeErrorMessage(error) {
   }
   if (raw.includes('provider_subscription_recovery_required')) {
     return messageBody('dashboard.billing_existing_subscription_recovery');
+  }
+  if (raw.includes('subscription_overdue_payment_not_found')) {
+    return messageBody('dashboard.billing_recovery_invoice_not_found');
+  }
+  if (raw.includes('multiple_overdue_subscription_payments')) {
+    return messageBody('dashboard.billing_recovery_multiple_invoices');
+  }
+  if (raw.includes('subscription_recovery_unavailable') || raw.includes('subscription_invoice_unavailable') || raw.includes('subscription_not_recoverable') || raw.includes('subscription_state_changed')) {
+    return messageBody('dashboard.billing_recovery_invoice_not_found');
   }
   if (raw.includes('plan_downgrade_pending')) {
     return messageBody('dashboard.billing_plan_movement_pending');
@@ -321,6 +338,12 @@ export default function PlanosSection({
 
     const currentStatus = String(billingStatus?.status || '').toLowerCase();
     const freeAccessOpen = currentStatus === 'trialing';
+    const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
+    const recoverExistingSubscription = String(billingStatus?.provider || '').toLowerCase() === 'asaas'
+      && Boolean(billingStatus?.provider_subscription_id)
+      && !['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED'].includes(providerStatus)
+      && !Boolean(billingStatus?.cancellation_scheduled)
+      && ['failed', 'expired'].includes(String(billingStatus?.payment_method_status || '').toLowerCase());
 
     setSavingPlan(planCode);
     setError('');
@@ -330,6 +353,9 @@ export default function PlanosSection({
         if (result) {
           onBillingStatusChange?.(result);
         }
+      } else if (planCode === currentPlanCode && recoverExistingSubscription) {
+        const recovery = await recoverAsaasSubscriptionPayment(negocioId);
+        window.location.assign(recovery.invoice_url);
       } else {
         const checkout = await createAsaasCheckout(negocioId, planCode);
         if (checkout?.billing_status) {
@@ -593,7 +619,7 @@ export default function PlanosSection({
                         : activeWithoutAction
                           ? 'Plano ativo'
                           : saving
-                            ? (freeAccessOpen ? 'Salvando...' : 'Abrindo checkout...')
+                            ? (freeAccessOpen ? 'Salvando...' : selectedPaymentButtonText === 'Pagar fatura' ? 'Abrindo fatura...' : 'Abrindo checkout...')
                             : checkoutCanResume
                               ? 'Continuar pagamento'
                               : active && (needsPayment || selectedCanceledOrCancellationScheduled)
