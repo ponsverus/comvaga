@@ -243,13 +243,13 @@ export const ptBR = {
       body: 'PLANO CANCELADO. ESCOLHA UM NOVO PLANO PARA CONTINUAR.',
     },
     billing_blocked_header: {
-      body: 'AGENDA BLOQUEADA. REGULARIZE SEU PLANO.',
+      body: 'AGENDA BLOQUEADA. REGULARIZE O PAGAMENTO.',
     },
     billing_blocked_never_paid_header: {
       body: 'AGENDA BLOQUEADA. ADICIONE UMA FORMA DE PAGAMENTO.',
     },
     billing_past_due_header: {
-      body: 'PAGAMENTO PENDENTE. REGULARIZE SEU PLANO.',
+      body: 'FATURA VENCIDA. REGULARIZE O PAGAMENTO.',
     },
     billing_payment_failed_header: {
       body: 'FALHA NO PAGAMENTO. TENTE NOVAMENTE.',
