@@ -47,6 +47,15 @@ function isCanceledOrCancellationScheduled(status) {
   return String(status?.status || '').toLowerCase() === 'canceled' || isCancellationScheduled(status);
 }
 
+function hasPaymentHistory(status) {
+  return Boolean(
+    status?.provider_subscription_id
+    || status?.current_period_start
+    || status?.current_period_end
+    || Number(status?.current_period_price_cents || 0) > 0
+  );
+}
+
 function statusText(status) {
   if (isCancellationScheduled(status)) return 'Cancelado';
   const current = String(status?.status || '').toLowerCase();
@@ -97,7 +106,7 @@ function statusButtonText(status) {
   if (isCancellationScheduled(status)) return 'Reativar plano';
   const current = String(status?.status || '').toLowerCase();
   if (current === 'blocked' || current === 'past_due') {
-    return 'Regularizar pagamento';
+    return hasPaymentHistory(status) ? 'Regularizar pagamento' : 'Adicionar pagamento';
   }
   if (current === 'canceled') return 'Reativar plano';
   return 'Adicionar pagamento';
