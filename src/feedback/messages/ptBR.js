@@ -245,6 +245,9 @@ export const ptBR = {
     billing_blocked_header: {
       body: 'AGENDA BLOQUEADA. REGULARIZE SEU PLANO.',
     },
+    billing_blocked_never_paid_header: {
+      body: 'AGENDA BLOQUEADA. ADICIONE UMA FORMA DE PAGAMENTO.',
+    },
     billing_past_due_header: {
       body: 'PAGAMENTO PENDENTE. REGULARIZE SEU PLANO.',
     },
