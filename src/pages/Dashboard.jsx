@@ -136,6 +136,13 @@ function getPendingPlanChangeSuffix(status) {
 
 function getBillingAnnouncement(status) {
   if (!status) return null;
+  if (status.provider_sync_pending) {
+    return {
+      tone: 'warning',
+      text: dashboardBillingMessage('billing_provider_sync_pending_header'),
+      hideAction: true,
+    };
+  }
   const current = String(status.status || '').toLowerCase();
   const paymentStatus = String(status.payment_method_status || '').toLowerCase();
   const daysUntilTrialEnd = Number(status.days_until_trial_end);
@@ -247,7 +254,7 @@ function BillingAnnouncementBar({ announcement, onAction, actionLoading = false 
     ? 'border-red-500/30 bg-[#1a0b0b] text-red-100'
     : 'border-primary/25 bg-[#151106] text-primary';
   const actionLabel = announcement.actionLabel || 'VER PLANOS';
-  const canAct = typeof onAction === 'function';
+  const canAct = typeof onAction === 'function' && !announcement.hideAction;
 
   return (
     <div className={`border-b ${toneClass}`}>
