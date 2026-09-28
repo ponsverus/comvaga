@@ -26,6 +26,7 @@ import {
   compareAgendamentoDateTimeDesc,
   getBizLabel,
   isCancellationScheduled,
+  isScheduledDowngradeSync,
   normalizeStatus,
 } from './dashboard/utils';
 import { fetchBusinessBillingStatus, getPublicUrl } from './dashboard/api/dashboardApi';
@@ -136,10 +137,17 @@ function getPendingPlanChangeSuffix(status) {
 
 function getBillingAnnouncement(status) {
   if (!status) return null;
-  if (status.provider_sync_pending) {
+  const providerSyncStatus = String(status.provider_sync_status || '').toLowerCase();
+  if (status.provider_sync_pending && (providerSyncStatus === 'failed' || !isScheduledDowngradeSync(status))) {
+    const syncFailed = providerSyncStatus === 'failed';
+    const syncRetrying = providerSyncStatus === 'retryable';
     return {
-      tone: 'warning',
-      text: dashboardBillingMessage('billing_provider_sync_pending_header'),
+      tone: syncFailed ? 'danger' : 'warning',
+      text: dashboardBillingMessage(syncFailed
+        ? 'billing_provider_sync_failed_header'
+        : syncRetrying
+          ? 'billing_provider_sync_retry_header'
+          : 'billing_provider_sync_pending_header'),
       hideAction: true,
     };
   }
@@ -424,6 +432,41 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       document.removeEventListener('visibilitychange', refreshBillingStatus);
     };
   }, [reloadBillingStatus, souDono]);
+
+  useEffect(() => {
+    const syncStatus = String(billingStatus?.provider_sync_status || '').toLowerCase();
+    const scheduledDowngrade = isScheduledDowngradeSync(billingStatus);
+    if (!souDono
+      || !billingStatus?.provider_sync_pending
+      || (syncStatus === 'failed' && !scheduledDowngrade)) return undefined;
+
+    const nextAttemptAt = Date.parse(billingStatus?.provider_sync_next_attempt_at || '');
+    const waitUntilRetry = Number.isFinite(nextAttemptAt) && nextAttemptAt > Date.now()
+      ? Math.min(nextAttemptAt - Date.now() + 1000, scheduledDowngrade ? 86_400_000 : 60_000)
+      : 15_000;
+    const pollDelay = syncStatus === 'processing' && !scheduledDowngrade ? 10_000 : waitUntilRetry;
+    let timer;
+    let stopped = false;
+
+    const pollBillingStatus = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const status = await fetchBusinessBillingStatus(negocio.id);
+        if (stopped) return;
+        setBillingStatus(status);
+        setBillingStatusLoadError(false);
+      } catch {
+        if (!stopped) timer = window.setTimeout(pollBillingStatus, 15_000);
+      }
+    };
+
+    timer = window.setTimeout(pollBillingStatus, pollDelay);
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+    };
+  }, [billingStatus, negocio?.id, souDono]);
+
   const checarPermissao = useCallback(async (profissionalId) => {
     if (!acessoDashboardAutorizado) {
       await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
