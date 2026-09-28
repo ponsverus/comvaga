@@ -218,6 +218,9 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
+    billing_provider_sync_pending_header: {
+      body: 'PROCESSANDO PAGAMENTO. AGUARDE PARA ALTERAR O PLANO.',
+    },
     billing_pending_plan_change_scheduled_header: {
       body: 'A TROCA PARA {plan} ESTÁ AGENDADA PARA {date}',
     },
