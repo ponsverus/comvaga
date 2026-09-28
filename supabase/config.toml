@@ -24,3 +24,5 @@ verify_jwt = false
 
 [functions.asaas-cancel-checkout]
 verify_jwt = true
+[functions.asaas-recover-subscription-payment]
+verify_jwt = true
