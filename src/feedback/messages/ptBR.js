@@ -131,13 +131,29 @@ export const ptBR = {
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
-    },    billing_checkout_cancel_wait: {
+    },
+    billing_recovery_invoice_not_found: {
+      title: 'Fatura pendente indisponível',
+      body: 'A busca por faturas vencidas na assinatura atual retornou sem resultados. Atualize o status em instantes ou contate o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_recovery_multiple_invoices: {
+      title: 'Faturas pendentes precisam de conferência',
+      body: 'Há mais de uma fatura vencida nesta assinatura. Para evitar pagamentos incorretos, contate o suporte para conferirmos os valores.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_cancel_wait: {
       title: 'Checkout sendo preparado',
       body: 'A abertura do checkout ainda está sendo confirmada pelo gateway. Aguarde alguns instantes e tente cancelar novamente',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
-    },    billing_checkout_cancel_error: {
+    },
+    billing_checkout_cancel_error: {
       title: 'Erro ao cancelar pagamento',
       body: 'Houve uma falha ao cancelar o pagamento pendente. Tente novamente em instantes.',
       variant: 'danger',
