@@ -403,6 +403,20 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     }
   }, [negocio?.id, souDono]);
 
+  useEffect(() => {
+    if (!souDono) return undefined;
+
+    const refreshBillingStatus = () => {
+      if (document.visibilityState === 'visible') void reloadBillingStatus();
+    };
+
+    window.addEventListener('focus', refreshBillingStatus);
+    document.addEventListener('visibilitychange', refreshBillingStatus);
+    return () => {
+      window.removeEventListener('focus', refreshBillingStatus);
+      document.removeEventListener('visibilitychange', refreshBillingStatus);
+    };
+  }, [reloadBillingStatus, souDono]);
   const checarPermissao = useCallback(async (profissionalId) => {
     if (!acessoDashboardAutorizado) {
       await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
