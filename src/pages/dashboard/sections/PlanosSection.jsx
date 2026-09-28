@@ -1,668 +1,1890 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import {
-  cancelAsaasCheckout,
-  cancelAsaasPlanDowngrade,
-  cancelAsaasSubscription,
-  createAsaasCheckout,
-  fetchBillingPlans,
-  recoverAsaasSubscriptionPayment,
-  setBusinessPlan,
-} from '../api/dashboardApi';
-import { getRequestErrorKey } from '../../../utils/requestError';
-import { useFeedback } from '../../../feedback/useFeedback';
-import { ptBR } from '../../../feedback/messages/ptBR.js';
-import { isCancellationScheduled } from '../utils';
-function getByPath(obj, path) {
-  const parts = String(path || '').split('.');
-  let cur = obj;
-  for (const part of parts) {
-    if (!cur || typeof cur !== 'object') return null;
-    cur = cur[part];
-  }
-  return cur || null;
-}
-
-function interpolateMessage(value, params) {
-  return String(value || '').replace(/\{(\w+)\}/g, (_, key) => {
-    const next = params?.[key];
-    return next === undefined || next === null ? '' : String(next);
-  });
-}
-
-function messageBody(key, params) {
-  const entry = getByPath(ptBR, key);
-  return interpolateMessage(entry?.body || '', params);
-}
-
-function formatCurrencyFromCents(value) {
-  return `R$ ${(Number(value || 0) / 100).toFixed(2).replace('.', ',')}`;
-}
-
-function getAccessEndDate(status) {
-  return status?.access_ends_label || '';
-}
-
-function isCanceledOrCancellationScheduled(status) {
-  return String(status?.status || '').toLowerCase() === 'canceled' || isCancellationScheduled(status);
-}
-
-function statusText(status) {
-  if (isCancellationScheduled(status)) return 'Cancelado';
-  const current = String(status?.status || '').toLowerCase();
-  if (current === 'active') return 'Ativo';
-  if (current === 'trialing') return 'Teste grátis';
-  if (current === 'past_due') return 'Pagamento pendente';
-  if (current === 'blocked') return 'Agenda bloqueada';
-  if (current === 'payment_grace') return 'Pagamento necessário';
-  if (current === 'canceled') return 'Cancelado';
-  return 'Config.';
-}
-
-function statusBadgeClass(status) {
-  if (isCancellationScheduled(status)) {
-    return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-200';
-  }
-
-  const current = String(status?.status || '').toLowerCase();
-  const paymentStatus = String(status?.payment_method_status || '').toLowerCase();
-
-  if (current === 'active' && paymentStatus === 'valid') {
-    return 'border-green-400/30 bg-green-400/10 text-green-300';
-  }
-  if (current === 'trialing') {
-    return 'border-primary/30 bg-primary/10 text-primary';
-  }
-  if (current === 'payment_grace') {
-    return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-200';
-  }
-  if (current === 'blocked' || current === 'past_due') {
-    return 'border-red-400/30 bg-red-400/10 text-red-200';
-  }
-  if (current === 'canceled') {
-    return 'border-gray-500/30 bg-gray-500/10 text-gray-300';
-  }
-
-  return 'border-gray-500/30 bg-gray-500/10 text-gray-300';
-}
-
-function statusButtonText(status) {
-  const providerStatus = String(status?.provider_status || '').toUpperCase();
-  const subscriptionIsRecoverable = String(status?.provider || '').toLowerCase() === 'asaas'
-    && Boolean(status?.provider_subscription_id)
-    && !Boolean(status?.cancellation_scheduled)
-    && !['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED'].includes(providerStatus)
-    && ['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase());
-  if (subscriptionIsRecoverable) return 'Pagar fatura';
-  if (isCancellationScheduled(status)) return 'Reativar plano';
-  const current = String(status?.status || '').toLowerCase();
-  if (current === 'blocked' || current === 'past_due') {
-    return 'Regularizar pagamento';
-  }
-  if (current === 'canceled') return 'Reativar plano';
-  return 'Adicionar pagamento';
-}
-
-function statusButtonClass(status) {
-  if (isCancellationScheduled(status)) {
-    return 'rounded-full border border-primary text-primary px-5 py-2.5 text-xs font-normal uppercase tracking-wider hover:bg-primary/10';
-  }
-
-  const current = String(status?.status || '').toLowerCase();
-  if (current === 'blocked' || current === 'past_due') {
-    return 'rounded-full bg-yellow-400 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-black hover:bg-yellow-300';
-  }
-  if (current === 'payment_grace' || current === 'trialing') {
-    return 'rounded-full bg-primary px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-black hover:bg-primary/90';
-  }
-  return 'rounded-full border border-primary text-primary px-5 py-2.5 text-xs font-normal uppercase tracking-wider hover:bg-primary/10';
-}
-
-function getPlanCancelErrorMessage(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  if (raw.includes('subscription_not_cancelable')) {
-    return messageBody('dashboard.billing_cancel_not_cancelable');
-  }
-  if (raw.includes('checkout_in_progress') || raw.includes('plan_downgrade_pending') || raw.includes('provider_sync_in_progress')) {
-    return messageBody('dashboard.billing_provider_sync_in_progress');
-  }
-  if (raw.includes('asaas_cancel_failed')) {
-    return messageBody('dashboard.billing_cancel_gateway_error');
-  }
-  return messageBody('dashboard.billing_cancel_error');
-}
-
-function getDowngradeCancelErrorMessage(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  if (raw.includes('plan_downgrade_not_scheduled')) {
-    return messageBody('dashboard.billing_cancel_downgrade_unavailable');
-  }
-  if (raw.includes('provider_sync_in_progress')) {
-    return messageBody('dashboard.billing_provider_sync_in_progress');
-  }
-  return messageBody('dashboard.billing_cancel_downgrade_error');
-}
-
-function getPlanChangeErrorMessage(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  if (raw.includes('future_plan_professional_limit_reached')) {
-    return messageBody('dashboard.future_plan_professional_limit_reached');
-  }
-  if (raw.includes('plan_professional_limit_reached')) {
-    return messageBody('dashboard.plan_professional_limit_reached');
-  }
-  if (
-    raw.includes('checkout_reconciliation_pending')
-    || raw.includes('checkout_session_reconciliation_pending')
-    || raw.includes('checkout_session_unknown')
-    || raw.includes('checkout_session_creating')
-  ) {
-    return messageBody('dashboard.billing_checkout_reconciliation_pending');
-  }
-  if (raw.includes('checkout_conflict') || raw.includes('checkout_session_conflict')) {
-    return messageBody('dashboard.billing_checkout_conflict');
-  }
-  if (raw.includes('checkout_in_progress') || raw.includes('checkout_session_in_progress')) {
-    return messageBody('dashboard.billing_checkout_in_progress');
-  }
-  if (raw.includes('provider_subscription_recovery_required')) {
-    return messageBody('dashboard.billing_existing_subscription_recovery');
-  }
-  if (raw.includes('subscription_overdue_payment_not_found')) {
-    return messageBody('dashboard.billing_recovery_invoice_not_found');
-  }
-  if (raw.includes('multiple_overdue_subscription_payments')) {
-    return messageBody('dashboard.billing_recovery_multiple_invoices');
-  }
-  if (raw.includes('subscription_recovery_unavailable') || raw.includes('subscription_invoice_unavailable') || raw.includes('subscription_not_recoverable') || raw.includes('subscription_state_changed')) {
-    return messageBody('dashboard.billing_recovery_invoice_not_found');
-  }
-  if (raw.includes('plan_downgrade_pending')) {
-    return messageBody('dashboard.billing_plan_movement_pending');
-  }
-  if (raw.includes('provider_sync_in_progress')) {
-    return messageBody('dashboard.billing_provider_sync_in_progress');
-  }
-  if (raw.includes('asaas_checkout_failed')) {
-    return messageBody('dashboard.billing_checkout_error');
-  }
-  return messageBody('dashboard.billing_plan_change_error');
-}
-
-
-function getCheckoutCancelErrorMessage(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  if (raw.includes('checkout_creation_in_progress')) {
-    return messageBody('dashboard.billing_checkout_cancel_wait');
-  }
-  if (raw.includes('payment_already_confirmed')) {
-    return messageBody('dashboard.billing_checkout_payment_confirmed');
-  }
-  if (raw.includes('checkout_not_found')) {
-    return messageBody('dashboard.billing_checkout_not_found');
-  }
-  if (raw.includes('asaas_checkout_cancel_failed')) {
-    return messageBody('dashboard.billing_checkout_cancel_gateway_error');
-  }
-  return messageBody('dashboard.billing_checkout_cancel_error');
-}
-function getPlanLimit(plan) {
-  if (plan?.max_profissionais == null) return null;
-  const value = Number(plan.max_profissionais);
-  return Number.isFinite(value) ? value : null;
-}
-
-function getPlanLimitMessage(plan, count) {
-  const limit = getPlanLimit(plan);
-  if (limit == null) return '';
-  return messageBody('dashboard.plan_professional_limit_current', {
-    count,
-    limit,
-    professionalsLabel: limit === 1 ? 'profissional ativo ou pendente' : 'profissionais ativos ou pendentes',
-  });
-}
-
-function getCapacityLabel(plan) {
-  const limit = getPlanLimit(plan);
-  if (limit == null) return 'Profissionais ilimitados';
-  return limit === 1 ? '1 profissional' : `Até ${limit} profissionais`;
-}
-
-const PLAN_CONTENT = {
-  essencial: {
-    label: 'Essencial',
-    oldPriceLabel: null,
-    priceClass: 'text-white',
-    buttonText: 'Selecionar Essencial',
-    buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
+export const ptBR = {
+  alerts: {
+    action_failed_support: {
+      title: 'Algo fugiu do esperado',
+      body:
+        'Houve um erro inesperado durante o processamento.\n' +
+        'Isso pode ser uma instabilidade temporária.\n' +
+        'Se o problema persistir, acesse SUPORTE no rodapé da página para falar com a gente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    request_timeout: {
+      title: 'Demorou demais',
+      body: 'O carregamento levou mais tempo que o normal.\nTente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    rate_limit_exceeded: {
+      title: 'Muitas tentativas',
+      body: 'Você realizou muitas tentativas em pouco tempo.\nAguarde um minuto e tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    business_not_loaded: {
+      title: 'Falha ao ler os dados do negócio',
+      body: 'Ocorreu um erro técnico durante o carregamento dos dados.\nRecarregue a página e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    route_load_failed: {
+      title: 'Algo deu errado',
+      body: 'O carregamento da tela falhou. Por favor, atualize a página e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'TENTAR NOVAMENTE',
+    },
   },
-  profissional: {
-    label: 'Profissional',
-    oldPriceLabel: 'R$ 99,99',
-    priceClass: 'text-green-400',
-    buttonText: 'Selecionar plano',
-    buttonClass: 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
+
+  dashboard: {
+    business_delete_confirm: {
+      title: 'Excluir negócio?',
+      body:
+        'Tem certeza que deseja excluir este negócio?\n' +
+        'Este comando encerra e apaga os registros do negócio para sempre.',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'EXCLUIR',
+      cancelText: 'CANCELAR',
+      buttonText: 'EXCLUIR',
+    },
+    business_deleted: {
+      title: 'Negócio excluído',
+      body: 'O negócio foi excluído com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    business_delete_error: {
+      title: 'Erro ao excluir',
+      body: 'Erro ao excluir negócio. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_delete_plan_active: {
+      title: 'Plano ativo',
+      body:
+        'Para este negócio, primeiro cancele o plano ativo.\n' +
+        'Depois que a assinatura ficar cancelada, será possível excluí-lo.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    business_delete_future_bookings: {
+      title: 'Agendamentos futuros',
+      body:
+        'Este negócio possui agendamentos de hoje ou futuros.\n' +
+        'Cancele ou reagende esses agendamentos antes de excluir o negócio.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_success: {
+      title: 'Pagamento iniciado/confirmado',
+      body: 'Pagamento iniciado/confirmado. Seu plano será atualizado em instantes.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    billing_checkout_cancel: {
+      title: 'Checkout cancelado',
+      body: 'Checkout cancelado. Você pode tentar novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_expired: {
+      title: 'Checkout expirado',
+      body: 'Checkout expirado. Gere um novo link de pagamento.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_cancel_confirm: {
+      title: 'Cancelar plano?',
+      body:
+        'Se houver período pago vigente, o acesso permanece liberado até o fim do ciclo.\n' +
+        'Depois disso, o sistema bloqueará novos agendamentos até que um novo plano seja contratado e ativado.',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'CANCELAR PLANO',
+      cancelText: 'VOLTAR',
+      buttonText: 'CANCELAR PLANO',
+    },
+    billing_cancel_checkout_confirm: {
+      title: 'Cancelar pagamento pendente?',
+      body: 'O link de pagamento aberto será cancelado, liberando a escolha dos planos novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'CANCELAR PAGAMENTO',
+      cancelText: 'VOLTAR',
+      buttonText: 'CANCELAR PAGAMENTO',
+    },
+    billing_existing_subscription_recovery: {
+      title: 'Assinatura atual precisa ser regularizada',
+      body: 'A assinatura anterior permanece ativa no gateway. De modo a evitar pagamento duplicado, mantemos a abertura de um novo plano suspensa. Favor regularizar a conta atual ou contatar o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_recovery_invoice_not_found: {
+      title: 'Fatura pendente indisponível',
+      body: 'A busca por faturas vencidas na assinatura atual retornou sem resultados. Atualize o status em instantes ou contate o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_recovery_multiple_invoices: {
+      title: 'Faturas pendentes precisam de conferência',
+      body: 'Há mais de uma fatura vencida nesta assinatura. Para evitar pagamentos incorretos, contate o suporte para conferirmos os valores.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_cancel_wait: {
+      title: 'Checkout sendo preparado',
+      body: 'A abertura do checkout ainda está sendo confirmada pelo gateway. Aguarde alguns instantes e tente cancelar novamente',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_cancel_error: {
+      title: 'Erro ao cancelar pagamento',
+      body: 'Houve uma falha ao cancelar o pagamento pendente. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_checkout_cancel_gateway_error: {
+      title: 'Erro no cancelamento',
+      body: 'O gateway de pagamento falhou em confirmar o cancelamento do checkout. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_checkout_payment_confirmed: {
+      title: 'Pagamento confirmado',
+      body: 'Esse pagamento já foi confirmado, tornando o cancelamento indisponível neste estágio.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_not_found: {
+      title: 'Pagamento indisponível',
+      body: 'Nenhum pagamento pendente foi encontrado para este negócio.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_plan_movement_pending: {
+      title: 'Troca em andamento',
+      body: 'Conclua ou cancele a troca de plano em andamento antes de iniciar outra.',
+      variant: 'info',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_cancel_downgrade_confirm: {
+      title: 'Cancelar downgrade?',
+      body: 'A troca agendada será removida e o valor do plano atual será mantido no próximo faturamento.',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'CANCELAR DOWNGRADE',
+      cancelText: 'VOLTAR',
+      buttonText: 'CANCELAR DOWNGRADE',
+    },
+    billing_cancel_downgrade_error: {
+      title: 'Erro ao cancelar downgrade',
+      body: 'Houve uma falha ao cancelar a troca agendada. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_cancel_downgrade_unavailable: {
+      title: 'Downgrade indisponível',
+      body: 'Nenhum downgrade agendado consta neste negócio para cancelar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_provider_sync_in_progress: {
+      title: 'Atualizando dados',
+      body: 'Aguarde alguns instantes e tente novamente.',
+      variant: 'info',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_pending_plan_change_scheduled_header: {
+      body: 'A TROCA PARA {plan} ESTÁ AGENDADA PARA {date}',
+    },
+    billing_pending_plan_change_continues_header: {
+      body: 'A TROCA PARA {plan} CONTINUA AGENDADA.',
+    },
+    billing_canceled_access_until_header: {
+      body: 'PLANO CANCELADO. ACESSO LIBERADO ATÉ {date}',
+    },
+    billing_canceled_header: {
+      body: 'CANCELAMENTO SOLICITADO. O ACESSO CONTINUA LIBERADO.',
+    },
+    billing_canceled_expired_header: {
+      body: 'PLANO CANCELADO. ESCOLHA UM NOVO PLANO PARA CONTINUAR.',
+    },
+    billing_blocked_header: {
+      body: 'AGENDA BLOQUEADA. REGULARIZE SEU PLANO.',
+    },
+    billing_past_due_header: {
+      body: 'PAGAMENTO PENDENTE. REGULARIZE SEU PLANO.',
+    },
+    billing_payment_failed_header: {
+      body: 'FALHA NO PAGAMENTO. TENTE NOVAMENTE.',
+    },
+    billing_trial_ended_header: {
+      body: 'TESTE ENCERRADO. ADICIONE UMA FORMA DE PAGAMENTO.',
+    },
+    billing_block_countdown_header: {
+      body: 'BLOQUEIO EM {days} {dayLabel}.',
+    },
+    billing_day_singular_header: {
+      body: 'DIA',
+    },
+    billing_day_plural_header: {
+      body: 'DIAS',
+    },
+    billing_trial_total_header: {
+      body: ' DE {days} {dayLabel}',
+    },
+    billing_trial_active_header: {
+      body: 'TESTE GRÁTIS ATIVO. FALTAM {days} {dayLabel}{total}.',
+    },
+    billing_plans_load_error: {
+      title: 'Erro ao carregar planos',
+      body: 'Erro ao carregar os planos agora.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_checkout_timeout: {
+      title: 'Checkout demorou demais',
+      body: 'O checkout demorou demais para abrir. Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_reconciliation_pending: {
+      title: 'Checkout em conferência',
+      body: 'Aguarde alguns instantes e tente abrir novamente, pois o registro do seu checkout segue em andamento; a Comvaga evita gerar um novo pedido enquanto houver dúvida sobre o anterior.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_conflict: {
+      title: 'Checkout em andamento para outro plano',
+      body: 'Já existe um processo de checkout em andamento para outro plano. Aguarde ele ser concluído ou expirar antes de tentar um plano diferente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_in_progress: {
+      title: 'Checkout sendo preparado',
+      body: 'O processamento deste checkout já está em andamento. Aguarde alguns instantes e clique novamente para abrir o mesmo link.',
+      variant: 'info',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_checkout_error: {
+      title: 'Erro no checkout',
+      body: 'Houve um erro ao abrir o checkout do pagamento agora.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_plan_change_error: {
+      title: 'Erro ao trocar plano',
+      body: 'Houve uma falha durante a troca de plano.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_cancel_not_cancelable: {
+      title: 'Cancelamento indisponível',
+      body: 'O estado atual deste plano impede o cancelamento.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_cancel_gateway_error: {
+      title: 'Erro no cancelamento',
+      body: 'O cancelamento da assinatura falhou no gateway de pagamento. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    billing_cancel_timeout: {
+      title: 'Cancelamento demorou demais',
+      body: 'O cancelamento demorou demais. Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_cancel_error: {
+      title: 'Erro ao cancelar',
+      body: 'Houve uma falha durante o cancelamento do plano.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    logo_updated: {
+      title: 'Logo atualizada',
+      body: 'Sua logo foi atualizada com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    logo_update_error: {
+      title: 'Erro ao atualizar logo',
+      body: 'Tente atualizar sua logo novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+
+    business_info_updated: {
+      title: 'Salvo',
+      body: 'Os dados do negócio foram salvos com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    business_info_update_error: {
+      title: 'Erro ao salvar',
+      body: 'Erro ao salvar os dados do negócio agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_phone_invalid: {
+      title: 'WhatsApp inválido',
+      body: 'Informe um WhatsApp válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_description_too_long: {
+      title: 'Muito longo',
+      body: 'O texto do campo "Sobre" ultrapassou o limite de 150 caracteres. Reduza o texto e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+
+    gallery_invalid_format: {
+      title: 'Formato inválido',
+      body: 'Envie apenas PNG, JPG ou WEBP.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_too_large: {
+      title: 'Arquivo grande',
+      body: 'Cada imagem pode ter no máximo 4 MB.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_upload_error: {
+      title: 'Erro no upload',
+      body: 'Erro ao enviar uma das imagens. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_updated: {
+      title: 'Galeria atualizada',
+      body: 'As imagens foram adicionadas.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    gallery_partial_upload: {
+      title: 'Galeria atualizada parcialmente',
+      body: 'Algumas imagens foram adicionadas, mas outras falharam ao ser enviadas. Tente novamente com as imagens que faltaram.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_no_images_added: {
+      title: 'Nenhuma imagem adicionada',
+      body: 'Nenhuma imagem foi adicionada à galeria. Verifique os arquivos e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_update_error: {
+      title: 'Erro',
+      body: 'Erro ao concluir o envio das imagens. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    gallery_load_warning: {
+      title: 'Galeria indisponível no momento',
+      body:
+        'Erro ao carregar as imagens da galeria agora.\n' +
+        'O restante do painel continua disponível.\n' +
+        'Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    history_load_error: {
+      title: 'Histórico indisponível',
+      body: 'Histórico indisponível no momento. Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    gallery_delete_confirm: {
+      title: 'Excluir imagem?',
+      body: 'Tem certeza que deseja excluir esta imagem da galeria?',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'EXCLUIR',
+      cancelText: 'CANCELAR',
+      buttonText: 'EXCLUIR',
+    },
+    gallery_image_deleted: {
+      title: 'Imagem excluída',
+      body: 'A imagem foi excluída da galeria.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    gallery_delete_error: {
+      title: 'Erro',
+      body: 'Erro ao excluir esta imagem agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+
+    billing_status_load_error_inline: {
+      body: 'Houve um erro ao verificar o pagamento agora.',
+    },
+    billing_status_retry_action: {
+      body: 'TENTAR DE NOVO',
+    },
+    metrics_load_error: {
+      title: 'Erro ao carregar métricas',
+      body: 'Erro ao carregar as métricas agora. Tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    entrega_promo_invalid: {
+      title: 'Oferta inválida',
+      body: 'O valor promocional precisa ser menor que o valor original.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    entrega_price_invalid: {
+      title: 'Valor inválido',
+      body: 'Informe um valor válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    entrega_duration_invalid: {
+      title: 'Tempo inválido',
+      body: 'Informe o tempo em minutos.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business: {
+
+      tab_title: {
+        servicos:  'SERVS',
+        consultas: 'Consultas',
+        aulas:     'Aulas',
+      },
+
+      button_add: {
+        servicos:  'ADD SERV.',
+        consultas: 'CONSULTA',
+        aulas:     'AULA',
+      },
+
+      modal_new: {
+        servicos:  'NOVO SERV.',
+        consultas: 'NOVA CONSULTA',
+        aulas:     'NOVA AULA',
+      },
+
+      modal_edit: {
+        servicos:  'EDITAR SERV.',
+        consultas: 'EDITAR CONSULTA',
+        aulas:     'EDITAR AULA',
+      },
+
+      counter_singular: {
+        servicos:  'SERV.',
+        consultas: 'CONSULTA',
+        aulas:     'AULA',
+      },
+      counter_plural: {
+        servicos:  'SERVS',
+        consultas: 'CONSULTAS',
+        aulas:     'AULAS',
+      },
+
+      empty_list: {
+        servicos:  ':(',
+        consultas: 'Sem consultas para este profissional.',
+        aulas:     'Sem aulas para este profissional.',
+      },
+
+      servicos: {
+        entrega_created: {
+          title: 'Serv. criado',
+          body: 'O novo serv. já está disponível para agendamento.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_updated: {
+          title: 'Serv. atualizado',
+          body: 'Os ajustes foram salvos com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_create_error: {
+          title: 'Erro ao criar',
+          body: 'Ocorreu uma falha ao criar este serv. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_update_error: {
+          title: 'Erro ao salvar',
+          body: 'Ocorreu uma falha ao atualizar este serv. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_duplicate_name: {
+          title: 'Nome repetido',
+          body: 'Este profissional já possui um serv. com este nome.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_confirm: {
+          title: 'Excluir serv?',
+          body: 'Tem certeza que deseja excluir este serv?',
+          variant: 'warning', screen: 'dark',
+          confirmText: 'EXCLUIR', cancelText: 'CANCELAR', buttonText: 'EXCLUIR',
+        },
+        entrega_deleted: {
+          title: 'Serv. excluído',
+          body: 'O serv. foi removido da lista.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_activated: {
+          title: 'Serv. ativado',
+          body: 'O serv. foi ativado com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_inactivated: {
+          title: 'Serv. inativado',
+          body: 'O serv. foi inativado com sucesso.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_toggle_error: {
+          title: 'Erro',
+          body: 'Erro ao alterar o status do serv. agora. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar esta página. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_error: {
+          title: 'Erro',
+          body: 'Houve um erro ao excluir o serv. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_future_bookings_blocked: {
+          title: 'Serv. com agendamentos',
+          body:
+            'Este serv. possui agendamentos marcados para hoje ou para uma data futura.\n' +
+            'Cancele ou reagende esses agendamentos antes de inativar ou excluir.',
+          variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+        },
+        entrega_prof_required: {
+          title: 'Selecione um profissional',
+          body: 'Escolha um profissional para o serv.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+      },
+
+      consultas: {
+        entrega_created: {
+          title: 'Consulta criada',
+          body: 'A nova consulta já está disponível para agendamento.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_updated: {
+          title: 'Consulta atualizada',
+          body: 'Os ajustes foram salvos com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_create_error: {
+          title: 'Erro ao criar',
+          body: 'Ocorreu uma falha ao criar esta consulta. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_update_error: {
+          title: 'Erro ao salvar',
+          body: 'Ocorreu uma falha ao atualizar esta consulta. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_duplicate_name: {
+          title: 'Nome repetido',
+          body: 'Este profissional já possui uma consulta com este nome.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_confirm: {
+          title: 'Excluir consulta?',
+          body: 'Tem certeza que deseja excluir esta consulta?',
+          variant: 'warning', screen: 'dark',
+          confirmText: 'EXCLUIR', cancelText: 'CANCELAR', buttonText: 'EXCLUIR',
+        },
+        entrega_deleted: {
+          title: 'Consulta excluída',
+          body: 'A consulta foi removida da lista.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_activated: {
+          title: 'Consulta ativada',
+          body: 'A consulta foi ativada com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_inactivated: {
+          title: 'Consulta inativada',
+          body: 'A consulta foi inativada com sucesso.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_toggle_error: {
+          title: 'Erro',
+          body: 'Erro ao alterar o status da consulta agora. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar mais consultas. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_error: {
+          title: 'Erro',
+          body: 'Houve um erro ao excluir a consulta. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_future_bookings_blocked: {
+          title: 'Consulta com agendamentos',
+          body:
+            'Esta consulta possui agendamentos marcados para hoje ou para uma data futura.\n' +
+            'Cancele ou reagende esses agendamentos antes de inativar ou excluir.',
+          variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+        },
+        entrega_prof_required: {
+          title: 'Selecione um profissional',
+          body: 'Escolha um profissional para esta consulta.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+      },
+
+      aulas: {
+        entrega_created: {
+          title: 'Aula criada',
+          body: 'A nova aula já está disponível para agendamento.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_updated: {
+          title: 'Aula atualizada',
+          body: 'Os ajustes foram salvos com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_create_error: {
+          title: 'Erro ao criar',
+          body: 'Ocorreu uma falha ao criar esta aula. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_update_error: {
+          title: 'Erro ao salvar',
+          body: 'Ocorreu uma falha ao atualizar esta aula. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_duplicate_name: {
+          title: 'Nome repetido',
+          body: 'Este profissional já possui uma aula com este nome.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_confirm: {
+          title: 'Excluir aula?',
+          body: 'Tem certeza que deseja excluir esta aula?',
+          variant: 'warning', screen: 'dark',
+          confirmText: 'EXCLUIR', cancelText: 'CANCELAR', buttonText: 'EXCLUIR',
+        },
+        entrega_deleted: {
+          title: 'Aula excluída',
+          body: 'A aula foi removida da lista.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_activated: {
+          title: 'Aula ativada',
+          body: 'A aula foi ativada com sucesso.',
+          variant: 'success', screen: 'light', buttonText: 'OK',
+        },
+        entrega_inactivated: {
+          title: 'Aula inativada',
+          body: 'A aula foi inativada com sucesso.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_toggle_error: {
+          title: 'Erro',
+          body: 'Erro ao alterar o status da aula agora. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        load_more_error: {
+          title: 'Erro ao carregar',
+          body: 'Erro ao carregar mais aulas. Tente novamente.',
+          variant: 'warning', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_delete_error: {
+          title: 'Erro',
+          body: 'Houve um erro ao excluir a aula. Tente novamente.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+        entrega_future_bookings_blocked: {
+          title: 'Aula com agendamentos',
+          body:
+            'Esta aula possui agendamentos marcados para hoje ou para uma data futura.\n' +
+            'Cancele ou reagende esses agendamentos antes de inativar ou excluir.',
+          variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+        },
+        entrega_prof_required: {
+          title: 'Selecione um profissional',
+          body: 'Escolha um profissional para esta aula.',
+          variant: 'danger', screen: 'dark', buttonText: 'OK',
+        },
+      },
+    },
+
+    professional_updated: {
+      title: 'Profissional atualizado',
+      body: 'Os ajustes foram salvos com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    professional_update_error: {
+      title: 'Erro',
+      body: 'Erro ao atualizar o profissional agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    professional_delete_confirm: {
+      title: 'Excluir profissional?',
+      body: 'Tem certeza que deseja excluir este profissional?',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'EXCLUIR',
+      cancelText: 'CANCELAR',
+      buttonText: 'EXCLUIR',
+    },
+    professional_self_delete_confirm: {
+      title: 'Excluir cadastro profissional?',
+      body:
+        'Ao confirmar, você exclui apenas o seu cadastro como profissional deste negócio.\n' +
+        'Sua conta de admin e o gerenciamento do negócio continuam ativos.\n' +
+        'O histórico de atendimentos já realizados será preservado.',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'EXCLUIR MEU CADASTRO',
+      cancelText: 'CANCELAR',
+      buttonText: 'EXCLUIR MEU CADASTRO',
+    },
+    professional_deleted: {
+      title: 'Profissional excluído',
+      body: 'O profissional foi excluído.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    professional_self_deleted: {
+      title: 'Cadastro profissional excluído',
+      body: 'Seu cadastro como profissional foi excluído deste negócio. Sua conta de admin continua ativa.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    professional_delete_error: {
+      title: 'Erro',
+      body: 'Erro ao excluir o profissional agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    professional_inactivate_reason: {
+      title: 'Motivo',
+      body: 'Se quiser, escreva um motivo (opcional).',
+      variant: 'warning',
+      screen: 'dark',
+      placeholder: 'Ex.: Férias, indisponível...',
+      confirmText: 'SALVAR',
+      cancelText: 'CANCELAR',
+      buttonText: 'SALVAR',
+    },
+    professional_activated: {
+      title: 'Ativado',
+      body: 'O profissional foi ativado com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    professional_inactivated: {
+      title: 'Inativado',
+      body: 'O profissional foi inativado com sucesso.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    professional_toggle_error: {
+      title: 'Erro',
+      body: 'Erro ao alterar o status agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    professional_future_bookings_blocked: {
+      title: 'Agendamentos futuros',
+      body: 'Este profissional tem agendamentos de hoje ou futuros.\nCancele ou reagende esses compromissos antes de inativar ou excluir o vínculo.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    professional_almoco_blocked: {
+      title: 'Pausa bloqueada',
+      body: 'Há agendamentos futuros que entram em conflito com o novo horário da pausa.\nCancele esses agendamentos antes de salvar este ajuste.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    professional_dia_blocked: {
+      title: 'Dia de trabalho bloqueado',
+      body: 'Existe um agendamento futuro no dia que você está tentando desativar.\nCancele ou reagende esse atendimento antes de remover este dia.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    professional_schedule_blocked: {
+      title: 'Horário de trabalho bloqueado',
+      body: 'Há agendamentos futuros fora do novo horário de trabalho que você está tentando salvar.\nCancele ou reagende esses atendimentos antes de alterar a abertura ou o fechamento.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+
+    booking_confirmed: {
+      title: 'Concluído',
+      body: 'O atendimento foi concluído.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    booking_confirm_error: {
+      title: 'Erro',
+      body: 'Erro ao concluir o atendimento agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    booking_cancel_confirm: {
+      title: 'Cancelar agendamento?',
+      body: 'Tem certeza que deseja cancelar este agendamento?',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'CANCELAR',
+      cancelText: 'VOLTAR',
+      buttonText: 'CANCELAR',
+    },
+    booking_canceled: {
+      title: 'Agendamento cancelado',
+      body: 'O agendamento foi cancelado com sucesso.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    booking_cancel_error: {
+      title: 'Erro',
+      body: 'Erro ao cancelar o agendamento agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+
+    account_email_invalid: {
+      title: 'E-mail inválido',
+      body: 'Digite um e-mail válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_email_update_sent: {
+      title: 'Acesso enviado',
+      body: 'Enviamos um link para o seu e-mail atual e outro para o novo. Você precisa clicar em ambos para a troca.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_email_update_error: {
+      title: 'Erro',
+      body: 'Erro ao solicitar a troca de e-mail agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_too_short: {
+      title: 'Senha fraca',
+      body: 'A senha deve ter no mínimo 7 caracteres.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_mismatch: {
+      title: 'Senhas diferentes',
+      body: 'As senhas digitadas divergem. Revise e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_updated: {
+      title: 'Senha atualizada',
+      body: 'Sua senha foi alterada com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_password_update_error: {
+      title: 'Erro',
+      body: 'Erro ao alterar a senha agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+
+    parceiro_acao_proibida: {
+      title: 'Acesso restrito',
+      body: 'Gerencie apenas itens referentes a você.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    partner_dashboard_access_inactive: {
+      title: 'Acesso ao negócio indisponível',
+      body: 'Seu acesso a este negócio encontra-se inativo no momento. O vínculo pode ter sido inativado pelo administrador. Volte à lista de negócios para consultar seus vínculos disponíveis.',
+      buttonText: 'SELECIONAR NEGÓCIO',
+    },
+    professional_approved: {
+      title: 'Parceiro aprovado',
+      body: 'O acesso do profissional foi liberado com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    partner_approve_error: {
+      title: 'Erro ao aprovar',
+      body: 'Erro ao aprovar o parceiro agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    partner_plan_unavailable: {
+      title: 'Parceria indisponível',
+      body: 'Parcerias desabilitadas neste negócio.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    plan_professional_limit_reached: {
+      title: 'Limite do plano',
+      body: 'Limite de profissionais atingido para a capacidade atual. Reduza os profissionais ativos ou pendentes antes de continuar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    future_plan_professional_limit_reached: {
+      title: 'Limite do plano agendado',
+      body: 'Este negócio tem um downgrade agendado e já atingiu o limite de profissionais do plano futuro. Reduza os profissionais ativos ou pendentes antes de continuar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    plan_professional_limit_current: {
+      title: 'Limite do plano',
+      body: 'Este plano permite até {limit} {professionalsLabel}. Você tem {count}.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
   },
-  premium: {
-    label: 'Premium',
-    oldPriceLabel: null,
-    priceClass: 'text-white',
-    buttonText: 'Selecionar Premium',
-    buttonClass: 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30',
+
+  professionalAccount: {
+    account_delete_confirm: {
+      title: 'Excluir conta',
+      body:
+        'Tem certeza que deseja excluir sua conta profissional?\n' +
+        'Este processo é irreversível. Você perderá o acesso imediatamente.',
+      variant: 'danger',
+      screen: 'dark',
+      confirmText: 'EXCLUIR CONTA',
+      cancelText: 'VOLTAR',
+      buttonText: 'EXCLUIR CONTA',
+    },
+    account_deleted: {
+      title: 'Conta excluída',
+      body: 'Sua conta profissional foi excluída com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_delete_owned_businesses: {
+      title: 'Negócios ativos',
+      body:
+        'Você ainda possui negócios vinculados a esta conta.\n' +
+        'Exclua seus negócios pelo dashboard antes de excluir sua conta.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    account_delete_future_bookings: {
+      title: 'Agendamentos futuros',
+      body: 'Cancele ou reagende seus agendamentos de hoje ou futuros antes de excluir a conta.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    account_delete_error: {
+      title: 'Erro ao excluir conta',
+      body: 'Houve um erro ao tentar excluir sua conta. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+  },
+
+  parceiroCadastro: {
+    nome_required:        { body: 'Informe seu nome para continuar.', variant: 'erro' },
+    email_invalid:        { body: 'Informe um e-mail válido para continuar.', variant: 'erro' },
+    senha_too_short:      { body: 'A senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+    email_registered_unknown: { body: 'Este e-mail já está vinculado a uma conta existente. Acesse sua conta ou use outro e-mail.', variant: 'erro' },
+    email_check_rate_limit: { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
+    access_unavailable:   { body: 'Erro ao solicitar acesso com este e-mail. Acesse sua conta de parceiro ou fale com o responsável pelo negócio.', variant: 'erro' },
+    account_create_error: { body: 'Erro ao criar sua conta agora. Tente novamente.', variant: 'erro' },
+    owner_cannot_request_partner_access: { body: 'Esta conta já gerencia este negócio. Acesse pela área profissional.', variant: 'erro' },
+    unexpected_error:     { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
+    success_title:        'Confirme seu e-mail',
+    success_body:         'Enviamos um link para seu e-mail.\nClique no link para concluir o seu cadastro de parceria.',
+  },
+
+  parceiroLogin: {
+    email_invalid:                  { body: 'Informe um e-mail válido para continuar.', variant: 'erro' },
+    senha_too_short:                { body: 'A senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+    credentials_invalid:            { body: 'E-mail ou senha incorretos.', variant: 'erro' },
+    email_not_confirmed:            { body: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada e spam.', variant: 'aviso' },
+    rate_limit_exceeded:            { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
+    auth_error:                     { body: 'Erro ao autenticar agora. Tente novamente.', variant: 'erro' },
+    profile_access_unavailable:     { body: 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.', variant: 'erro' },
+    not_partner:                    { body: 'Este login pertence a outro tipo de conta para este negócio.', variant: 'erro' },
+    unexpected_error:               { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
+    reset_email_required:           { body: 'Digite seu e-mail antes de solicitar o resgate de senha.', variant: 'aviso' },
+    reset_sent:                     { body: 'Link enviado. Confira sua caixa de entrada para redefinir a senha.', variant: 'sucesso' },
+    reset_error:                    { body: 'Erro ao enviar o link agora. Tente novamente.', variant: 'erro' },
+    recovery_password_too_short:    { body: 'A nova senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+    recovery_password_mismatch:     { body: 'As senhas divergem. Revise e tente novamente.', variant: 'erro' },
+    recovery_password_same_as_old:  { body: 'Use uma senha diferente da senha atual.', variant: 'aviso' },
+    recovery_password_updated:      { body: 'Senha atualizada com sucesso. Acesse sua conta com a nova senha.', variant: 'sucesso' },
+    recovery_password_update_error: { body: 'Erro ao atualizar a senha agora. Tente novamente.', variant: 'erro' },
+  },
+
+  partnerBusinessCenter: {
+    load_error: 'Erro ao carregar seus negócios.',
+    search_empty: 'Nenhum negócio encontrado para essa busca.',
+    search_error: 'Erro ao pesquisar negócios.',
+    request_pending_approval: 'Pedido enviado. Aguarde o aval do responsável pelo negócio.',
+    request_active: 'Parceria ativa. Você já pode acessar o dashboard deste negócio.',
+    access_inactive: 'Este vínculo está inativo ou excluído neste negócio.',
+    owner_cannot_request_partner_access: 'Parcerias indisponíveis para contas administradoras.',
+    plan_professional_limit_reached: 'Este negócio já atingiu o limite de profissionais do plano atual.',
+    future_plan_professional_limit_reached: 'Este negócio tem um downgrade agendado e já atingiu o limite de profissionais do plano futuro.',
+    request_error: 'Erro ao solicitar parceria.',
+  },
+
+  clientArea: {
+    load_data_error: {
+      title: 'Erro ao carregar a área do cliente',
+      body:
+        'Houve uma falha ao carregar seus dados.\n' +
+        'Recarregue a página e tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    load_more_agendamentos_error: {
+      title: 'Erro ao carregar agendamentos',
+      body:
+        'O carregamento de novos agendamentos falhou neste momento.\n' +
+        'Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    load_more_favoritos_error: {
+      title: 'Erro ao carregar favoritos',
+      body:
+        'O carregamento da lista de favoritos falhou agora.\n' +
+        'Tente novamente em instantes.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    rebook_unavailable: {
+      title: 'Reagendamento indisponível',
+      body:
+        'Dados insuficientes para reagendar.\n' +
+        'Tente abrir o negócio pela vitrine novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    avatar_invalid_format: {
+      title: 'Formato inválido',
+      body: 'Use PNG, JPG ou WEBP.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    avatar_too_large: {
+      title: 'Imagem muito grande',
+      body: 'A imagem excede o limite permitido. Escolha um arquivo menor e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    avatar_updated: {
+      title: 'Foto atualizada',
+      body: 'Sua foto de perfil foi atualizada com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    avatar_update_error: {
+      title: 'Erro ao atualizar foto',
+      body: 'Erro ao atualizar sua foto agora. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    profile_name_required: {
+      title: 'Nome obrigatório',
+      body: 'Preencha seu nome para salvar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    profile_name_updated: {
+      title: 'Nome atualizado',
+      body: 'Seu nome foi atualizado com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    profile_name_update_error: {
+      title: 'Erro ao salvar nome',
+      body: 'Erro ao salvar seu nome agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    phone_updated: {
+      title: 'WhatsApp atualizado',
+      body: 'Seu WhatsApp foi atualizado com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    phone_update_error: {
+      title: 'Erro ao salvar WhatsApp',
+      body: 'Erro ao salvar seu WhatsApp agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    phone_invalid: {
+      title: 'WhatsApp inválido',
+      body: 'Informe um WhatsApp válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_email_invalid: {
+      title: 'E-mail inválido',
+      body: 'Digite um e-mail válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_email_update_sent: {
+      title: 'Código de acesso enviado',
+      body: 'Confira seu e-mail para validar a troca.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_email_update_error: {
+      title: 'Erro ao alterar e-mail',
+      body: 'Erro ao alterar seu e-mail agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_too_short: {
+      title: 'Senha muito curta',
+      body: 'A senha precisa ter pelo menos 7 caracteres.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_mismatch: {
+      title: 'Senhas diferentes',
+      body: 'As senhas divergem entre si. Revise e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_password_updated: {
+      title: 'Senha atualizada',
+      body: 'Sua senha foi atualizada com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_password_update_error: {
+      title: 'Erro ao alterar senha',
+      body: 'Erro ao alterar sua senha agora. Tente novamente em alguns instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    account_delete_confirm: {
+      title: 'Excluir conta',
+      body: 'Tem certeza que deseja excluir sua conta de cliente?\nIsso excluirá permanentemente seus dados de acesso.',
+      variant: 'danger',
+      screen: 'dark',
+      confirmText: 'EXCLUIR CONTA',
+      cancelText: 'VOLTAR',
+      buttonText: 'EXCLUIR CONTA',
+    },
+    account_deleted: {
+      title: 'Conta excluída',
+      body: 'Sua conta de cliente foi excluída com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    account_delete_future_bookings: {
+      title: 'Agendamentos futuros',
+      body: 'Cancele ou reagende seus agendamentos de hoje ou futuros antes de excluir a conta.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    account_delete_error: {
+      title: 'Erro ao excluir conta',
+      body: 'Houve um erro ao tentar excluir sua conta. Tente novamente em alguns instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    booking_cancel_confirm: {
+      title: 'Cancelar agendamento',
+      body: 'Tem certeza que deseja cancelar este agendamento?',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'CONFIRMAR',
+      cancelText: 'VOLTAR',
+      buttonText: 'CONFIRMAR',
+    },
+    booking_canceled: {
+      title: 'Agendamento cancelado',
+      body: 'Seu agendamento foi cancelado com sucesso.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    booking_cancel_error: {
+      title: 'Erro ao cancelar',
+      body: 'Erro ao concluir o cancelamento agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    favorite_removed: {
+      title: 'Removido',
+      body: 'Favorito removido com sucesso.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    favorite_remove_error: {
+      title: 'Erro ao remover',
+      body: 'Erro ao remover o favorito agora. Tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    depoimento_send_error: {
+      title: 'Erro ao enviar depoimento',
+      body: 'Erro ao enviar seu depoimento agora. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    depoimento_rate_limit: {
+      title: 'Limite de depoimentos atingido',
+      body: 'Você já enviou muitos depoimentos hoje. Tente novamente mais tarde.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+  },
+
+  home: {
+    search_failed_support: {
+      title: 'Houve uma falha ao concluir a busca agora',
+      body:
+        'Parece que ocorreu uma instabilidade temporária.\n' +
+        'Tente novamente em alguns segundos.\n' +
+        'Persistindo a dificuldade, utilize o SUPORTE no rodapé da página para falar com a gente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+  },
+
+  login: {
+    auth_error: {
+      title: 'Acesso indisponível no momento.',
+      body:
+        'Confira seu e-mail, sua senha e o tipo selecionado.\n' +
+        'Se o problema persistir, acesse SUPORTE no rodapé da página para falar com a gente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    profile_access_unavailable: {
+      title: 'Houve um erro ao carregar seu acesso',
+      body:
+        'Sua senha foi aceita, mas houve um erro ao confirmar seu perfil agora.\n' +
+        'Tente novamente em alguns segundos.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    credentials_invalid: {
+      title: 'E-mail ou senha incorretos',
+      body:
+        'Revise seus dados de acesso e tente novamente.\n' +
+        'Se precisar, clique em TROCAR SENHA.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    email_not_confirmed: {
+      title: 'Confirme seu e-mail',
+      body:
+        'Antes de entrar, confirme seu cadastro pelo link enviado ao seu e-mail.\n' +
+        'Verifique também a pasta de spam.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    account_type_required: {
+      title: 'Escolha o tipo de conta',
+      body: 'Selecione CLIENTE ou PROFISSIONAL antes de entrar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    account_type_mismatch: {
+      title: 'Tipo de conta incorreto',
+      body:
+        'Esta conta pertence a outro tipo de acesso.\n' +
+        'Volte e selecione o tipo correto para entrar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    profile_not_ready: {
+      title: 'Cadastro ainda indisponível',
+      body:
+        'Seu perfil segue em preparo para o acesso.\n' +
+        'Aguarde alguns segundos e tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    session_expired_or_invalid: {
+      title: 'Link expirado ou inválido',
+      body:
+        'Solicite um novo link e tente novamente.\n' +
+        'Por cuidado, links de resgate podem expirar.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    partner_use_partner_login: {
+      title: 'Use o Login Parceiro',
+      body:
+        'Esta conta pertence a um profissional parceiro.\n' +
+        'Acesse pelo Login Parceiro para entrar na central de negócios.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    reset_email_required: {
+      title: 'Informe seu e-mail',
+      body:
+        'Digite seu e-mail para receber o link de resgate.\n' +
+        'Se precisar, acesse SUPORTE no rodapé da página.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    reset_sent: {
+      title: 'Link enviado',
+      body:
+        'Confira sua caixa de entrada para redefinir a senha.\n' +
+        'Caso demore, busque o link na pasta de spam.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    reset_error: {
+      title: 'Houve um erro ao enviar o link agora.',
+      body:
+        'Tente novamente em instantes.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    recovery_password_too_short: {
+      title: 'Senha muito curta',
+      body: 'A nova senha precisa ter pelo menos 7 caracteres.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    recovery_password_mismatch: {
+      title: 'Senhas diferentes',
+      body: 'Houve uma divergência nas senhas digitadas. Revise os campos e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    recovery_password_same_as_old: {
+      title: 'Escolha uma nova senha',
+      body: 'A nova senha precisa ser diferente da senha atual.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    recovery_password_updated: {
+      title: 'Senha atualizada',
+      body:
+        'Sua senha foi atualizada com sucesso.\n' +
+        'Agora você pode entrar novamente.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    recovery_password_update_error: {
+      title: 'Erro ao atualizar senha',
+      body:
+        'Tente novamente.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+  },
+
+  signupChoice: {
+    navigate_error: {
+      title: 'Houve um erro ao prosseguir. Tente novamente.',
+      body:
+        'Ocorreu uma falha ao abrir esta fase.\n' +
+        'Tente novamente em alguns instantes.\n' +
+        'Persistindo o erro, use o SUPORTE no rodapé da página para falar com a gente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+  },
+
+  signupClient: {
+    name_required: {
+      title: 'Nome obrigatório',
+      body: 'Informe seu nome para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    email_invalid: {
+      title: 'E-mail inválido',
+      body: 'Informe um e-mail válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    email_already_exists: {
+      title: 'E-mail já cadastrado',
+      body:
+        'Este e-mail já possui uma conta.\n' +
+        'Use a tela de login para entrar ou recupere o acesso, se necessário.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    password_too_short: {
+      title: 'Senha muito curta',
+      body: 'A senha deve ter no mínimo 7 caracteres.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    created_confirm_email: {
+      title: 'Conta criada :)',
+      body:
+        'Agora confirme seu e-mail para ativar o acesso.\n' +
+        'Verifique a caixa de entrada e o spam.\n' +
+        'Depois disso, realize o login normalmente.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'ENTENDI',
+    },
+    profile_not_ready: {
+      title: 'Quase lá...',
+      body:
+        'Seu perfil está ausente no sistema.\n' +
+        'Aguarde alguns segundos e tente fazer login.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+  },
+
+  signupProfessional: {
+    name_required: {
+      title: 'Nome obrigatório',
+      body: 'Informe seu nome para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    phone_required: {
+      title: 'Telefone obrigatório',
+      body: 'Informe seu WhatsApp para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    phone_invalid: {
+      title: 'WhatsApp inválido',
+      body: 'Informe um WhatsApp válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    email_invalid: {
+      title: 'E-mail inválido',
+      body: 'Informe um e-mail válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    email_already_exists: {
+      title: 'E-mail já cadastrado',
+      body:
+        'Este e-mail já possui uma conta.\n' +
+        'Use a tela de login para entrar ou recupere o acesso, se necessário.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    password_too_short: {
+      title: 'Senha muito curta',
+      body: 'A senha deve ter no mínimo 7 caracteres.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_name_required: {
+      title: 'Nome do negócio obrigatório',
+      body: 'Informe o nome do seu negócio para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_slug_invalid: {
+      title: 'URL inválida',
+      body: 'A URL do negócio precisa ter pelo menos 3 caracteres, usando apenas letras e números.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_type_required: {
+      title: 'Tipo de negócio obrigatório',
+      body: 'Informe o tipo do seu negócio (ex.: barbearia, clínica...).',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    address_street_required: {
+      title: 'Endere. incompleto',
+      body: 'Informe a rua do negócio.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    address_number_required: {
+      title: 'Endere. incompleto',
+      body: 'Informe o número do endere.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    address_city_required: {
+      title: 'Endere. incompleto',
+      body: 'Informe a cidade.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    address_state_required: {
+      title: 'Endere. incompleto',
+      body: 'Informe o estado.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_slug_taken: {
+      title: 'URL já está em uso',
+      body: 'Esta URL já está em uso. Escolha outro nome para o negócio.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    confirm_email_needed: {
+      title: 'Confirme seu e-mail',
+      body:
+        'Sua conta foi criada. Confirme seu e-mail para ativar o acesso.\n' +
+        'Verifique a caixa de entrada e o spam.\n' +
+        'Depois disso, realize o login normalmente.',
+      variant: 'success',
+      screen: 'light',
+      buttonText: 'ENTENDI',
+    },
+    profile_not_created: {
+      title: 'Perfil ausente',
+      body:
+        'Seu perfil está ausente no sistema.\n' +
+        'Aguarde alguns segundos e tente fazer login.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    profile_wrong_type: {
+      title: 'Cadastro inconsistente',
+      body:
+        'Seu perfil foi criado com tipo incorreto.\n' +
+        'Acesse SUPORTE no rodapé da página para resolver.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    partner_cannot_create_business: {
+      title: 'Use uma conta administradora',
+      body:
+        'Esta conta pertence a um profissional parceiro.\n' +
+        'Para criar negócios, entre com uma conta administradora.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    business_create_error: {
+      title: 'Erro ao criar negócio',
+      body:
+        'Erro ao criar o negócio agora. ' +
+        'Tente novamente em alguns instantes.\n' +
+        'Se persistir, acesse SUPORTE no rodapé da página.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    resume_load_error: {
+      title: 'Erro ao carregar a retomada',
+      body:
+        'Houve uma falha ao carregar os dados de retomada.\n' +
+        'Recarregue a página e tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    resume_error: {
+      title: 'Erro na retomada do cadastro',
+      body:
+        'O processo de retomada falhou neste momento. ' +
+        'Tente novamente em alguns instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    plan_selection_failed: {
+      title: 'Houve um erro ao aplicar o plano escolhido',
+      body:
+        'Seu negócio foi criado normalmente, mas houve uma falha ao aplicar o plano ' +
+        'que você selecionou. O plano pode ser escolhido novamente em ' +
+        'Dashboard > Planos.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+  },
+
+  vitrine: {
+    generic_title: 'Aviso',
+    common_ok: 'ENTENDI',
+
+    load_timeout: 'A vitrine demorou demais para carregar. Tente novamente.',
+    load_error: 'Erro ao carregar a vitrine.',
+
+    favorite_need_login: {
+      title: 'Login necessário',
+      body: 'Realize o login para favoritar este negócio.',
+      buttonText: 'ENTENDI',
+    },
+    favorite_only_client: {
+      title: 'Acesso restrito',
+      body: 'Apenas contas do tipo CLIENTE podem favoritar negócios.',
+      buttonText: 'ENTENDI',
+    },
+    favorite_invalid_business: {
+      title: 'Negócio inválido',
+      body: 'Negócio inválido.',
+      buttonText: 'ENTENDI',
+    },
+    favorite_toggle_error: {
+      title: 'Erro',
+      body: 'Erro ao atualizar o favorito agora. Tente novamente.',
+      buttonText: 'OK',
+    },
+    schedule_need_login_confirm: {
+      title: 'Login necessário',
+      body: 'Você precisa fazer login para agendar. Deseja fazer login agora?',
+      confirmText: 'IR PARA LOGIN',
+      cancelText: 'TALVEZ DEPOIS',
+    },
+    schedule_only_client: {
+      title: 'Acesso restrito',
+      body: 'Você está logado como PROFISSIONAL.\nPara agendar, entre com uma conta CLIENTE.',
+      buttonText: 'ENTENDI',
+    },
+    schedule_blocked: {
+      title: 'Agenda indisponível',
+      body: 'Agendamentos online suspensos neste canal. Por favor, entre em contato direto com o proprietário deste estabelecimento para reservar seu horário.',
+      buttonText: 'ENTENDI',
+    },
+    schedule_time_unavailable: {
+      title: 'Horário oficial indisponível',
+      body: 'Ainda estamos sincronizando o horário oficial. Tente novamente em instantes.',
+      buttonText: 'ENTENDI',
+    },
+
+    business: {
+      section_title: {
+        servicos:  'Servs',
+        consultas: 'Consultas',
+        aulas:     'Aulas',
+      },
+      counter_singular: {
+        servicos:  'SERV.',
+        consultas: 'CONSULTA',
+        aulas:     'AULA',
+      },
+      counter_plural: {
+        servicos:  'SERVS',
+        consultas: 'CONSULTAS',
+        aulas:     'AULAS',
+      },
+      empty_list: {
+        servicos:  ':(',
+        consultas: 'Sem consultas para este profissional.',
+        aulas:     'Sem aulas para este profissional.',
+      },
+      load_more_error: {
+        servicos:  'Erro ao carregar mais servs. Tente novamente.',
+        consultas: 'Erro ao carregar mais consultas. Tente novamente.',
+        aulas:     'Erro ao carregar mais aulas. Tente novamente.',
+      },
+    },
+
+    depoimentos_load_more_error: {
+      title: 'Erro ao carregar',
+      body: 'Erro ao carregar mais depoimentos. Tente novamente.',
+      variant: 'warning',
+      screen: 'light',
+      buttonText: 'OK',
+    },
+    depoimento_need_login_confirm: {
+      title: 'Login necessário',
+      body: 'Você precisa fazer login para deixar um depoimento. Deseja fazer login agora?',
+      confirmText: 'IR PARA LOGIN',
+      cancelText: 'TALVEZ DEPOIS',
+    },
+    depoimento_only_client: {
+      title: 'Acesso restrito',
+      body: 'Apenas contas do tipo CLIENTE podem deixar depoimentos.',
+      buttonText: 'ENTENDI',
+    },
+    depoimento_invalid_business: {
+      title: 'Negócio inválido',
+      body: 'Negócio inválido.',
+      buttonText: 'ENTENDI',
+    },
+    depoimento_sent: {
+      title: 'Depoimento registrado',
+      body: 'Seu depoimento foi enviado com sucesso.',
+      buttonText: 'OK',
+    },
+    depoimento_rate_limit: {
+      title: 'Limite de depoimentos atingido',
+      body: 'Você já enviou muitos depoimentos hoje. Tente novamente mais tarde.',
+      buttonText: 'ENTENDI',
+    },
+    depoimento_send_error_title: 'Erro ao enviar depoimento',
+    depoimento_send_error_body: 'Erro ao enviar seu depoimento agora. Tente novamente em instantes.',
   },
 };
-
-export default function PlanosSection({
-  negocioId,
-  profissionais = [],
-  billingStatus = null,
-  billingLoading = false,
-  onBillingStatusChange,
-  reloadBillingStatus,
-}) {
-  const feedback = useFeedback();
-  const [plans, setPlans] = useState([]);
-  const [plansLoading, setPlansLoading] = useState(true);
-  const [savingPlan, setSavingPlan] = useState('');
-  const [cancelingPlan, setCancelingPlan] = useState('');
-  const [cancelingDowngrade, setCancelingDowngrade] = useState(false);
-  const [cancelingCheckout, setCancelingCheckout] = useState(false);
-  const [error, setError] = useState('');
-
-  const loadPlans = useCallback(async () => {
-    if (!negocioId) {
-      setPlans([]);
-      setPlansLoading(false);
-      return;
-    }
-    setPlansLoading(true);
-    setError('');
-    try {
-      const plansData = await fetchBillingPlans();
-      setPlans(plansData);
-    } catch (err) {
-      console.error('PlanosSection load error:', err);
-      const requestKey = getRequestErrorKey(err);
-      if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('alerts.request_timeout'));
-      } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
-      } else {
-        setError(messageBody('dashboard.billing_plans_load_error'));
-      }
-    } finally {
-      setPlansLoading(false);
-    }
-  }, [negocioId]);
-
-  useEffect(() => {
-    loadPlans();
-  }, [loadPlans]);
-
-  const loading = plansLoading || billingLoading;
-  const currentPlanCode = billingStatus?.plan_code || '';
-  const currentStatusLabel = statusText(billingStatus);
-  const canceledOrCancellationScheduled = isCanceledOrCancellationScheduled(billingStatus);
-  const planChangeScheduled = Boolean(billingStatus?.plan_change_scheduled);
-  const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
-  const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
-  const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
-  const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
-  const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
-  const accessEndDate = getAccessEndDate(billingStatus);
-  const selectedPlan = useMemo(
-    () => plans.find((plan) => plan.code === currentPlanCode) || null,
-    [currentPlanCode, plans]
-  );
-  const billableProfessionalsCount = useMemo(
-    () => profissionais.filter((item) => ['ativo', 'pendente'].includes(String(item?.status || '').toLowerCase())).length,
-    [profissionais]
-  );
-
-  const handleSelectPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingCheckout) return;
-    if (providerSyncPending) {
-      setError(messageBody('dashboard.billing_provider_sync_in_progress'));
-      return;
-    }
-    const targetPlan = plans.find((plan) => plan.code === planCode);
-    const targetLimit = getPlanLimit(targetPlan);
-    if (targetLimit != null && billableProfessionalsCount > targetLimit) {
-      setError(getPlanLimitMessage(targetPlan, billableProfessionalsCount));
-      return;
-    }
-    if (hasActiveCheckout && activeCheckoutPlanCode === planCode && activeCheckoutUrl) {
-      window.location.assign(activeCheckoutUrl);
-      return;
-    }
-
-    const currentStatus = String(billingStatus?.status || '').toLowerCase();
-    const freeAccessOpen = currentStatus === 'trialing';
-    const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
-    const recoverExistingSubscription = String(billingStatus?.provider || '').toLowerCase() === 'asaas'
-      && Boolean(billingStatus?.provider_subscription_id)
-      && !['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED'].includes(providerStatus)
-      && !Boolean(billingStatus?.cancellation_scheduled)
-      && ['failed', 'expired'].includes(String(billingStatus?.payment_method_status || '').toLowerCase());
-
-    setSavingPlan(planCode);
-    setError('');
-    try {
-      if (freeAccessOpen) {
-        const result = await setBusinessPlan(negocioId, planCode);
-        if (result) {
-          onBillingStatusChange?.(result);
-        }
-      } else if (planCode === currentPlanCode && recoverExistingSubscription) {
-        const recovery = await recoverAsaasSubscriptionPayment(negocioId);
-        window.location.assign(recovery.invoice_url);
-      } else {
-        const checkout = await createAsaasCheckout(negocioId, planCode);
-        if (checkout?.billing_status) {
-          onBillingStatusChange?.(checkout.billing_status);
-        }
-        if (checkout?.checkout_url) {
-          window.location.assign(checkout.checkout_url);
-        }
-      }
-    } catch (err) {
-      console.error(freeAccessOpen ? 'setBusinessPlan error:' : 'createAsaasCheckout error:', err);
-      const requestKey = getRequestErrorKey(err);
-      if (requestKey === 'alerts.request_timeout') {
-        setError(freeAccessOpen ? messageBody('dashboard.billing_plan_change_error') : messageBody('dashboard.billing_checkout_timeout'));
-      } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
-      } else {
-        setError(getPlanChangeErrorMessage(err));
-      }
-    } finally {
-      setSavingPlan('');
-    }
-  };
-
-  const handleCancelPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingCheckout) return;
-    if (hasActiveCheckout || providerSyncPending) {
-      setError(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'));
-      return;
-    }
-    const confirmed = await feedback.confirm('dashboard.billing_cancel_confirm');
-    if (!confirmed) return;
-
-    setCancelingPlan(planCode);
-    setError('');
-    try {
-      const result = await cancelAsaasSubscription(negocioId);
-      if (result?.billing_status) {
-        onBillingStatusChange?.(result.billing_status);
-      } else {
-        await reloadBillingStatus?.();
-      }
-    } catch (err) {
-      console.error('cancelAsaasSubscription error:', err);
-      const requestKey = getRequestErrorKey(err);
-      if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
-      } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
-      } else {
-        setError(getPlanCancelErrorMessage(err));
-      }
-    } finally {
-      setCancelingPlan('');
-    }
-  };
-
-  const handleCancelDowngrade = async () => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
-    const confirmed = await feedback.confirm('dashboard.billing_cancel_downgrade_confirm');
-    if (!confirmed) return;
-
-    setCancelingDowngrade(true);
-    setError('');
-    try {
-      const result = await cancelAsaasPlanDowngrade(negocioId);
-      if (result?.billing_status) {
-        onBillingStatusChange?.(result.billing_status);
-      } else {
-        await reloadBillingStatus?.();
-      }
-    } catch (err) {
-      console.error('cancelAsaasPlanDowngrade error:', err);
-      const requestKey = getRequestErrorKey(err);
-      if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
-      } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
-      } else {
-        setError(getDowngradeCancelErrorMessage(err));
-      }
-    } finally {
-      setCancelingDowngrade(false);
-    }
-  };
-
-
-  const handleCancelCheckout = async () => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
-    const confirmed = await feedback.confirm('dashboard.billing_cancel_checkout_confirm');
-    if (!confirmed) return;
-
-    setCancelingCheckout(true);
-    setError('');
-    try {
-      const result = await cancelAsaasCheckout(negocioId);
-      if (result?.billing_status) {
-        onBillingStatusChange?.(result.billing_status);
-      } else {
-        await reloadBillingStatus?.();
-      }
-    } catch (err) {
-      console.error('cancelAsaasCheckout error:', err);
-      const requestKey = getRequestErrorKey(err);
-      if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
-      } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
-      } else {
-        setError(getCheckoutCancelErrorMessage(err));
-      }
-    } finally {
-      setCancelingCheckout(false);
-    }
-  };
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-14 text-gray-500">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        CARREGANDO PLANOS...
-      </div>
-    );
-  }
-
-  return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-normal text-white">PLANOS</h2>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm uppercase text-gray-500">
-          <span>ATUAL: <span className="text-primary">{selectedPlan?.name || currentStatusLabel}</span></span>
-          {accessEndDate && (
-            <span>ACESSO ATÉ: <span className="text-primary">{accessEndDate}</span></span>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-custom border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {error}
-        </div>
-      )}
-
-      <div className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 grid grid-cols-1 lg:grid-cols-3 gap-px">
-        {plans.map((plan) => {
-          const active = plan.code === currentPlanCode;
-          const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
-          const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
-          const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
-          const checkoutBlocksPlan = hasActiveCheckout && !checkoutCanResume;
-          const movementBlocked = providerSyncPending || checkoutBlocksPlan;
-          const saving = savingPlan === plan.code;
-          const canceling = cancelingPlan === plan.code;
-          const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
-          const currentStatus = String(billingStatus?.status || '').toLowerCase();
-          const freeAccessOpen = currentStatus === 'trialing';
-          const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
-          const canCancelDowngrade = active && Boolean(billingStatus?.can_cancel_plan_downgrade);
-          const canCancel = active
-            && !selectedCanceledOrCancellationScheduled
-            && Boolean(billingStatus?.can_cancel_subscription);
-          const activeFreeAccess = active && freeAccessOpen;
-          const needsPayment = active
-            && !activeFreeAccess
-            && paymentStatus !== 'valid';
-          const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
-          const planLimit = getPlanLimit(plan);
-          const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
-          const selectedStatusLabel = statusText(billingStatus);
-          const selectedStatusClass = statusBadgeClass(billingStatus);
-          const selectedPaymentButtonText = statusButtonText(billingStatus);
-          const selectedPaymentButtonClass = statusButtonClass(billingStatus);
-          const content = PLAN_CONTENT[plan.code] || {
-            label: plan.name,
-            oldPriceLabel: null,
-            priceClass: 'text-white',
-            buttonText: 'Selecionar plano',
-            buttonClass: 'bg-transparent border border-primary text-primary hover:bg-primary/10',
-          };
-
-          const hasOferta = Boolean(content.oldPriceLabel);
-          const showStatusBadge = active;
-          const showOfertaBadge = hasOferta && !showStatusBadge;
-
-          return (
-            <div
-              key={plan.code}
-              className={[
-                'bg-dark-200 p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-8 transition-all',
-                plan.code === 'profissional'
-                  ? 'bg-primary/10 border-l-4 border-l-primary shadow-lg shadow-primary/10'
-                  : '',
-              ].join(' ')}
-            >
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between w-full gap-2">
-                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
-                    {content.label}
-                  </span>
-
-                  {showStatusBadge && (
-                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-normal uppercase tracking-wide ${selectedStatusClass}`}>
-                      {selectedStatusLabel}
-                    </span>
-                  )}
-
-                  {showOfertaBadge && (
-                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                      OFERTA
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-lg md:text-xl font-normal uppercase text-primary mb-2">
-                    {getCapacityLabel(plan)}
-                  </p>
-                  <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
-                    {content.oldPriceLabel && (
-                      <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
-                        {content.oldPriceLabel}
-                      </span>
-                    )}
-                    <span className={`text-xl font-normal ${content.priceClass}`}>
-                      {formatCurrencyFromCents(plan.price_cents)}
-                      <span className="text-sm font-normal text-gray-500">/mês</span>
-                    </span>
-                  </div>
-
-                  {pendingForPlan && (
-                    <p className="mt-3 rounded-custom border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-normal uppercase tracking-wide text-yellow-100">
-                      Troca agendada{pendingPlanDate ? ` para ${pendingPlanDate}` : ''}
-                    </p>
-                  )}
-
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  disabled={planLimitBlocked || movementBlocked || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                  onClick={() => handleSelectPlan(plan.code)}
-                  className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                    activeFreeAccess
-                      ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
-                      : activeWithoutAction
-                        ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
-                        : checkoutCanResume
-                          ? 'border border-yellow-400/40 bg-yellow-400/10 text-yellow-100 hover:bg-yellow-400/15'
-                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                            ? selectedPaymentButtonClass
-                            : content.buttonClass
-                  }`}
-                >
-                  {planLimitBlocked
-                    ? 'Limite excedido'
-                    : pendingForPlan
-                      ? 'Agendado'
-                      : activeFreeAccess
-                        ? 'Teste grátis'
-                        : activeWithoutAction
-                          ? 'Plano ativo'
-                          : saving
-                            ? (freeAccessOpen ? 'Salvando...' : selectedPaymentButtonText === 'Pagar fatura' ? 'Abrindo fatura...' : 'Abrindo checkout...')
-                            : checkoutCanResume
-                              ? 'Continuar pagamento'
-                              : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                                ? selectedPaymentButtonText
-                                : content.buttonText}
-                </button>
-
-                {checkoutForPlan && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                    onClick={handleCancelCheckout}
-                    className="flex w-full items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-yellow-100 transition-all hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente'}
-                  </button>
-                )}
-                {canCancelDowngrade && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                    onClick={handleCancelDowngrade}
-                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {cancelingDowngrade ? 'Cancelando downgrade...' : 'Cancelar downgrade'}
-                  </button>
-                )}
-
-                {canCancel && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending}
-                    onClick={() => handleCancelPlan(plan.code)}
-                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {canceling ? 'Cancelando...' : 'Cancelar plano'}
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
