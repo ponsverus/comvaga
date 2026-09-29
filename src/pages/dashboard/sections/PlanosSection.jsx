@@ -113,9 +113,7 @@ function statusBadgeClass(status) {
 
 function statusButtonText(status) {
   if (isCancellationScheduled(status)) return 'Reativar plano';
-  if (status?.provider_sync_pending) return 'Aguarde atualização';
   if (status?.has_active_checkout) return 'Pagamento em andamento';
-  if (status?.plan_change_scheduled) return 'Troca agendada';
   if (canRequestSubscriptionInvoice(status)) return 'Regularizar pagamento';
 
   const current = String(status?.status || '').toLowerCase();
@@ -123,6 +121,9 @@ function statusButtonText(status) {
     return hasPaymentHistory(status) ? 'Regularizar pagamento' : 'Adicionar pagamento';
   }
   if (current === 'canceled') return 'Reativar plano';
+
+  if (status?.provider_sync_pending) return 'Aguarde atualização';
+  if (status?.plan_change_scheduled) return 'Troca agendada';
   return 'Adicionar pagamento';
 }
 
