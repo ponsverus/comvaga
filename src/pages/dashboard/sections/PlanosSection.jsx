@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   cancelAsaasCheckout,
@@ -41,6 +41,19 @@ function formatCurrencyFromCents(value) {
 
 function getAccessEndDate(status) {
   return status?.access_ends_label || '';
+}
+
+function getAccessDateLabel(status) {
+  if (!getAccessEndDate(status)) return '';
+  if (isCancellationScheduled(status)) return 'ACESSO ATÉ';
+
+  const current = String(status?.status || '').toLowerCase();
+  const paymentStatus = String(status?.payment_method_status || '').toLowerCase();
+
+  if (current === 'active' && paymentStatus === 'valid') return 'RENOVA EM';
+  if (current === 'canceled') return 'ENCERRADO EM';
+  if (['blocked', 'past_due', 'payment_grace'].includes(current)) return 'VENCEU EM';
+  return 'PERÍODO ATÉ';
 }
 
 function isCanceledOrCancellationScheduled(status) {
@@ -324,7 +337,6 @@ export default function PlanosSection({
 
   const loading = plansLoading || billingLoading;
   const currentPlanCode = billingStatus?.plan_code || '';
-  const currentStatusLabel = statusText(billingStatus);
   const canceledOrCancellationScheduled = isCanceledOrCancellationScheduled(billingStatus);
   const planChangeScheduled = Boolean(billingStatus?.plan_change_scheduled);
   const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
@@ -335,6 +347,7 @@ export default function PlanosSection({
   const providerSyncFailed = String(billingStatus?.provider_sync_status || '').toLowerCase() === 'failed';
   const replaceableScheduledDowngrade = isScheduledDowngradeSync(billingStatus);
   const accessEndDate = getAccessEndDate(billingStatus);
+  const accessDateLabel = getAccessDateLabel(billingStatus);
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.code === currentPlanCode) || null,
     [currentPlanCode, plans]
@@ -507,14 +520,13 @@ export default function PlanosSection({
 
   return (
     <section className="space-y-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-2xl font-normal text-white">PLANOS</h2>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm uppercase text-gray-500">
-          <span>ATUAL: <span className="text-primary">{selectedPlan?.name || currentStatusLabel}</span></span>
-          {accessEndDate && (
-            <span>ACESSO ATÉ: <span className="text-primary">{accessEndDate}</span></span>
-          )}
-        </div>
+        {accessEndDate && accessDateLabel && (
+          <span className="inline-flex min-h-[32px] items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-normal uppercase tracking-wide text-gray-300">
+            {accessDateLabel}: <span className="ml-1 text-primary">{accessEndDate}</span>
+          </span>
+        )}
       </div>
 
       {error && (
@@ -571,6 +583,109 @@ export default function PlanosSection({
           const hasOferta = Boolean(content.oldPriceLabel);
           const showStatusBadge = active;
           const showOfertaBadge = hasOferta && !showStatusBadge;
+          const primaryButtonLabel = planLimitBlocked
+            ? 'Limite excedido'
+            : pendingForPlan
+              ? 'Agendado'
+              : activeFreeAccess
+                ? 'Teste grátis'
+                : activeWithoutAction
+                  ? 'Plano ativo'
+                  : saving
+                    ? (freeAccessOpen ? 'Salvando...' : canRequestSubscriptionInvoice(billingStatus) ? 'Verificando fatura...' : 'Abrindo checkout...')
+                    : checkoutCanResume
+                      ? 'Continuar pagamento'
+                      : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                        ? selectedPaymentButtonText
+                        : content.buttonText;
+          const buttonItems = [
+            {
+              key: 'primary',
+              label: primaryButtonLabel,
+              node: (
+                <button
+                  type="button"
+                  disabled={planLimitBlocked || movementBlocked || planChangeBlocksPayment || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
+                  onClick={() => handleSelectPlan(plan.code)}
+                  className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+                    activeFreeAccess
+                      ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
+                      : activeWithoutAction
+                        ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
+                        : checkoutCanResume
+                          ? 'border border-yellow-400/40 bg-yellow-400/10 text-yellow-100 hover:bg-yellow-400/15'
+                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                            ? selectedPaymentButtonClass
+                            : content.buttonClass
+                  }`}
+                >
+                  {primaryButtonLabel}
+                </button>
+              ),
+            },
+            checkoutForPlan
+              ? {
+                key: 'cancel-checkout',
+                label: cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente',
+                node: (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
+                    onClick={handleCancelCheckout}
+                    className="flex w-full items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-yellow-100 transition-all hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente'}
+                  </button>
+                ),
+              }
+              : null,
+            canCancel
+              ? {
+                key: 'cancel-plan',
+                label: canceling ? 'Cancelando...' : 'Cancelar plano',
+                node: (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending}
+                    onClick={() => handleCancelPlan(plan.code)}
+                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {canceling ? 'Cancelando...' : 'Cancelar plano'}
+                  </button>
+                ),
+              }
+              : null,
+            canCancelDowngrade
+              ? {
+                key: 'cancel-downgrade',
+                label: cancelingDowngrade ? 'Cancelando downgrade...' : 'Cancelar downgrade',
+                node: (
+                  <button
+                    type="button"
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
+                    onClick={handleCancelDowngrade}
+                    className="flex w-full items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-yellow-100 transition-all hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {cancelingDowngrade ? 'Cancelando downgrade...' : 'Cancelar downgrade'}
+                  </button>
+                ),
+              }
+              : null,
+          ].filter(Boolean);
+          const orderedButtonItems = buttonItems.length >= 3
+            ? (() => {
+              const longestIndex = buttonItems.reduce((bestIndex, item, index, list) => (
+                item.label.length > list[bestIndex].label.length ? index : bestIndex
+              ), 0);
+              const longest = buttonItems[longestIndex];
+              return [
+                ...buttonItems.slice(0, longestIndex),
+                ...buttonItems.slice(longestIndex + 1),
+                longest,
+              ];
+            })()
+            : buttonItems;
+          const compactButtonGrid = orderedButtonItems.length >= 3;
 
           return (
             <div
@@ -626,70 +741,24 @@ export default function PlanosSection({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  disabled={planLimitBlocked || movementBlocked || planChangeBlocksPayment || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                  onClick={() => handleSelectPlan(plan.code)}
-                  className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                    activeFreeAccess
-                      ? 'cursor-default border border-primary/40 bg-primary/10 text-primary'
-                      : activeWithoutAction
-                        ? 'cursor-default border border-green-400/30 bg-green-400/10 text-green-300'
-                        : checkoutCanResume
-                          ? 'border border-yellow-400/40 bg-yellow-400/10 text-yellow-100 hover:bg-yellow-400/15'
-                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                            ? selectedPaymentButtonClass
-                            : content.buttonClass
-                  }`}
-                >
-                  {planLimitBlocked
-                    ? 'Limite excedido'
-                    : pendingForPlan
-                      ? 'Agendado'
-                      : activeFreeAccess
-                        ? 'Teste grátis'
-                        : activeWithoutAction
-                          ? 'Plano ativo'
-                          : saving
-                            ? (freeAccessOpen ? 'Salvando...' : canRequestSubscriptionInvoice(billingStatus) ? 'Verificando fatura...' : 'Abrindo checkout...')
-                            : checkoutCanResume
-                              ? 'Continuar pagamento'
-                              : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                                ? selectedPaymentButtonText
-                                : content.buttonText}
-                </button>
-
-                {checkoutForPlan && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                    onClick={handleCancelCheckout}
-                    className="flex w-full items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-yellow-100 transition-all hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente'}
-                  </button>
-                )}
-                {canCancelDowngrade && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
-                    onClick={handleCancelDowngrade}
-                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {cancelingDowngrade ? 'Cancelando downgrade...' : 'Cancelar downgrade'}
-                  </button>
-                )}
-
-                {canCancel && (
-                  <button
-                    type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending}
-                    onClick={() => handleCancelPlan(plan.code)}
-                    className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {canceling ? 'Cancelando...' : 'Cancelar plano'}
-                  </button>
+              <div className={compactButtonGrid ? 'space-y-2' : 'flex flex-col gap-3'}>
+                {compactButtonGrid ? (
+                  <>
+                    <div className="flex gap-2">
+                      {orderedButtonItems.slice(0, 2).map((item) => (
+                        <div key={item.key} className="min-w-0 flex-1">
+                          {item.node}
+                        </div>
+                      ))}
+                    </div>
+                    {orderedButtonItems.slice(2).map((item) => (
+                      <Fragment key={item.key}>{item.node}</Fragment>
+                    ))}
+                  </>
+                ) : (
+                  orderedButtonItems.map((item) => (
+                    <Fragment key={item.key}>{item.node}</Fragment>
+                  ))
                 )}
               </div>
             </div>
