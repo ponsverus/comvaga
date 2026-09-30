@@ -50,9 +50,9 @@ function getAccessDateLabel(status) {
   const current = String(status?.status || '').toLowerCase();
   const paymentStatus = String(status?.payment_method_status || '').toLowerCase();
 
-  if (current === 'active' && paymentStatus === 'valid') return 'RENOVA EM';
-  if (current === 'canceled') return 'ENCERRADO EM';
-  if (['blocked', 'past_due', 'payment_grace'].includes(current)) return 'VENCEU EM';
+  if (current === 'active' && paymentStatus === 'valid') return 'RENOVA';
+  if (current === 'canceled') return 'ENCERRADO';
+  if (['blocked', 'past_due', 'payment_grace'].includes(current)) return 'VENCEU';
   return 'PERÍODO ATÉ';
 }
 
@@ -126,7 +126,7 @@ function statusBadgeClass(status) {
 
 function statusButtonText(status) {
   if (isCancellationScheduled(status)) return 'Reativar plano';
-  if (status?.provider_sync_pending) return 'Aguarde atualização';
+  if (status?.provider_sync_pending) return 'Aguarde atualiza.';
   if (status?.has_active_checkout) return 'Pagamento em andamento';
   if (status?.plan_change_scheduled) return 'Troca agendada';
   if (canRequestSubscriptionInvoice(status)) return 'Regularizar pagamento';
