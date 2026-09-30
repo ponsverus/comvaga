@@ -32,6 +32,7 @@ window.addEventListener('vite:preloadError', (event) => {
   try {
     window.sessionStorage.setItem(reloadKey, String(now));
   } catch {
+    // sessionStorage can be unavailable in restricted browser contexts.
   }
 
   window.location.reload();
