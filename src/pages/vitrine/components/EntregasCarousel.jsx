@@ -8,14 +8,15 @@ function EntregaButtons({
   entrega,
   profissional,
   selecaoProfId,
-  entregasSelecionadas,
+  entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
   onToggleSelecao,
   isLight,
 }) {
-  const isSelecionado = entregasSelecionadas.some((item) => item.id === entrega.id);
-  const modoSelecaoOn = entregasSelecionadas.length > 0;
+  const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
+  const isSelecionado = selecionadas.some((item) => item.id === entrega.id);
+  const modoSelecaoOn = selecionadas.length > 0;
   const outroProfSel = modoSelecaoOn && selecaoProfId !== null && selecaoProfId !== profissional.id;
   const agendarDesabilitado = !!isProfessional || modoSelecaoOn;
   const selecionarDesabilitado = !!isProfessional || outroProfSel;
@@ -88,7 +89,7 @@ function EntregaCard({
   entrega,
   profissional,
   selecaoProfId,
-  entregasSelecionadas,
+  entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
   onToggleSelecao,
@@ -137,7 +138,7 @@ function EntregaCard({
         entrega={entrega}
         profissional={profissional}
         selecaoProfId={selecaoProfId}
-        entregasSelecionadas={entregasSelecionadas}
+        entregasSelecionadas={selecionadas}
         isProfessional={isProfessional}
         onAgendarAgora={onAgendarAgora}
         onToggleSelecao={onToggleSelecao}
@@ -148,7 +149,7 @@ function EntregaCard({
 }
 
 export default function EntregasCarousel({
-  lista,
+  lista = [],
   pages = null,
   totalCount = null,
   loadingPage = null,
@@ -157,7 +158,7 @@ export default function EntregasCarousel({
   onLoadPageError,
   profissional,
   selecaoProfId,
-  entregasSelecionadas,
+  entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
   onToggleSelecao,
@@ -171,11 +172,13 @@ export default function EntregasCarousel({
   const [loadingTargetPage, setLoadingTargetPage] = useState(null);
   const touchStartX = useRef(null);
   const animationTimeoutRef = useRef(null);
-  const totalItens = Number.isFinite(Number(totalCount)) ? Number(totalCount) : lista.length;
+  const listaSegura = Array.isArray(lista) ? lista : [];
+  const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
+  const totalItens = Number.isFinite(Number(totalCount)) ? Number(totalCount) : listaSegura.length;
   const totalPaginas = Math.ceil(totalItens / ENTREGAS_POR_PAGINA);
   const getPageItems = (pageIndex) => {
     if (pages && Object.prototype.hasOwnProperty.call(pages, pageIndex)) return pages[pageIndex] || [];
-    return lista.slice(
+    return listaSegura.slice(
       pageIndex * ENTREGAS_POR_PAGINA,
       pageIndex * ENTREGAS_POR_PAGINA + ENTREGAS_POR_PAGINA
     );
@@ -285,7 +288,7 @@ export default function EntregasCarousel({
                 entrega={item}
                 profissional={profissional}
                 selecaoProfId={selecaoProfId}
-                entregasSelecionadas={entregasSelecionadas}
+                entregasSelecionadas={selecionadas}
                 isProfessional={isProfessional}
                 onAgendarAgora={onAgendarAgora}
                 onToggleSelecao={onToggleSelecao}
@@ -303,7 +306,7 @@ export default function EntregasCarousel({
               entrega={item}
               profissional={profissional}
               selecaoProfId={selecaoProfId}
-              entregasSelecionadas={entregasSelecionadas}
+              entregasSelecionadas={selecionadas}
               isProfessional={isProfessional}
               onAgendarAgora={onAgendarAgora}
               onToggleSelecao={onToggleSelecao}
