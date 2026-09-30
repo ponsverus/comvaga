@@ -219,13 +219,13 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_provider_sync_pending_header: {
-      body: 'ATUALIZAÇÃO DA COBRANÇA EM ANDAMENTO. AGUARDE PARA ALTERAR O PLANO.',
+      body: 'AJUSTE DE PAGAMENTO EM ANDAMENTO. AGUARDE PARA ALTERAR O PLANO.',
     },
     billing_provider_sync_retry_header: {
-      body: 'ATUALIZAÇÃO DA COBRANÇA AGUARDANDO NOVA TENTATIVA.',
+      body: 'PAGAMENTO AGUARDANDO NOVA TENTATIVA.',
     },
     billing_provider_sync_failed_header: {
-      body: 'NÃO CONSEGUIMOS CONFIRMAR A ATUALIZAÇÃO DA COBRANÇA. ACESSE SUPORTE NO RODAPÉ.',
+      body: 'FALHA AO VALIDAR O STATUS DO PAGAMENTO. ACESSE O SUPORTE NO RODAPÉ.',
     },
     billing_pending_plan_change_scheduled_header: {
       body: 'A TROCA PARA {plan} ESTÁ AGENDADA PARA {date}',
