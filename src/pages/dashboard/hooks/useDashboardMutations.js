@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT, normalizeSeoText } from '../../../utils/businessSeo';
 import { supabase } from '../../../supabase';
 import { getDiasTrabalhoFromHorarios, timeToMinutes, toNumberOrNull, toUpperClean } from '../utils';
 import {
@@ -185,8 +186,16 @@ export function useDashboardMutations({
         await uiAlert('dashboard.business_description_too_long', 'error');
         return false;
       }
+      const seoTitle = normalizeSeoText(formInfo.seo_title);
+      const seoDescription = normalizeSeoText(formInfo.seo_description);
+      if (Array.from(seoTitle).length > SEO_TITLE_LIMIT || Array.from(seoDescription).length > SEO_DESCRIPTION_LIMIT) {
+        await uiAlert('dashboard.business_seo_too_long', 'error');
+        return false;
+      }
       const payload = {
         nome: toUpperClean(formInfo.nome),
+        seo_title: seoTitle || null,
+        seo_description: seoDescription || null,
         descricao,
         telefone: telefone || null,
         endereco_cep: onlyDigits(formInfo.endereco_cep) || null,
