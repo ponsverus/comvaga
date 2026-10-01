@@ -1,5 +1,6 @@
 import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
+import { invokeProtectedAction } from '../../../utils/protectedAction';
 
 export async function fetchClientePerfil(userId) {
   const { data, error } = await withAuthRetry(
@@ -84,7 +85,7 @@ export async function fetchReviewedBookings(agendamentoIds) {
 
 export async function createBookingReview({ agendamentoId, nota, comentario }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('create_depoimento_profissional', {
+    () => invokeProtectedAction('create_depoimento_profissional', {
       p_agendamento_id: agendamentoId,
       p_nota: nota,
       p_comentario: comentario ?? null,
@@ -99,7 +100,7 @@ export async function createBookingReview({ agendamentoId, nota, comentario }) {
 
 export async function cancelarAgendamentoCliente(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('cancelar_agendamento', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('cancelar_agendamento', { p_agendamento_id: agendamentoId }),
     6500,
     'cancelar-agendamento'
   );
@@ -110,7 +111,7 @@ export async function cancelarAgendamentoCliente(agendamentoId) {
 
 export async function excluirContaCliente() {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('excluir_conta_cliente_seguro'),
+    () => invokeProtectedAction('excluir_conta_cliente_seguro'),
     6500,
     'excluir-conta'
   );
