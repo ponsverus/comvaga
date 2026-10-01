@@ -17,6 +17,7 @@ import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
 import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
 import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection';
 import VitrineTopSection from './vitrine/sections/VitrineTopSection';
+import { buildBusinessSeo } from '../utils/businessSeo';
 
 const NOW_RPC_SEQUENCE = ['now_sp', 'now_sp_fallback'];
 
@@ -155,13 +156,6 @@ function sanitizeTel(raw) {
   const v = String(raw || '').trim();
   if (!v) return '';
   return v.replace(/[^\d+]/g, '');
-}
-
-function buildMetaDescription(negocio) {
-  const nome = String(negocio?.nome || '').trim() || 'este negócio';
-  const descricao = String(negocio?.descricao || '').replace(/\s+/g, ' ').trim();
-  const base = descricao || `Agende horários, veja trabalhos, profissionais e depoimentos de ${nome}.`;
-  return base.length > 160 ? `${base.slice(0, 157).trim()}...` : base;
 }
 
 function setMetaTag(name, content) {
@@ -546,10 +540,17 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
 
   useEffect(() => {
     if (!negocio?.nome) return;
-    const nome = String(negocio.nome).trim();
-    document.title = `${nome} | Comvaga`;
-    setMetaTag('description', buildMetaDescription(negocio));
-  }, [negocio]);
+    const seo = buildBusinessSeo(negocio, entregas);
+    const previousTitle = document.title;
+    const previousDescription = document.querySelector('meta[name="description"]')?.getAttribute('content');
+    document.title = seo.title;
+    setMetaTag('description', seo.description);
+    return () => {
+      document.title = previousTitle;
+      if (previousDescription !== undefined) setMetaTag('description', previousDescription);
+      else document.querySelector('meta[name="description"]')?.remove();
+    };
+  }, [negocio, entregas]);
 
   if (loading) return (<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div>);
   if (error) return (<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div>);
