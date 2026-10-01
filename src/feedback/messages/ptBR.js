@@ -219,13 +219,13 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_provider_sync_pending_header: {
-      body: 'AJUSTE DE PAGAMENTO EM ANDAMENTO. AGUARDE PARA ALTERAR O PLANO.',
+      body: 'PAGAMENTO EM AJUSTE. AGUARDE PARA MUDAR O PLANO.',
     },
     billing_provider_sync_retry_header: {
       body: 'PAGAMENTO AGUARDANDO NOVA TENTATIVA.',
     },
     billing_provider_sync_failed_header: {
-      body: 'FALHA AO VALIDAR O STATUS DO PAGAMENTO. ACESSE O SUPORTE NO RODAPÉ.',
+      body: 'ERRO NO PAGAMENTO. FALAR COM O SUPORTE NO RODAPÉ.',
     },
     billing_pending_plan_change_scheduled_header: {
       body: 'A TROCA PARA {plan} ESTÁ AGENDADA PARA {date}',
@@ -234,7 +234,7 @@ export const ptBR = {
       body: 'A TROCA PARA {plan} CONTINUA AGENDADA.',
     },
     billing_canceled_access_until_header: {
-      body: 'PLANO CANCELADO. ACESSO LIBERADO ATÉ {date}',
+      body: 'CANCELADO. ACESSO LIBERADO ATÉ {date}',
     },
     billing_canceled_header: {
       body: 'CANCELADO. ACESSO LIBERADO ATÉ.',
@@ -381,6 +381,13 @@ export const ptBR = {
     business_phone_invalid: {
       title: 'WhatsApp inválido',
       body: 'Informe um WhatsApp válido para continuar.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    business_seo_too_long: {
+      title: 'Texto muito longo',
+      body: 'Use até 60 caracteres no título e até 160 na meta description do Google.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
