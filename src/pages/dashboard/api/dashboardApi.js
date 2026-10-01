@@ -1,5 +1,6 @@
 import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
+import { invokeProtectedAction } from '../../../utils/protectedAction';
 
 function isAdminExcludedProfessional(row) {
   return row?.status === 'excluido';
@@ -350,7 +351,7 @@ export async function fetchProfissionaisComStatus(negocioId) {
 
 export async function excluirProfissionalParceiroSeguramente(profissionalId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('excluir_profissional_parceiro_seguro', { p_profissional_id: profissionalId }),
+    () => invokeProtectedAction('excluir_profissional_parceiro_seguro', { p_profissional_id: profissionalId }),
     6500,
     'excluir-profissional-parceiro'
   );
@@ -360,7 +361,7 @@ export async function excluirProfissionalParceiroSeguramente(profissionalId) {
 
 export async function excluirNegocioSeguramente(negocioId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('excluir_negocio_seguro', { p_negocio_id: negocioId }),
+    () => invokeProtectedAction('excluir_negocio_seguro', { p_negocio_id: negocioId }),
     6500,
     'excluir-negocio'
   );
@@ -370,7 +371,7 @@ export async function excluirNegocioSeguramente(negocioId) {
 
 export async function excluirEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('excluir_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('excluir_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'excluir-entrega'
   );
@@ -380,7 +381,7 @@ export async function excluirEntregaSeguramente(entregaId) {
 
 export async function inativarEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('inativar_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('inativar_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'inativar-entrega'
   );
@@ -390,7 +391,7 @@ export async function inativarEntregaSeguramente(entregaId) {
 
 export async function ativarEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('ativar_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('ativar_entrega_segura', { p_entrega_id: entregaId }),
     6500,
     'ativar-entrega'
   );
@@ -400,7 +401,7 @@ export async function ativarEntregaSeguramente(entregaId) {
 
 export async function aprovarParceiroProfissional(profissionalId, negocioId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('aprovar_parceiro_profissional', {
+    () => invokeProtectedAction('aprovar_parceiro_profissional', {
       p_profissional_id: profissionalId,
       p_negocio_id: negocioId,
     }),
@@ -413,7 +414,7 @@ export async function aprovarParceiroProfissional(profissionalId, negocioId) {
 
 export async function concluirAgendamentoProfissional(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('concluir_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('concluir_agendamento_profissional', { p_agendamento_id: agendamentoId }),
     6500,
     'concluir-agendamento'
   );
@@ -423,7 +424,7 @@ export async function concluirAgendamentoProfissional(agendamentoId) {
 
 export async function cancelarAgendamentoProfissional(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('cancelar_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('cancelar_agendamento_profissional', { p_agendamento_id: agendamentoId }),
     6500,
     'cancelar-agendamento-profissional'
   );

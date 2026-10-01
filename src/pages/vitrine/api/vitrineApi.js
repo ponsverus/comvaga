@@ -1,6 +1,7 @@
 import { supabase } from '../../../supabase';
 import { withTimeout } from '../../../utils/withTimeout';
 import { withAuthRetry } from '../../../utils/authSession';
+import { invokeProtectedAction } from '../../../utils/protectedAction';
 
 export function getPublicUrl(bucket, path) {
   if (!path) return null;
@@ -242,7 +243,7 @@ export async function removeFavoritoNegocio({ clienteId, negocioId }) {
 
 export async function createDepoimento({ negocioId, nota, comentario }) {
   const { error } = await withAuthRetry(
-    () => supabase.rpc('create_depoimento_negocio', {
+    () => invokeProtectedAction('create_depoimento_negocio', {
       p_negocio_id: negocioId,
       p_nota: nota,
       p_comentario: comentario ?? null,

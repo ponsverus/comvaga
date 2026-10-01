@@ -4,6 +4,7 @@ import { supabase } from '../supabase';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
 import { withAuthRetry } from '../utils/authSession';
+import { invokeProtectedAction } from '../utils/protectedAction';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -193,7 +194,7 @@ export default function BookingCalendar({
     try {
       const isMultiplo = entregaIds.length > 1;
       const bookingRequest = () => isMultiplo
-        ? supabase.rpc(assistedBooking ? 'rpc_criar_agendamentos_multiplos_assistido' : 'rpc_criar_agendamentos_multiplos', {
+        ? invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamentos_multiplos_assistido' : 'rpc_criar_agendamentos_multiplos', {
             ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
             p_negocio_id:      negocioId,
             p_profissional_id: profissional.id,
@@ -201,7 +202,7 @@ export default function BookingCalendar({
             p_data:            selectedDay,
             p_horario_inicio:  selectedSlot.hora,
           })
-        : supabase.rpc(assistedBooking ? 'rpc_criar_agendamento_assistido' : 'rpc_criar_agendamento', {
+        : invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamento_assistido' : 'rpc_criar_agendamento', {
             ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
             p_negocio_id:      negocioId,
             p_profissional_id: profissional.id,

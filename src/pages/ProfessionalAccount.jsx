@@ -4,6 +4,7 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { withAuthRetry } from '../utils/authSession';
+import { invokeProtectedAction } from '../utils/protectedAction';
 import { getRequestErrorKey } from '../utils/requestError';
 import AccountDataSection from './dashboard/sections/AccountDataSection';
 
@@ -150,7 +151,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setDeletingAccount(true);
       const { error } = await withAuthRetry(
-        () => supabase.rpc('excluir_conta_profissional_seguro'),
+        () => invokeProtectedAction('excluir_conta_profissional_seguro'),
         8000,
         'professional-account-delete'
       );
@@ -193,6 +194,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
 
         <div className="mb-8">
           <h1 className="text-3xl font-normal uppercase tracking-wide">Minha conta</h1>
+          <p className="mt-2 text-sm uppercase text-gray-500">CLIQUE, EDITE E SALVE</p>
         </div>
 
         <div className="overflow-hidden rounded-custom border border-gray-800 bg-dark-100 p-6">
