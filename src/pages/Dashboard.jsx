@@ -523,6 +523,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const [formInfo, setFormInfo] = useState({
     nome: '',
     descricao: '',
+    seo_title: '',
+    seo_description: '',
     telefone: '',
     endereco_cep: '',
     endereco_rua: '',
@@ -547,6 +549,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     setFormInfo({
       nome: negocio.nome || '',
       descricao: negocio.descricao || '',
+      seo_title: negocio.seo_title || '',
+      seo_description: negocio.seo_description || '',
       telefone: formatPhoneForDisplay(negocio.telefone) || '',
       endereco_cep: negocio.endereco_cep || '',
       endereco_rua: negocio.endereco_rua || '',
