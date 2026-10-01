@@ -286,8 +286,7 @@ export default function InfoNegocioSection({
               <div key={key}>
                 {index > 0 ? <div className="-mx-4 my-3 border-t border-gray-800 sm:-mx-6" /> : null}
                 <label htmlFor={key} className="sr-only">{label}</label>
-                <textarea id={key} value={formInfo[key] || ''} onChange={(e) => setFormInfo((prev) => ({ ...prev, [key]: Array.from(e.target.value).slice(0, limit).join('') }))} readOnly={!isEditing('google')} rows={rows} aria-describedby={key + '-count'} className={inputClass + ' max-h-32 resize-none overflow-y-auto leading-5 ' + inputStateClass(isEditing('google'))} placeholder={placeholder} />
-                <div id={key + '-count'} className="text-right text-[12px] text-gray-500">{Array.from(formInfo[key] || '').length}/{limit}</div>
+                <textarea id={key} value={formInfo[key] || ''} onChange={(e) => setFormInfo((prev) => ({ ...prev, [key]: Array.from(e.target.value).slice(0, limit).join('') }))} readOnly={!isEditing('google')} rows={rows} className={inputClass + ' max-h-32 resize-none overflow-y-auto leading-5 ' + inputStateClass(isEditing('google'))} placeholder={placeholder} />
               </div>
             ))}
           </div>
