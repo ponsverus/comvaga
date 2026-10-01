@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import FullScreenMessage from './ui/FullScreenMessageView';
+import FullScreenMessage from './ui/FullScreenMessage';
 import { getFeedbackState, subscribeFeedback } from './feedbackStore';
 import { useFeedback } from './useFeedback';
 
