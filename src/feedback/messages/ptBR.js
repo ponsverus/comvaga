@@ -237,16 +237,16 @@ export const ptBR = {
       body: 'PLANO CANCELADO. ACESSO LIBERADO ATÉ {date}',
     },
     billing_canceled_header: {
-      body: 'CANCELAMENTO SOLICITADO. O ACESSO CONTINUA LIBERADO.',
+      body: 'CANCELADO. ACESSO LIBERADO ATÉ.',
     },
     billing_canceled_expired_header: {
-      body: 'PLANO CANCELADO. ESCOLHA UM NOVO PLANO PARA CONTINUAR.',
+      body: 'PLANO CANCELADO. ESCOLHA E CONTINUE.',
     },
     billing_blocked_header: {
       body: 'AGENDA BLOQUEADA. REGULARIZE O PAGAMENTO.',
     },
     billing_blocked_never_paid_header: {
-      body: 'AGENDA BLOQUEADA. ADICIONE UMA FORMA DE PAGAMENTO.',
+      body: 'AGENDA BLOQUEADA. ADICIONE UM PAGAMENTO.',
     },
     billing_past_due_header: {
       body: 'FATURA VENCIDA. REGULARIZE O PAGAMENTO.',
@@ -255,7 +255,7 @@ export const ptBR = {
       body: 'FALHA NO PAGAMENTO. TENTE NOVAMENTE.',
     },
     billing_trial_ended_header: {
-      body: 'TESTE ENCERRADO. ADICIONE UMA FORMA DE PAGAMENTO.',
+      body: 'TESTE ENCERRADO. ADICIONE UM PAGAMENTO.',
     },
     billing_block_countdown_header: {
       body: 'BLOQUEIO EM {days} {dayLabel}.',
