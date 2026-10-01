@@ -276,7 +276,7 @@ function BillingAnnouncementBar({ announcement, onAction, actionLoading = false 
   return (
     <div className={`border-b ${toneClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs sm:text-sm font-normal">
-        <div className="flex flex-col items-center justify-center gap-2 text-center sm:flex-row">
+        <div className="flex flex-row flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
           <span>{announcement.text}</span>
           {canAct ? (
             <button
