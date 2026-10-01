@@ -216,7 +216,7 @@ export default function InfoNegocioSection({
               onChange={(e) => setFormInfo((prev) => ({ ...prev, descricao: e.target.value }))}
               readOnly={!isEditing('sobre')}
               rows={4}
-              className={`max-h-32 w-full resize-none overflow-y-auto bg-transparent py-2 pl-0 pr-6 text-[14px] font-normal leading-5 text-white outline-none [scrollbar-width:none] placeholder-gray-600 focus:text-white sm:pr-0 [&::-webkit-scrollbar]:hidden ${inputStateClass(isEditing('sobre'))}`}
+              className={`mt-3 max-h-32 w-full resize-none overflow-y-auto bg-transparent py-2 pl-0 pr-6 text-[14px] font-normal leading-5 text-white outline-none [scrollbar-width:none] placeholder-gray-600 focus:text-white sm:pr-0 [&::-webkit-scrollbar]:hidden ${inputStateClass(isEditing('sobre'))}`}
               placeholder="Conte sobre seu negócio, atendimento e diferenciais; até 150 caracteres."
             />
 
