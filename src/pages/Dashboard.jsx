@@ -283,7 +283,7 @@ function BillingAnnouncementBar({ announcement, onAction, actionLoading = false 
               type="button"
               onClick={onAction}
               disabled={actionLoading}
-              className="inline-flex items-center justify-center font-normal uppercase text-sky-300 transition-colors hover:text-sky-200 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center justify-center font-normal uppercase text-primary transition-colors hover:text-primary/80 disabled:cursor-wait disabled:opacity-60"
             >
               {actionLoading ? 'VERIFICANDO...' : actionLabel}
             </button>
