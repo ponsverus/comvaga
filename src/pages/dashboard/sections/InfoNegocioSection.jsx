@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import TemaToggle from '../components/TemaToggle';
+import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT } from '../../../utils/businessSeo';
 
 function InfoRow({ label, children, action, last = false }) {
   return (
@@ -69,6 +70,7 @@ export default function InfoNegocioSection({
   navigate,
 }) {
   const [sobreExpanded, setSobreExpanded] = useState(false);
+  const [googleExpanded, setGoogleExpanded] = useState(false);
   const [visiblePrivateFields, setVisiblePrivateFields] = useState({
     instagram: false,
     facebook: false,
@@ -91,6 +93,7 @@ export default function InfoNegocioSection({
   }, [galeriaHasMore, galeriaLoadingMore, loadMoreGaleria]);
 
   const getBusinessFieldValue = (field) => {
+    if (field === 'google') return JSON.stringify(['seo_title', 'seo_description'].map((key) => normalizedFieldValue(formInfo[key])));
     if (field === 'sobre') {
       return JSON.stringify(aboutFields.map((key) => normalizedFieldValue(formInfo[key])));
     }
@@ -101,6 +104,7 @@ export default function InfoNegocioSection({
   const fieldChanged = (field) => isEditing(field) && fieldBaselines[field] !== getBusinessFieldValue(field);
 
   const startEditing = (field) => {
+    if (field === 'google') setGoogleExpanded(true);
     if (field === 'sobre') setSobreExpanded(true);
     if (field === 'instagram' || field === 'facebook') {
       setVisiblePrivateFields((current) => ({ ...current, [field]: true }));
@@ -264,6 +268,31 @@ export default function InfoNegocioSection({
         ) : null}
       </div>
 
+      <div className="border-b border-gray-800 px-4 py-3 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={() => setGoogleExpanded((value) => !value)} aria-expanded={googleExpanded} aria-controls="business-google-fields" className="flex min-w-0 flex-1 items-center justify-between gap-3 text-[14px] leading-5 text-gray-500">
+            GOOGLE
+            <ChevronDown className={googleExpanded ? 'h-4 w-4 shrink-0 rotate-180' : 'h-4 w-4 shrink-0'} />
+          </button>
+          {googleExpanded ? businessFieldAction('google') : null}
+        </div>
+        {googleExpanded ? (
+          <div id="business-google-fields" className="mt-3">
+            {[
+              { key: 'seo_title', label: 'TÍTULO', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Nome do negócio, especialidade e cidade. Deixe vazio para usar os dados da vitrine.' },
+              { key: 'seo_description', label: 'DESCRIÇÃO', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Uma frase curta sobre o negócio, trabalhos e cidade. Pode aparecer no Google. Deixe vazio para usar a descrição da vitrine.' },
+            ].map(({ key, label, limit, rows, placeholder }, index) => (
+              <div key={key}>
+                {index > 0 ? <div className="-mx-4 my-3 border-t border-gray-800 sm:-mx-6" /> : null}
+                <label htmlFor={key} className="text-[12px] text-gray-500">{label}</label>
+                <textarea id={key} value={formInfo[key] || ''} onChange={(e) => setFormInfo((prev) => ({ ...prev, [key]: Array.from(e.target.value).slice(0, limit).join('') }))} readOnly={!isEditing('google')} rows={rows} aria-describedby={key + '-count'} className={inputClass + ' max-h-32 resize-none overflow-y-auto leading-5 ' + inputStateClass(isEditing('google'))} placeholder={placeholder} />
+                <div id={key + '-count'} className="text-right text-[12px] text-gray-500">{Array.from(formInfo[key] || '').length}/{limit}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
       <InfoRow label="INSTAGRAM" action={businessFieldAction('instagram')}>
         <input
           type="text"
@@ -293,7 +322,7 @@ export default function InfoNegocioSection({
             <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadGaleria(e.target.files)} disabled={galleryUploading} />
             <span className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-[12px] uppercase ${galleryUploading ? 'border-gray-800 text-gray-600' : 'border-primary/30 text-primary'}`}>
               <Plus className="h-3.5 w-3.5" />
-              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR IMG'}
+              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR'}
             </span>
           </label>
         </div>
