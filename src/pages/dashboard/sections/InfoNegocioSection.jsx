@@ -270,21 +270,22 @@ export default function InfoNegocioSection({
 
       <div className="border-b border-gray-800 px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setGoogleExpanded((value) => !value)} aria-expanded={googleExpanded} aria-controls="business-google-fields" className="flex min-w-0 flex-1 items-center justify-between gap-3 text-[14px] leading-5 text-gray-500">
-            GOOGLE
-            <ChevronDown className={googleExpanded ? 'h-4 w-4 shrink-0 rotate-180' : 'h-4 w-4 shrink-0'} />
-          </button>
-          {googleExpanded ? businessFieldAction('google') : null}
+          <span className="text-[14px] leading-5 text-gray-500">GOOGLE</span>
+          {googleExpanded ? businessFieldAction('google') : (
+            <button type="button" onClick={() => setGoogleExpanded(true)} aria-expanded={googleExpanded} aria-controls="business-google-fields" aria-label="Expandir Google" className={iconButtonClass}>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          )}
         </div>
         {googleExpanded ? (
           <div id="business-google-fields" className="mt-3">
             {[
-              { key: 'seo_title', label: 'TÍTULO', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Nome do negócio, especialidade e cidade. Deixe vazio para usar os dados da vitrine.' },
-              { key: 'seo_description', label: 'DESCRIÇÃO', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Uma frase curta sobre o negócio, trabalhos e cidade. Pode aparecer no Google. Deixe vazio para usar a descrição da vitrine.' },
+              { key: 'seo_title', label: 'Título para o Google', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Escreva o título para o Google com nome do negócio, especialidade e cidade; até 60 caracteres.' },
+              { key: 'seo_description', label: 'Meta description', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Escreva a meta description para o Google sobre o negócio, trabalhos e cidade; até 160 caracteres.' },
             ].map(({ key, label, limit, rows, placeholder }, index) => (
               <div key={key}>
                 {index > 0 ? <div className="-mx-4 my-3 border-t border-gray-800 sm:-mx-6" /> : null}
-                <label htmlFor={key} className="text-[12px] text-gray-500">{label}</label>
+                <label htmlFor={key} className="sr-only">{label}</label>
                 <textarea id={key} value={formInfo[key] || ''} onChange={(e) => setFormInfo((prev) => ({ ...prev, [key]: Array.from(e.target.value).slice(0, limit).join('') }))} readOnly={!isEditing('google')} rows={rows} aria-describedby={key + '-count'} className={inputClass + ' max-h-32 resize-none overflow-y-auto leading-5 ' + inputStateClass(isEditing('google'))} placeholder={placeholder} />
                 <div id={key + '-count'} className="text-right text-[12px] text-gray-500">{Array.from(formInfo[key] || '').length}/{limit}</div>
               </div>
@@ -322,7 +323,7 @@ export default function InfoNegocioSection({
             <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadGaleria(e.target.files)} disabled={galleryUploading} />
             <span className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-[12px] uppercase ${galleryUploading ? 'border-gray-800 text-gray-600' : 'border-primary/30 text-primary'}`}>
               <Plus className="h-3.5 w-3.5" />
-              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR'}
+              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR IMG'}
             </span>
           </label>
         </div>
