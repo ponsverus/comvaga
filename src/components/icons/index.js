@@ -1,3 +1,4 @@
+export { default as AlertIcon } from './AlertIcon';
 export { default as CalendarIcon } from './CalendarIcon';
 export { default as CheckDoubleIcon } from './CheckDoubleIcon';
 export { default as CheckIcon } from './CheckIcon';
