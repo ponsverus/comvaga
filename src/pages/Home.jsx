@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
-import { CheckDoubleIcon, ZapIcon, SearchIcon, ProfessionalIcon, CheckIcon, AlertIcon } from '../components/icons';
+import { CheckDoubleIcon, ZapIcon, SearchIcon, ProfessionalIcon, CheckIcon } from '../components/icons';
 import { getSupportHref, getCustomPlanHref } from '../support';
 import { saveSelectedPlanIntent } from '../utils/plans';
 import { searchHome } from '../utils/searchHome';
@@ -414,7 +414,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           {[
             { icon: MoneyGlyph, title: 'LUCRO BLINDADO', text: 'Menos buracos e horários mortos na agenda significam mais faturamento no fim do mês.' },
             { icon: SmileGlyph, title: 'CLIENTE SATISFEITO', text: 'Quem agenda tem a certeza de ser atendido no horário marcado, sem atrasos por erro de cálculo.' },
-            { icon: AlertIcon, title: 'FLUXO COMPLETO', text: 'Da descoberta ao pós-atendimento, profissional e cliente continuam dentro do mesmo sistema.' },
+            { icon: CheckDoubleIcon, title: 'FLUXO COMPLETO', text: 'Da descoberta ao pós-atendimento, profissional e cliente continuam dentro do mesmo sistema.' },
           ].map(({ icon: Icon, title, text }, i) => (
             <div
               key={i}
