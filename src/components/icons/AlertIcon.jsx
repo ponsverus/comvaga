@@ -1,4 +1,4 @@
-export default function EyesIcon({
+export default function AlertCircleIcon({
   className = '',
   title,
   style = {},
@@ -7,7 +7,7 @@ export default function EyesIcon({
 }) {
   return (
     <svg
-      viewBox="0 0 64 64"
+      viewBox="0 0 24 24"
       fill="none"
       width={size}
       height={size}
@@ -24,23 +24,28 @@ export default function EyesIcon({
     >
       {title && <title>{title}</title>}
 
-      <path
-        d="M2 31.428C2 40.23 5.74 53 17.002 53s15-12.77 15-21.572C32.002 4.191 2 4.191 2 31.428m12.768 20.006c-9.586 0-11.969-11.785-11.969-19.346c0-26.029 23.936-26.029 23.935 0c-.001 7.56-2.38 19.346-11.966 19.346"
-        fill="currentColor"
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="2"
       />
 
       <path
-        d="M32.002 31.428C32.002 40.23 35.739 53 47.003 53C58.264 53 62 40.23 62 31.428c0-27.237-29.998-27.237-29.998 0m12.767 20.006c-9.588 0-11.968-11.785-11.968-19.346c0-26.029 23.934-26.029 23.934 0c-.001 7.56-2.381 19.346-11.966 19.346"
+        d="M 12 5
+           C 10.25 5 9 6.25 9 8
+           C 9 9.85 10.25 12.15 12 15
+           C 13.75 12.15 15 9.85 15 8
+           C 15 6.25 13.75 5 12 5
+           Z"
         fill="currentColor"
       />
 
-      <path
-        d="M2.799 32.246c0 6.211 4.354 10.965 9.727 10.965c5.372 0 9.724-4.754 9.724-10.965c-.001-15.275-19.451-15.275-19.451 0"
-        fill="currentColor"
-      />
-
-      <path
-        d="M32.801 32.246c0 6.211 4.353 10.965 9.726 10.965c5.371 0 9.723-4.754 9.723-10.965c-.001-15.275-19.449-15.275-19.449 0"
+      <circle
+        cx="12"
+        cy="18"
+        r="1.25"
         fill="currentColor"
       />
     </svg>
