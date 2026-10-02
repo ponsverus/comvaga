@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { AlertIcon } from '../../components/icons';
 
 const toneByVariant = {
   success: {
-    icon: CheckCircle2,
+    glyph: ':)',
     iconClass: 'text-green-400',
     borderClass: 'border-green-500/30',
     buttonClass: 'bg-green-500 text-black hover:bg-green-400',
   },
   danger: {
-    icon: XCircle,
+    glyph: ':(',
     iconClass: 'text-red-400',
     borderClass: 'border-red-500/30',
     buttonClass: 'bg-red-500 text-white hover:bg-red-400',
   },
   warning: {
-    icon: AlertTriangle,
+    icon: AlertIcon,
     iconClass: 'text-primary',
     borderClass: 'border-primary/30',
     buttonClass: 'bg-primary text-black hover:bg-yellow-400',
@@ -99,8 +100,14 @@ export default function FullScreenMessageView({ open, payload, onClose }) {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm">
       <div className={`w-full max-w-md rounded-custom border ${panelClass} ${tone.borderClass} p-6 shadow-2xl`}>
         <div className="mb-5 flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-current/20">
-            <Icon className={`h-6 w-6 ${tone.iconClass}`} strokeWidth={1.8} />
+          <div aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center">
+            {tone.glyph ? (
+              <span className={`inline-flex h-8 w-8 items-center justify-center font-condensed text-[32px] font-normal leading-none ${tone.iconClass}`}>
+                {tone.glyph}
+              </span>
+            ) : (
+              <Icon className={`h-6 w-6 ${tone.iconClass}`} />
+            )}
           </div>
           <div className="min-w-0">
             <h2 className="text-xl font-normal uppercase">{payload.title || 'Aviso'}</h2>
