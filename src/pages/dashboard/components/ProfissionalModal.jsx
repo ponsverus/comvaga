@@ -103,7 +103,7 @@ export default function ProfissionalModal({
                     >
                       {d.label}
                     </button>
-                    <div className={`h-px flex-1 ${ativo ? 'bg-primary/20' : 'bg-gray-800'}`} />
+                    <div aria-hidden="true" className={`min-w-0 flex-1 border-t-2 border-dotted ${ativo ? 'border-primary' : 'border-gray-600'}`} />
                     <span className={`text-[11px] uppercase ${ativo ? 'text-primary' : 'text-gray-600'}`}>{ativo ? 'ABERTO' : 'FECHADO'}</span>
                   </div>
 
