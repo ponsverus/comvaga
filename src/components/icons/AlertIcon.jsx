@@ -1,22 +1,17 @@
 export default function AlertCircleIcon({
   className = '',
   title,
-  style = {},
   size = 24,
   ...props
 }) {
+  delete props.style;
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       width={size}
       height={size}
-      className={className}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        ...style,
-      }}
+      className={`inline-block align-middle ${className}`}
       xmlns="http://www.w3.org/2000/svg"
       role={title ? 'img' : 'presentation'}
       aria-hidden={!title}
