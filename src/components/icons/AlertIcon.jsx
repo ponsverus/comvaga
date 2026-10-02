@@ -27,25 +27,27 @@ export default function AlertCircleIcon({
       <circle
         cx="12"
         cy="12"
-        r="10"
+        r="10.75"
         stroke="currentColor"
         strokeWidth="2"
       />
 
       <path
-        d="M 12 5
-           C 10.25 5 9 6.25 9 8
-           C 9 9.85 10.25 12.15 12 15
-           C 13.75 12.15 15 9.85 15 8
-           C 15 6.25 13.75 5 12 5
+        d="M12 4.7
+           C10.95 4.7 10.25 5.5 10.35 6.55
+           L11.05 12.85
+           C11.12 13.55 11.48 13.95 12 13.95
+           C12.52 13.95 12.88 13.55 12.95 12.85
+           L13.65 6.55
+           C13.75 5.5 13.05 4.7 12 4.7
            Z"
         fill="currentColor"
       />
 
       <circle
         cx="12"
-        cy="18"
-        r="1.25"
+        cy="17.25"
+        r="1.2"
         fill="currentColor"
       />
     </svg>
