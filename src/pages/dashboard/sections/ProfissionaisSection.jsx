@@ -60,6 +60,9 @@ export default function ProfissionaisSection({
           const label = resolveProfissionalStatusKey(p) || normalizeKey(p.status_label);
           const dotClass = STATUS_COLOR_CLASS[label] || 'bg-gray-500';
           const statusLabelView = label === 'ALMOCO' ? 'PAUSA' : p.status_label;
+          const statusText = isInativo
+            ? (souDono ? String(p.motivo_inativo || '').trim() : '')
+            : (isPendente ? 'PENDENTE' : (statusLabelView || '-'));
           const isEuMesmo = parceiroProfissional?.id === p.id;
           const entregasCount = entregasCountByProf?.get?.(p.id) ?? entregas.filter((s) => s.profissional_id === p.id).length;
           const horarios = normalizeProfissionalHorarios(p);
@@ -87,10 +90,10 @@ export default function ProfissionaisSection({
                 <div className="w-12 h-12 bg-gradient-to-br from-primary to-yellow-600 rounded-custom flex items-center justify-center font-normal text-xl shrink-0">{p.nome?.[0] || 'P'}</div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-normal pr-24 uppercase">{p.nome}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  {statusText && <div className="flex items-center gap-2 mt-1">
                     <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isPendente ? 'bg-yellow-400' : dotClass}`} />
-                    <span className={`text-xs ${isPendente ? 'text-yellow-400' : 'text-gray-400'}`}>{isPendente ? 'PENDENTE' : (statusLabelView || '-')}</span>
-                  </div>
+                    <span className={`min-w-0 break-words text-xs ${isPendente ? 'text-yellow-400' : 'text-gray-400'}`}>{statusText}</span>
+                  </div>}
                   {p.profissao && <p className="text-xs text-gray-500 mt-1">{p.profissao}</p>}
                   {!isPendente && p.anos_experiencia != null && (
                     <p className="text-xs text-gray-500 mt-1">{p.anos_experiencia} ANOS DE EXPERIÊNCIA</p>
@@ -137,11 +140,6 @@ export default function ProfissionaisSection({
 
               {!isPendente && (isEuMesmo || souDono) && (
                 <>
-                  {isInativo && p.motivo_inativo && (
-                    <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-custom p-2 mb-3">
-                      INATIVO {p.motivo_inativo ? `- ${p.motivo_inativo}` : ''}
-                    </div>
-                  )}
                   {souDono ? (
                     <div className="space-y-2 mt-2">
                       <div className="flex gap-2">
