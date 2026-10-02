@@ -552,7 +552,7 @@ export function useDashboardMutations({
       if (novoStatus === 'inativo') {
         const r = await uiPrompt('dashboard.professional_inactivate_reason', { variant: 'warning' });
         if (r === null) return;
-        motivo = r || null;
+        motivo = String(r).trim() || null;
       }
       await updateProfissionalStatus(
         p.id,
