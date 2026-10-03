@@ -97,7 +97,7 @@ function ProfissionalEntregasBlock({
                 const isInativo = s.ativo === false;
                 return (
                   <div key={s.id} className={`relative bg-dark-100 border rounded-custom p-5 ${isInativo ? 'border-gray-700' : 'border-gray-800'}`}>
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start mb-4">
                       <span className="inline-flex items-center rounded-full border border-gray-700 bg-transparent px-3 py-1 text-xs text-gray-500">{s.duracao_minutos} MIN</span>
                       {promo != null && promo > 0 && promo < preco ? (
                         <div className="flex items-baseline gap-2">
