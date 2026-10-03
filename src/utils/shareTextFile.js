@@ -1,5 +1,5 @@
 export async function shareTextFile({ title, text, filename }) {
-  const file = new File([text], filename, { type: 'text/plain;charset=utf-8' });
+  const file = new File([text], filename, { type: 'text/plain' });
 
   if (typeof navigator.share === 'function') {
     try {
