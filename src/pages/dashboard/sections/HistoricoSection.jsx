@@ -53,7 +53,13 @@ export default function HistoricoSection({
         text,
         filename: `agendamento-${agendamento.id}.txt`,
       });
-    } catch {
+    } catch (error) {
+      console.error('Falha no compartilhamento do historico.', {
+        name: error?.name || 'Error',
+        message: error?.message || 'Erro sem mensagem',
+        secureContext: window.isSecureContext,
+        nativeShareAvailable: typeof navigator.share === 'function',
+      });
       setShareErrorId(agendamento.id);
     } finally {
       shareLock.current = false;
