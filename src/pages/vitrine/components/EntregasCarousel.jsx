@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CalendarIcon, CheckIcon, SelectIcon, TimeIcon } from '../../../components/icons';
+import { CalendarIcon, CheckIcon, SelectIcon } from '../../../components/icons';
 
 const ENTREGAS_POR_PAGINA = 6;
 
@@ -103,38 +103,20 @@ function EntregaCard({
 
   return (
     <div className="bg-vcard2 border border-vborder rounded-custom p-4">
-      {temPromo ? (
-        <>
-          <div className="flex items-start justify-between gap-3">
-            <div className="font-normal text-sm leading-tight">{entrega.nome}</div>
-            <span
-              className="inline-block px-1.5 py-0.5 rounded-button text-[9px] font-normal uppercase shrink-0 vitrine-offer-badge"
-            >
-              OFERTA
-            </span>
+      <div className="flex items-start justify-between gap-3">
+        <span className="inline-flex items-center rounded-full border border-vborder bg-transparent px-3 py-1 text-xs text-vmuted font-normal shrink-0">
+          {entrega.duracao_minutos} MIN
+        </span>
+        {temPromo ? (
+          <div className="flex items-baseline gap-2 shrink-0">
+            <span className="text-xs text-red-500 line-through">R$ {preco.toFixed(2)}</span>
+            <span className="font-normal text-base text-vpromo">R$ {precoFinal.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between gap-3 mt-2">
-            <div className="flex items-center gap-1 text-xs text-vmuted font-normal">
-              <TimeIcon className="w-3 h-3 shrink-0" />
-              {entrega.duracao_minutos} MIN
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="font-normal text-base text-vpromo">R$ {precoFinal.toFixed(2)}</span>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-start justify-between gap-3">
-            <div className="font-normal text-sm leading-tight">{entrega.nome}</div>
-            <div className="text-vprimary font-normal text-base shrink-0">R$ {precoFinal.toFixed(2)}</div>
-          </div>
-          <div className="flex items-center gap-1 mt-2 text-xs text-vmuted font-normal">
-            <TimeIcon className="w-3 h-3 shrink-0" />
-            {entrega.duracao_minutos} MIN
-          </div>
-        </>
-      )}
+        ) : (
+          <div className="text-vprimary font-normal text-base shrink-0">R$ {precoFinal.toFixed(2)}</div>
+        )}
+      </div>
+      <div className="font-normal text-sm leading-tight mt-2">{entrega.nome}</div>
       <EntregaButtons
         entrega={entrega}
         profissional={profissional}
