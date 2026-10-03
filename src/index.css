@@ -22,7 +22,6 @@
   --color-vborder2: var(--vborder2);
   --color-vprimary: var(--vprimary);
   --color-vprimary-text: var(--vprimary-text);
-  --color-voferta: var(--voferta-text);
   --color-vpromo: var(--vpromo-text);
   --color-verror: var(--verror-text);
 }
@@ -38,9 +37,6 @@
   --vborder2:      #18181b;
   --vprimary:      #FFD700;
   --vprimary-text: #000000;
-  --voferta-bg:    rgba(74,222,128,0.15);
-  --voferta-border:rgba(74,222,128,0.35);
-  --voferta-text:  #4ade80;
   --vpromo-text:   #4ade80;
   --verror-text:   #f87171;
 }
@@ -66,12 +62,8 @@
   --color-vborder2:var(--vborder2);
   --color-vprimary:var(--vprimary);
   --color-vprimary-text: var(--vprimary-text);
-  --voferta-bg:    rgba(22,101,52,0.12);
-  --voferta-border:rgba(22,101,52,0.35);
-  --voferta-text:  #166534;
   --vpromo-text:   #166534;
   --verror-text:   #991b1b;
-  --color-voferta: var(--voferta-text);
   --color-vpromo:  var(--vpromo-text);
   --color-verror:  var(--verror-text);
 }
@@ -151,12 +143,6 @@ body {
   .animate-marquee-sync {
     animation: none;
   }
-}
-
-.vitrine-offer-badge {
-  background: var(--voferta-bg);
-  border: 1px solid var(--voferta-border);
-  color: var(--voferta-text);
 }
 
 .vitrine-selection-bar {
