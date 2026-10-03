@@ -852,16 +852,14 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'OK',
     },
-    professional_inactivate_reason: {
-      title: 'Motivo',
-      body: 'Se quiser, escreva um motivo (opcional).',
+    professional_inactivate_confirm: {
+      title: 'Inativar profissional?',
+      body: 'O profissional ficará sem acesso ao dashboard deste negócio.',
       variant: 'warning',
       screen: 'dark',
-      placeholder: 'Ex.: Férias (até 20 caracteres)',
-      maxLength: 20,
-      confirmText: 'SALVAR',
+      confirmText: 'INATIVAR',
       cancelText: 'CANCELAR',
-      buttonText: 'SALVAR',
+      buttonText: 'INATIVAR',
     },
     professional_activated: {
       title: 'Ativado',

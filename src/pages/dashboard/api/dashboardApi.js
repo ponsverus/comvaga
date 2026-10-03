@@ -671,14 +671,11 @@ export async function updateEntregaById(entregaId, negocioId, payload) {
   if (error) throw error;
 }
 
-export async function updateProfissionalStatus(profissionalId, negocioId, status, motivoInativo) {
+export async function updateProfissionalStatus(profissionalId, negocioId, status) {
   const { error } = await withAuthRetry(
     () => supabase
       .from('profissionais')
-      .update({
-        status,
-        motivo_inativo: motivoInativo,
-      })
+      .update({ status })
       .eq('id', profissionalId)
       .eq('negocio_id', negocioId),
     6000,
