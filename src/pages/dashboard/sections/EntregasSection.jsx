@@ -98,8 +98,13 @@ function ProfissionalEntregasBlock({
                 return (
                   <div key={s.id} className={`relative bg-dark-100 border rounded-custom p-5 ${isInativo ? 'border-gray-700' : 'border-gray-800'}`}>
                     <div className="flex justify-between items-start mb-3">
-                      {promo != null && promo > 0 && promo < preco ? (<div className="text-xl font-normal text-green-400">R$ {promo.toFixed(2)}</div>) : (<div className="text-xl font-normal text-primary">R$ {preco.toFixed(2)}</div>)}
                       <span className="inline-flex items-center rounded-full border border-gray-700 bg-transparent px-3 py-1 text-xs text-gray-500">{s.duracao_minutos} MIN</span>
+                      {promo != null && promo > 0 && promo < preco ? (
+                        <div className="flex items-baseline gap-2">
+                          <div className="text-xl font-normal text-green-400">R$ {promo.toFixed(2)}</div>
+                          <div className="text-sm font-normal text-red-500 line-through">R$ {preco.toFixed(2)}</div>
+                        </div>
+                      ) : (<div className="text-xl font-normal text-primary">R$ {preco.toFixed(2)}</div>)}
                     </div>
                     <h3 className="flex items-center gap-2 text-sm font-normal text-white mb-0.5">
                       <span>{s.nome}</span>
