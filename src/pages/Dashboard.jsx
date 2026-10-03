@@ -338,6 +338,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     negocio,
     setNegocio,
     profissionais,
+    profissionaisEquipe,
     entregas,
     entregaPagesByProf,
     agendamentos,
@@ -1122,7 +1123,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 adminJaEhProfissional={adminJaEhProfissional}
                 cadastrarAdminComoProfissional={cadastrarAdminComoProfissional}
                 submittingAdminProf={submittingAdminProf}
-              profissionais={profissionais}
+              profissionais={souDono ? profissionais : profissionaisEquipe}
               todayDow={serverNow?.dow ?? null}
               parceiroProfissional={parceiroProfissional}
               entregas={entregas}
