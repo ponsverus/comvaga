@@ -88,8 +88,8 @@ export default function AgendamentosSection({
                       </div>
                       {!isDone && !isCancel && (
                         isHoje ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button onClick={() => cancelarAgendamento(a)} className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
+                          <div className={`grid ${canShowReminder ? 'grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'} gap-2`}>
+                            <button onClick={() => cancelarAgendamento(a)} className="w-full sm:order-last py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
                             {canShowReminder ? (
                               reminderHref ? (
                                 <a
@@ -112,7 +112,7 @@ export default function AgendamentosSection({
                                 </button>
                               )
                             ) : null}
-                            <button onClick={() => confirmarAtendimento(a)} className={`w-full ${canShowReminder ? 'sm:col-span-2' : ''} py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm font-normal uppercase`}>CONFIRMAR ATENDIMENTO</button>
+                            <button onClick={() => confirmarAtendimento(a)} className={`w-full sm:order-first ${canShowReminder ? 'col-span-full sm:col-span-1' : ''} py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm font-normal uppercase`}>CONFIRMAR ATENDIMENTO</button>
                           </div>
                         ) : (
                           <button onClick={() => cancelarAgendamento(a)} className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
