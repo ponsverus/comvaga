@@ -1,4 +1,3 @@
-import { MessageCircle } from 'lucide-react';
 import { formatPhoneForWhatsAppLink } from '../../../utils/phone';
 import {
   computeStatusFromDb,
@@ -98,8 +97,7 @@ export default function AgendamentosSection({
                                   rel="noreferrer"
                                   className="inline-flex w-full items-center justify-center gap-2 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm font-normal uppercase"
                                 >
-                                  <MessageCircle size={16} aria-hidden="true" />
-                                  LEMBRETE CLIENTE
+                                  LEMBRAR CLIENTE
                                 </a>
                               ) : (
                                 <button
@@ -107,7 +105,6 @@ export default function AgendamentosSection({
                                   disabled
                                   className="inline-flex w-full items-center justify-center gap-2 py-2 bg-gray-700/20 border border-gray-700 text-gray-500 rounded-button text-sm font-normal uppercase cursor-not-allowed"
                                 >
-                                  <MessageCircle size={16} aria-hidden="true" />
                                   SEM WHATSAPP
                                 </button>
                               )
