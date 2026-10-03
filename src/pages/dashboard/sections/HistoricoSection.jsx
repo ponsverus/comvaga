@@ -1,4 +1,7 @@
+import { useRef, useState } from 'react';
+import { Share2 } from 'lucide-react';
 import DatePicker from '../../../components/DatePicker';
+import { shareTextFile } from '../../../utils/shareTextFile';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import {
   computeStatusFromDb,
@@ -20,7 +23,43 @@ export default function HistoricoSection({
   historicoLoadingMore,
   historicoError,
 }) {
+  const shareLock = useRef(false);
+  const [sharingId, setSharingId] = useState(null);
+  const [shareErrorId, setShareErrorId] = useState(null);
   const historicoErrorMsg = historicoError ? ptBR.dashboard?.history_load_error : null;
+
+  const compartilharAgendamento = async (agendamento) => {
+    if (shareLock.current) return;
+    shareLock.current = true;
+    setSharingId(agendamento.id);
+    setShareErrorId(null);
+    try {
+      const status = computeStatusFromDb(agendamento);
+      const statusText = isCancelStatus(status) ? 'CANCELADO' : isDoneStatus(status) ? 'CONCLUIDO' : 'AGENDADO';
+      const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+        .format(Number(getValorAgendamento(agendamento)));
+      const text = [
+        'COMVAGA - AGENDAMENTO',
+        `Cliente: ${agendamento.cliente?.nome || '-'}`,
+        `Profissional: ${agendamento.profissionais?.nome || '-'}`,
+        `Servico: ${agendamento.entregas?.nome || '-'}`,
+        `Data: ${formatDateBRFromISO(getAgDate(agendamento))}`,
+        `Horario: ${getAgInicio(agendamento)}`,
+        `Valor: ${valor}`,
+        `Status: ${statusText}`,
+      ].join('\n');
+      await shareTextFile({
+        title: 'Agendamento - ComVaga',
+        text,
+        filename: `agendamento-${agendamento.id}.txt`,
+      });
+    } catch {
+      setShareErrorId(agendamento.id);
+    } finally {
+      shareLock.current = false;
+      setSharingId(null);
+    }
+  };
 
   return (
     <div>
@@ -55,6 +94,18 @@ export default function HistoricoSection({
                   <div><div className="text-xs text-gray-500">HORÁRIO</div><div className="text-sm">{getAgInicio(a)}</div></div>
                   <div><div className="text-xs text-gray-500">VALOR</div><div className="text-sm">R$ {Number(valorReal).toFixed(2)}</div></div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => compartilharAgendamento(a)}
+                  disabled={sharingId !== null}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/50 bg-primary/20 py-3 px-4 text-sm font-normal uppercase text-primary hover:bg-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Share2 size={18} aria-hidden="true" className="shrink-0" />
+                  {sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
+                </button>
+                {shareErrorId === a.id && (
+                  <p role="alert" className="mt-2 text-sm text-red-300">Falha ao compartilhar. Tente novamente.</p>
+                )}
               </div>
             );
           })}
