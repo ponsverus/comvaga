@@ -10,6 +10,7 @@ import {
   fetchOwnerNegocio,
   fetchPartnerNegocioIds,
   fetchProfissionaisComStatus,
+  fetchProfissionaisEquipe,
 } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../../../utils/authSession';
@@ -103,6 +104,7 @@ export function useDashboardBootstrap({
   const [parceiroProfissional, setParceiroProfissional] = useState(null);
   const [negocio, setNegocio] = useState(null);
   const [profissionais, setProfissionais] = useState([]);
+  const [profissionaisEquipe, setProfissionaisEquipe] = useState([]);
   const [entregaPagesByProf, setEntregaPagesByProf] = useState({});
   const entregas = useMemo(() => flattenEntregaPages(entregaPagesByProf), [entregaPagesByProf]);
   const [agendamentos, setAgendamentos] = useState([]);
@@ -160,12 +162,16 @@ export function useDashboardBootstrap({
   const reloadProfissionais = useCallback(async (negocioId, negocioOwnerId = negocio?.owner_id) => {
     const id = negocioId || negocio?.id;
     if (!id) return;
-    const allProfissionais = await fetchProfissionaisComStatus(id);
+    const [allProfissionais, equipe] = await Promise.all([
+      fetchProfissionaisComStatus(id),
+      negocioOwnerId === userId ? Promise.resolve([]) : fetchProfissionaisEquipe(id),
+    ]);
     const { scoped, parceiro } = scopeProfissionais(allProfissionais, negocioOwnerId);
     setProfissionais(scoped);
+    setProfissionaisEquipe(parceiro ? equipe : []);
     setParceiroProfissional(parceiro);
     return scoped;
-  }, [negocio?.id, negocio?.owner_id, scopeProfissionais]);
+  }, [negocio?.id, negocio?.owner_id, scopeProfissionais, userId]);
 
   const loadEntregasPage = useCallback(async (profissionalId, page = 0, { force = false } = {}) => {
     const id = negocio?.id;
@@ -367,6 +373,7 @@ export function useDashboardBootstrap({
     setParceiroProfissional(null);
     setNegocio(null);
     setProfissionais([]);
+    setProfissionaisEquipe([]);
     setEntregaPagesByProf({});
     setAgendamentos([]);
     setAgendamentosHasMore(false);
@@ -429,15 +436,19 @@ export function useDashboardBootstrap({
         return;
       }
 
-      const allProfissionais = await fetchProfissionaisComStatus(negocioData.id);
+      const souDonoDoNegocio = negocioData.owner_id === userId;
+      const [allProfissionais, equipe] = await Promise.all([
+        fetchProfissionaisComStatus(negocioData.id),
+        souDonoDoNegocio ? Promise.resolve([]) : fetchProfissionaisEquipe(negocioData.id),
+      ]);
       if (!isCurrentRun()) return;
 
       const { scoped: scopedProfs, parceiro: meuProfissional } = scopeProfissionais(allProfissionais, negocioData.owner_id);
-      const souDonoDoNegocio = negocioData.owner_id === userId;
       if (!souDonoDoNegocio && !isActivePartnerProfessional(meuProfissional)) {
         setNegocio(null);
         setParceiroProfissional(null);
         setProfissionais([]);
+        setProfissionaisEquipe([]);
         setEntregaPagesByProf({});
         setAgendamentos([]);
         setAgendamentosHasMore(false);
@@ -453,6 +464,7 @@ export function useDashboardBootstrap({
       setNegocio(negocioData);
       setParceiroProfissional(meuProfissional);
       setProfissionais(scopedProfs);
+      setProfissionaisEquipe(equipe);
 
       const galeriaResult = await fetchGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
       if (!isCurrentRun()) return;
@@ -555,6 +567,7 @@ export function useDashboardBootstrap({
     negocio,
     setNegocio,
     profissionais,
+    profissionaisEquipe,
     setProfissionais,
     entregas,
     entregaPagesByProf,
