@@ -116,7 +116,7 @@ function EntregaCard({
           <div className="text-vprimary font-normal text-base shrink-0">R$ {precoFinal.toFixed(2)}</div>
         )}
       </div>
-      <div className="font-normal text-sm leading-tight mt-2">{entrega.nome}</div>
+      <div className="font-normal text-sm leading-tight mt-4">{entrega.nome}</div>
       <EntregaButtons
         entrega={entrega}
         profissional={profissional}
