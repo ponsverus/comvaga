@@ -88,8 +88,8 @@ export default function AgendamentosSection({
                       </div>
                       {!isDone && !isCancel && (
                         isHoje ? (
-                          <div className={`grid grid-cols-1 ${canShowReminder ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2`}>
-                            <button onClick={() => confirmarAtendimento(a)} className="w-full py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm font-normal uppercase">CONFIRMAR ATENDIMENTO</button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button onClick={() => cancelarAgendamento(a)} className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
                             {canShowReminder ? (
                               reminderHref ? (
                                 <a
@@ -112,7 +112,7 @@ export default function AgendamentosSection({
                                 </button>
                               )
                             ) : null}
-                            <button onClick={() => cancelarAgendamento(a)} className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
+                            <button onClick={() => confirmarAtendimento(a)} className={`w-full ${canShowReminder ? 'sm:col-span-2' : ''} py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm font-normal uppercase`}>CONFIRMAR ATENDIMENTO</button>
                           </div>
                         ) : (
                           <button onClick={() => cancelarAgendamento(a)} className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-button text-sm font-normal uppercase">CANCELAR</button>
