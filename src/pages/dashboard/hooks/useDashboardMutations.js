@@ -44,7 +44,6 @@ export function useDashboardMutations({
   checarPermissao,
   uiAlert,
   uiConfirm,
-  uiPrompt,
   setNegocio,
   setGaleriaItems,
   formInfo,
@@ -548,17 +547,14 @@ export function useDashboardMutations({
     }
     try {
       const novoStatus = p.status === 'ativo' ? 'inativo' : 'ativo';
-      let motivo = null;
       if (novoStatus === 'inativo') {
-        const r = await uiPrompt('dashboard.professional_inactivate_reason', { variant: 'warning' });
-        if (r === null) return;
-        motivo = String(r).trim() || null;
+        const confirmed = await uiConfirm('dashboard.professional_inactivate_confirm', 'warning');
+        if (!confirmed) return;
       }
       await updateProfissionalStatus(
         p.id,
         negocio.id,
-        novoStatus,
-        novoStatus === 'ativo' ? null : motivo
+        novoStatus
       );
       await uiAlert(novoStatus === 'ativo' ? 'dashboard.professional_activated' : 'dashboard.professional_inactivated', 'success');
       await reloadProfissionais();
