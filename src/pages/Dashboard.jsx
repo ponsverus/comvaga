@@ -328,7 +328,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const uiAlert   = useCallback(async (key, variant = 'info') => { if (feedback?.showMessage) return feedback.showMessage(key, { variant }); return Promise.resolve(); }, [feedback]);
   const uiConfirm = useCallback(async (key, variant = 'warning') => { if (feedback?.confirm) return !!(await feedback.confirm(key, { variant })); return false; }, [feedback]);
-  const uiPrompt  = useCallback(async (key, opts = {}) => { if (feedback?.prompt) return await feedback.prompt(key, opts); return null; }, [feedback]);
 
   const [activeTab, setActiveTab] = useState('agendamentos');
   const [billingStatus, setBillingStatus] = useState(null);
@@ -685,7 +684,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       checarPermissao,
       uiAlert,
       uiConfirm,
-    uiPrompt,
     setNegocio,
     setGaleriaItems,
     formInfo,
