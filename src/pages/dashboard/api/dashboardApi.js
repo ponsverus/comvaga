@@ -349,6 +349,16 @@ export async function fetchProfissionaisComStatus(negocioId) {
   return (data || []).filter((row) => !isAdminExcludedProfessional(row));
 }
 
+export async function fetchProfissionaisEquipe(negocioId) {
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_profissionais_equipe_dashboard', { p_negocio_id: negocioId }),
+    6000,
+    'profissionais-equipe'
+  );
+  if (error) throw error;
+  return data || [];
+}
+
 export async function excluirProfissionalParceiroSeguramente(profissionalId) {
   const { data, error } = await withAuthRetry(
     () => invokeProtectedAction('excluir_profissional_parceiro_seguro', { p_profissional_id: profissionalId }),
