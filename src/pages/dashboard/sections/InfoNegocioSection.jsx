@@ -322,7 +322,7 @@ export default function InfoNegocioSection({
             <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadGaleria(e.target.files)} disabled={galleryUploading} />
             <span className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-[12px] uppercase ${galleryUploading ? 'border-gray-800 text-gray-600' : 'border-primary/30 text-primary'}`}>
               <Plus className="h-3.5 w-3.5" />
-              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR IMG'}
+              {galleryUploading ? 'ENVIANDO' : 'ADICIONAR'}
             </span>
           </label>
         </div>
