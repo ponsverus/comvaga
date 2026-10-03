@@ -123,7 +123,6 @@ export default function FullScreenMessageView({ open, payload, onClose }) {
           <input
             autoFocus
             value={promptValue}
-            maxLength={payload.maxLength}
             onChange={(event) => setPromptValue(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') closeWithPrimary();
