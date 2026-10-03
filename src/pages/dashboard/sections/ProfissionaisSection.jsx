@@ -61,7 +61,7 @@ export default function ProfissionaisSection({
           const dotClass = STATUS_COLOR_CLASS[label] || 'bg-gray-500';
           const statusLabelView = label === 'ALMOCO' ? 'PAUSA' : p.status_label;
           const isEuMesmo = parceiroProfissional?.id === p.id;
-          const entregasCount = entregasCountByProf?.get?.(p.id) ?? entregas.filter((s) => s.profissional_id === p.id).length;
+          const entregasCount = entregasCountByProf?.get?.(p.id) ?? p.total_entregas ?? entregas.filter((s) => s.profissional_id === p.id).length;
           const horarios = normalizeProfissionalHorarios(p);
           const horarioHoje = getHorarioPorDia(horarios, todayDow);
           const almocoInicio = horarioHoje?.almoco_inicio ? String(horarioHoje.almoco_inicio).slice(0, 5) : null;
