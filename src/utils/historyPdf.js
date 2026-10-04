@@ -13,7 +13,11 @@ export function loadHistoryPdfRenderer() {
         }
         return btoa(binary);
       }),
-    ]).then(([{ jsPDF }, font]) => ({ jsPDF, font })).catch((error) => {
+      fetch(`${import.meta.env?.BASE_URL || '/'}Comvaga%20Logo.png`).then(async (response) => {
+        if (!response.ok) throw new Error('Falha ao carregar a logo do PDF');
+        return new Uint8Array(await response.arrayBuffer());
+      }),
+    ]).then(([{ jsPDF }, font, logo]) => ({ jsPDF, font, logo })).catch((error) => {
       rendererPromise = undefined;
       throw error;
     });
@@ -28,16 +32,19 @@ export function createHistoryPdfFile(renderer, { filename, fields }) {
   doc.setFont('RobotoCondensed');
   doc.setProperties({ title: 'Agendamento - ComVaga', creator: 'ComVaga' });
   const margin = 20;
-  const width = doc.internal.pageSize.getWidth() - margin * 2;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const width = pageWidth - margin * 2;
   const bottom = doc.internal.pageSize.getHeight() - margin;
-  let y = 24;
+  const logoSize = 42;
+  doc.addImage(renderer.logo, 'PNG', (pageWidth - logoSize) / 2, 16, logoSize, logoSize);
+  let y = 68;
 
   doc.setTextColor(40, 40, 40);
   doc.setFontSize(22);
-  doc.text('COMVAGA', margin, y);
+  doc.text('COMVAGA', pageWidth / 2, y, { align: 'center' });
   y += 10;
   doc.setFontSize(14);
-  doc.text('AGENDAMENTO', margin, y);
+  doc.text('AGENDAMENTO', pageWidth / 2, y, { align: 'center' });
   y += 6;
   doc.setDrawColor(230, 180, 0);
   doc.setLineWidth(0.8);
