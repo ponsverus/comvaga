@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import DatePicker from '../../../components/DatePicker';
-import { shareTextFile } from '../../../utils/shareTextFile';
+import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/historyPdf';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import {
   computeStatusFromDb,
@@ -26,10 +26,23 @@ export default function HistoricoSection({
   const shareLock = useRef(false);
   const [sharingId, setSharingId] = useState(null);
   const [shareErrorId, setShareErrorId] = useState(null);
+  const [pdfRenderer, setPdfRenderer] = useState(null);
+  const [pdfPreparationError, setPdfPreparationError] = useState(false);
   const historicoErrorMsg = historicoError ? ptBR.dashboard?.history_load_error : null;
 
+  useEffect(() => {
+    let active = true;
+    loadHistoryPdfRenderer().then((renderer) => {
+      if (active) setPdfRenderer(renderer);
+    }).catch((error) => {
+      console.error('Falha ao preparar o PDF do historico.', { name: error?.name, message: error?.message });
+      if (active) setPdfPreparationError(true);
+    });
+    return () => { active = false; };
+  }, []);
+
   const compartilharAgendamento = async (agendamento) => {
-    if (shareLock.current) return;
+    if (shareLock.current || !pdfRenderer) return;
     shareLock.current = true;
     setSharingId(agendamento.id);
     setShareErrorId(null);
@@ -38,21 +51,19 @@ export default function HistoricoSection({
       const statusText = isCancelStatus(status) ? 'CANCELADO' : isDoneStatus(status) ? 'CONCLUIDO' : 'AGENDADO';
       const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
         .format(Number(getValorAgendamento(agendamento)));
-      const text = [
-        'COMVAGA - AGENDAMENTO',
-        `Cliente: ${agendamento.cliente?.nome || '-'}`,
-        `Profissional: ${agendamento.profissionais?.nome || '-'}`,
-        `Servico: ${agendamento.entregas?.nome || '-'}`,
-        `Data: ${formatDateBRFromISO(getAgDate(agendamento))}`,
-        `Horario: ${getAgInicio(agendamento)}`,
-        `Valor: ${valor}`,
-        `Status: ${statusText}`,
-      ].join('\n');
-      await shareTextFile({
-        title: 'Agendamento - ComVaga',
-        text,
-        filename: `agendamento-${agendamento.id}.txt`,
+      const file = createHistoryPdfFile(pdfRenderer, {
+        filename: `agendamento-${agendamento.id}.pdf`,
+        fields: [
+          ['CLIENTE', agendamento.cliente?.nome],
+          ['PROFISSIONAL', agendamento.profissionais?.nome],
+          ['SERVICO', agendamento.entregas?.nome],
+          ['DATA', formatDateBRFromISO(getAgDate(agendamento))],
+          ['HORARIO', getAgInicio(agendamento)],
+          ['VALOR', valor],
+          ['STATUS', statusText],
+        ],
       });
+      await shareHistoryPdf(file);
     } catch (error) {
       console.error('Falha no compartilhamento do historico.', {
         name: error?.name || 'Error',
@@ -77,6 +88,9 @@ export default function HistoricoSection({
         <div className="mb-4 border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 rounded-custom p-4 text-sm">
           {historicoErrorMsg.body}
         </div>
+      )}
+      {pdfPreparationError && (
+        <p role="alert" className="mb-4 text-sm text-red-300">Falha ao preparar o PDF. Recarregue a pagina e tente novamente.</p>
       )}
       {historicoAgendamentos.length > 0 ? (
         <div className="space-y-3">
@@ -103,11 +117,11 @@ export default function HistoricoSection({
                 <button
                   type="button"
                   onClick={() => compartilharAgendamento(a)}
-                  disabled={sharingId !== null}
+                  disabled={sharingId !== null || !pdfRenderer}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/50 bg-primary/20 py-3 px-4 text-sm font-normal uppercase text-primary hover:bg-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Share2 size={18} aria-hidden="true" className="shrink-0" />
-                  {sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
+                  {pdfPreparationError ? 'PDF INDISPONIVEL' : !pdfRenderer ? 'PREPARANDO PDF...' : sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
                 </button>
                 {shareErrorId === a.id && (
                   <p role="alert" className="mt-2 text-sm text-red-300">Falha ao compartilhar. Tente novamente.</p>
