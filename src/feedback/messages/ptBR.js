@@ -550,6 +550,12 @@ export const ptBR = {
         aulas:     'EDITAR AULA',
       },
 
+      item_singular: {
+        servicos:  'Servi\u00e7o',
+        consultas: 'Consulta',
+        aulas:     'Aula',
+      },
+
       counter_singular: {
         servicos:  'SERV.',
         consultas: 'CONSULTA',

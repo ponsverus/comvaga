@@ -8,12 +8,15 @@ import {
   formatDateBRFromISO,
   getAgDate,
   getAgInicio,
+  getBizLabel,
   getValorAgendamento,
   isCancelStatus,
   isDoneStatus,
 } from '../utils';
 
 export default function HistoricoSection({
+  negocioNome = '',
+  businessGroup = 'servicos',
   historicoData,
   setHistoricoData,
   hoje,
@@ -48,17 +51,18 @@ export default function HistoricoSection({
     setShareErrorId(null);
     try {
       const status = computeStatusFromDb(agendamento);
-      const statusText = isCancelStatus(status) ? 'CANCELADO' : isDoneStatus(status) ? 'CONCLUIDO' : 'AGENDADO';
+      const statusText = isCancelStatus(status) ? 'CANCELADO' : isDoneStatus(status) ? 'CONCLU\u00cdDO' : 'AGENDADO';
       const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
         .format(Number(getValorAgendamento(agendamento)));
       const file = createHistoryPdfFile(pdfRenderer, {
         filename: `agendamento-${agendamento.id}.pdf`,
         fields: [
+          ['NEG\u00d3CIO', negocioNome],
           ['CLIENTE', agendamento.cliente?.nome],
           ['PROFISSIONAL', agendamento.profissionais?.nome],
-          ['SERVICO', agendamento.entregas?.nome],
+          [getBizLabel(businessGroup, 'item_singular').toUpperCase(), agendamento.entregas?.nome],
           ['DATA', formatDateBRFromISO(getAgDate(agendamento))],
-          ['HORARIO', getAgInicio(agendamento)],
+          ['HOR\u00c1RIO', getAgInicio(agendamento)],
           ['VALOR', valor],
           ['STATUS', statusText],
         ],
@@ -90,7 +94,7 @@ export default function HistoricoSection({
         </div>
       )}
       {pdfPreparationError && (
-        <p role="alert" className="mb-4 text-sm text-red-300">Falha ao preparar o PDF. Recarregue a pagina e tente novamente.</p>
+        <p role="alert" className="mb-4 text-sm text-red-300">Falha ao preparar o PDF. Recarregue a página e tente novamente.</p>
       )}
       {historicoAgendamentos.length > 0 ? (
         <div className="space-y-3">
@@ -121,7 +125,7 @@ export default function HistoricoSection({
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/50 bg-primary/20 py-3 px-4 text-sm font-normal uppercase text-primary hover:bg-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Share2 size={18} aria-hidden="true" className="shrink-0" />
-                  {pdfPreparationError ? 'PDF INDISPONIVEL' : !pdfRenderer ? 'PREPARANDO PDF...' : sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
+                  {pdfPreparationError ? 'PDF INDISPON\u00cdVEL' : !pdfRenderer ? 'PREPARANDO PDF...' : sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
                 </button>
                 {shareErrorId === a.id && (
                   <p role="alert" className="mt-2 text-sm text-red-300">Falha ao compartilhar. Tente novamente.</p>
