@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import DatePicker from '../../../components/DatePicker';
-import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/historyPdf';
+import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import {
   computeStatusFromDb,
