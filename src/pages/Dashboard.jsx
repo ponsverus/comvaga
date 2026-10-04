@@ -1071,6 +1071,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
             {activeTab === 'historico' && (
               <HistoricoSection
+                negocioNome={negocio?.nome || ''}
+                businessGroup={businessGroup}
                 historicoData={historicoData}
                 setHistoricoData={setHistoricoData}
                 hoje={hoje}
