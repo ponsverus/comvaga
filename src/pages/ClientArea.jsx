@@ -899,6 +899,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
 
             {activeTab === 'agendamentos' && (
               <BookingsSection
+                clienteNome={nomePerfil}
                 groups={agendamentosPorStatus}
                 hasMore={agendamentosHasMore}
                 loadingMore={agendamentosLoadingMore}
