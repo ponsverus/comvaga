@@ -1,4 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Share2 } from 'lucide-react';
+import { supabase } from '../../../supabase';
+import { ptBR } from '../../../feedback/messages/ptBR';
+import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
 import { CalendarIcon } from '../../../components/icons';
 import ReviewStar from './ReviewStar';
 import {
@@ -23,6 +28,8 @@ function BookingGroup({
   onRebook,
   onOpenReview,
   onSubmitReview,
+  shareState,
+  onShare,
 }) {
   if (!items.length) return null;
 
@@ -73,6 +80,22 @@ function BookingGroup({
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
+                  {(booking.status === 'concluido' || String(booking.status || '').includes('cancelado')) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onShare(booking)}
+                        disabled={!shareState.ready || shareState.sharingId !== null}
+                        className="inline-flex w-full items-center justify-center gap-2 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Share2 size={16} aria-hidden="true" />
+                        {shareState.sharingId === booking.id ? 'COMPARTILHANDO...' : shareState.failed ? 'PDF INDISPON\u00cdVEL' : !shareState.ready ? 'PREPARANDO PDF...' : 'COMPARTILHAR'}
+                      </button>
+                      {shareState.errorId === booking.id && (
+                        <p role="alert" className="text-sm text-red-300">{'Falha ao compartilhar o PDF. Tente novamente.'}</p>
+                      )}
+                    </>
+                  )}
                   {booking.status === 'agendado' && (
                     <button
                       onClick={() => onCancel(booking.id)}
@@ -151,6 +174,7 @@ function BookingGroup({
 }
 
 export default function BookingsSection({
+  clienteNome = '',
   groups,
   hasMore,
   loadingMore,
@@ -167,14 +191,98 @@ export default function BookingsSection({
   reviewLoading,
   onSubmitReview,
 }) {
+  const [renderer, setRenderer] = useState(null);
+  const [groupsByType, setGroupsByType] = useState({});
+  const [preparationFailed, setPreparationFailed] = useState(false);
+  const [sharingId, setSharingId] = useState(null);
+  const [errorId, setErrorId] = useState(null);
+  const shareLock = useRef(false);
+  const typeRequests = useRef(new Map());
+  const typesKey = JSON.stringify([...new Set([...groups.concluidos, ...groups.cancelados]
+    .map((booking) => booking.profissionais?.negocios?.tipo_negocio)
+    .filter((type) => typeof type === 'string' && type.trim()))].sort());
+
+  useEffect(() => {
+    let active = true;
+    loadHistoryPdfRenderer().then((value) => {
+      if (active) setRenderer(value);
+    }).catch((error) => {
+      console.error('Falha ao preparar PDF do cliente.', error);
+      if (active) setPreparationFailed(true);
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const types = JSON.parse(typesKey);
+    Promise.all(types.map((type) => {
+      if (!typeRequests.current.has(type)) {
+        typeRequests.current.set(type, supabase.rpc('tipo_negocio_grupo', { p_tipo: type })
+          .then(({ data, error }) => {
+            if (error) throw error;
+            if (!['servicos', 'consultas', 'aulas'].includes(data)) throw new Error('Grupo de atendimento desconhecido');
+            return [type, data];
+          }).catch((error) => {
+            typeRequests.current.delete(type);
+            throw error;
+          }));
+      }
+      return typeRequests.current.get(type);
+    })).then((entries) => {
+      if (active) setGroupsByType(Object.fromEntries(entries));
+    }).catch((error) => {
+      console.error('Falha ao preparar termos do PDF.', error);
+      if (active) setPreparationFailed(true);
+    });
+    return () => { active = false; };
+  }, [typesKey]);
+
+  const ready = !!renderer && !preparationFailed && JSON.parse(typesKey).every((type) => groupsByType[type]);
+  const shareState = { ready, failed: preparationFailed, sharingId, errorId };
+  const onShare = async (booking) => {
+    if (!ready || shareLock.current) return;
+    shareLock.current = true;
+    setSharingId(booking.id);
+    setErrorId(null);
+    try {
+      const negocio = booking.profissionais?.negocios;
+      const group = groupsByType[negocio?.tipo_negocio] || 'servicos';
+      const file = createHistoryPdfFile(renderer, {
+        filename: `agendamento-${booking.id}.pdf`,
+        fields: [
+          ['NEG\u00d3CIO', negocio?.nome],
+          ['CLIENTE', clienteNome],
+          ['PROFISSIONAL', booking.profissionais?.nome],
+          [ptBR.dashboard.business.item_singular[group].toUpperCase(), booking.entregas?.nome],
+          ['DATA', formatDateBRFromISO(booking.data)],
+          ['HOR\u00c1RIO', booking.hora_inicio],
+          ['VALOR', `R$ ${moneyBR(getValorAgendamento(booking))}`],
+          ['STATUS', getStatusText(booking.status)],
+        ],
+      });
+      await shareHistoryPdf(file);
+    } catch (error) {
+      console.error('Falha ao compartilhar PDF do cliente.', error);
+      setErrorId(booking.id);
+    } finally {
+      shareLock.current = false;
+      setSharingId(null);
+    }
+  };
   const hasBookings = groups.abertos.length || groups.cancelados.length || groups.concluidos.length;
 
   return (
     <div>
+      {preparationFailed && (
+        <p role="alert" className="mb-4 text-sm text-red-300">{'Falha ao preparar o PDF. Recarregue a p\u00e1gina e tente novamente.'}</p>
+      )}
       {hasBookings ? (
         <>
           <BookingGroup
             title="EM ABERTO"
+            shareState={shareState}
+            onShare={onShare}
             items={groups.abertos}
             reviewsByBooking={reviewsByBooking}
             reviewTarget={reviewTarget}
@@ -190,6 +298,8 @@ export default function BookingsSection({
           />
           <BookingGroup
             title={'CONCLU\u00cdDOS'}
+            shareState={shareState}
+            onShare={onShare}
             items={groups.concluidos}
             reviewsByBooking={reviewsByBooking}
             reviewTarget={reviewTarget}
@@ -205,6 +315,8 @@ export default function BookingsSection({
           />
           <BookingGroup
             title="CANCELADOS"
+            shareState={shareState}
+            onShare={onShare}
             items={groups.cancelados}
             reviewsByBooking={reviewsByBooking}
             reviewTarget={reviewTarget}
