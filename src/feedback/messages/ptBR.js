@@ -551,7 +551,7 @@ export const ptBR = {
       },
 
       item_singular: {
-        servicos:  'Servi\u00e7o',
+        servicos:  'Serv.',
         consultas: 'Consulta',
         aulas:     'Aula',
       },
