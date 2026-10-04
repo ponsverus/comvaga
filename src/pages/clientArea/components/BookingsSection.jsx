@@ -51,6 +51,9 @@ function BookingGroup({
             String(booking.status || '') === 'concluido' &&
             !reviewsByBooking[booking.id];
           const depoimentoAberto = podeAvaliar && reviewTarget?.id === booking.id;
+          const podeCompartilhar = booking.status === 'concluido' || String(booking.status || '').includes('cancelado');
+          const actionCount = Number(podeAvaliar) + Number(podeCompartilhar) + Number(podeMarcarNovamente) + Number(booking.status === 'agendado');
+          const actionColumns = actionCount === 3 ? 'grid-cols-2 sm:grid-cols-3' : actionCount === 2 ? 'grid-cols-2' : 'grid-cols-1';
 
           return (
             <div key={booking.id} className="overflow-hidden bg-dark-200 border border-gray-800 rounded-custom">
@@ -79,22 +82,26 @@ function BookingGroup({
                     <div className="text-sm text-white">R$ {moneyBR(getValorAgendamento(booking))}</div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  {(booking.status === 'concluido' || String(booking.status || '').includes('cancelado')) && (
-                    <>
+                <div className={`grid items-stretch gap-2 ${actionColumns}`}>
+                  {podeAvaliar && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenReview(booking)}
+                      className="min-w-0 w-full px-2 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words"
+                    >
+                      DAR DEPOIMENTO
+                    </button>
+                  )}
+                  {podeCompartilhar && (
                       <button
                         type="button"
                         onClick={() => onShare(booking)}
                         disabled={!shareState.ready || shareState.sharingId !== null}
-                        className="inline-flex w-full items-center justify-center gap-2 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="inline-flex min-w-0 w-full items-center justify-center gap-2 px-2 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        <Share2 size={16} aria-hidden="true" />
-                        {shareState.sharingId === booking.id ? 'COMPARTILHANDO...' : shareState.failed ? 'PDF INDISPON\u00cdVEL' : !shareState.ready ? 'PREPARANDO PDF...' : 'COMPARTILHAR'}
+                        <Share2 size={16} className="shrink-0" aria-hidden="true" />
+                        <span className="min-w-0 whitespace-normal break-words">{shareState.sharingId === booking.id ? 'COMPARTILHANDO...' : shareState.failed ? 'PDF INDISPON\u00cdVEL' : !shareState.ready ? 'PREPARANDO PDF...' : 'COMPARTILHAR'}</span>
                       </button>
-                      {shareState.errorId === booking.id && (
-                        <p role="alert" className="text-sm text-red-300">{'Falha ao compartilhar o PDF. Tente novamente.'}</p>
-                      )}
-                    </>
                   )}
                   {booking.status === 'agendado' && (
                     <button
@@ -107,20 +114,15 @@ function BookingGroup({
                   {podeMarcarNovamente && (
                     <button
                       onClick={() => onRebook(booking)}
-                      className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase"
+                      className={`min-w-0 w-full px-2 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words ${actionCount === 3 ? 'col-span-2 sm:col-span-1' : ''}`}
                     >
                       AGENDAR NOVAMENTE
                     </button>
                   )}
-                  {podeAvaliar && (
-                    <button
-                      onClick={() => onOpenReview(booking)}
-                      className="w-full py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded-button text-sm transition-all uppercase"
-                    >
-                      DAR DEPOIMENTO
-                    </button>
-                  )}
                 </div>
+                {shareState.errorId === booking.id && (
+                  <p role="alert" className="mt-2 text-sm text-red-300">{'Falha ao compartilhar o PDF. Tente novamente.'}</p>
+                )}
               </div>
               {depoimentoAberto && (
                 <div className="border-t border-gray-800 px-3 py-3 sm:px-5">
