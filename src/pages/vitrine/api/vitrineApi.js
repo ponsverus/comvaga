@@ -50,12 +50,12 @@ export async function fetchOfficialDate(rpcSequence) {
 
 export async function fetchVitrineNegocioBySlug(slug) {
   const { data, error } = await withTimeout(
-    supabase.rpc('get_negocio_vitrine_by_slug', { p_slug: slug }),
+    supabase.rpc('get_public_business_seo', { p_slug: slug }),
     7000,
     'negocio'
   );
   if (error) throw error;
-  return data?.[0] || null;
+  return data || null;
 }
 
 export async function fetchVitrineProfissionais(negocioId) {
