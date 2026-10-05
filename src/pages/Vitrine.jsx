@@ -17,7 +17,7 @@ import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
 import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
 import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection';
 import VitrineTopSection from './vitrine/sections/VitrineTopSection';
-import { buildBusinessSeo } from '../utils/businessSeo';
+import { applyBusinessMetadata, buildBusinessMetadata, DEFAULT_SEO_IMAGE } from '../utils/businessSeoMetadata';
 
 const NOW_RPC_SEQUENCE = ['now_sp', 'now_sp_fallback'];
 
@@ -156,17 +156,6 @@ function sanitizeTel(raw) {
   const v = String(raw || '').trim();
   if (!v) return '';
   return v.replace(/[^\d+]/g, '');
-}
-
-function setMetaTag(name, content) {
-  if (typeof document === 'undefined') return;
-  let meta = document.querySelector(`meta[name="${name}"]`);
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.setAttribute('name', name);
-    document.head.appendChild(meta);
-  }
-  meta.setAttribute('content', content);
 }
 
 function isRateLimitError(error) {
@@ -540,17 +529,8 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
 
   useEffect(() => {
     if (!negocio?.nome) return;
-    const seo = buildBusinessSeo(negocio, entregas);
-    const previousTitle = document.title;
-    const previousDescription = document.querySelector('meta[name="description"]')?.getAttribute('content');
-    document.title = seo.title;
-    setMetaTag('description', seo.description);
-    return () => {
-      document.title = previousTitle;
-      if (previousDescription !== undefined) setMetaTag('description', previousDescription);
-      else document.querySelector('meta[name="description"]')?.remove();
-    };
-  }, [negocio, entregas]);
+    return applyBusinessMetadata(buildBusinessMetadata(negocio, entregas, logoUrl || DEFAULT_SEO_IMAGE));
+  }, [negocio, entregas, logoUrl]);
 
   if (loading) return (<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div>);
   if (error) return (<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div>);
