@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { loadEnv } from 'vite';
-import { createPublicRpc, serveVitrine, serveSitemap } from './publicSeo.js';
+import { serveVitrine, serveSitemap } from './publicSeo.js';
 
 export function publicSeoPlugin() {
   return {
     name: 'public-business-seo',
     configureServer(server) {
       const env = { ...process.env, ...loadEnv(server.config.mode, server.config.root, '') };
-      const options = { env, rpc: createPublicRpc(env) };
+      const options = { env };
       server.middlewares.use(async (req, res, next) => {
         const path = new URL(req.url, 'http://localhost').pathname;
         if (/^\/v\/[^/]+$/.test(path)) {
