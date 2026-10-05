@@ -1,6 +1,8 @@
 import { buildBusinessSeo } from './businessSeo.js';
 
 export const PUBLIC_ORIGIN = 'https://comvaga.com.br';
+export const DEFAULT_SEO_TITLE = 'Comvaga: Inteligência de Agenda';
+export const DEFAULT_SEO_DESCRIPTION = 'Plataforma inteligente de agendamento';
 export const DEFAULT_SEO_IMAGE = `${PUBLIC_ORIGIN}/og-default.png`;
 export const VALID_BUSINESS_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -65,8 +67,8 @@ export function applyBusinessMetadata(metadata) {
     document.title = previousTitle;
     changes.reverse().forEach((restore) => restore());
     if (startedWithBusiness) {
-      document.title = 'Comvaga: Inteligência de Agenda';
-      document.head.querySelector('meta[name="description"]')?.setAttribute('content', 'Plataforma inteligente de agendamento');
+      document.title = DEFAULT_SEO_TITLE;
+      document.head.querySelector('meta[name="description"]')?.setAttribute('content', DEFAULT_SEO_DESCRIPTION);
       document.head.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"]').forEach((element) => element.remove());
     }
   };
