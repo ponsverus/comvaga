@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { publicSeoPlugin } from './server/devSeo.js';
   import react from '@vitejs/plugin-react';
   import { sentryVitePlugin } from '@sentry/vite-plugin';
 
@@ -10,7 +11,7 @@ import { defineConfig } from 'vite';
     && env.SENTRY_PROJECT
   );
 
-  const plugins = [react()];
+  const plugins = [react(), publicSeoPlugin()];
 
   if (enableSentrySourceMaps) {
     plugins.push(
@@ -31,4 +32,3 @@ import { defineConfig } from 'vite';
     },
     plugins,
   });
-  
