@@ -18,6 +18,7 @@ function comparisonText(value) {
 }
 
 export function buildBusinessSeo(negocio, entregas = []) {
+  entregas = Array.isArray(negocio?.seo_services) ? negocio.seo_services : entregas;
   const nome = normalizeSeoText(negocio?.nome);
   const tipo = normalizeSeoText(negocio?.tipo_negocio).toLocaleLowerCase('pt-BR');
   const cidade = normalizeSeoText(negocio?.endereco_cidade);
