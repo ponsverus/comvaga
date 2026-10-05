@@ -47,4 +47,9 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
+  {
+    files: ['api/**/*.js', 'server/**/*.js', 'tests/**/*.mjs'],
+    languageOptions: { globals: globals.node },
+    rules: js.configs.recommended.rules,
+  },
 ];
