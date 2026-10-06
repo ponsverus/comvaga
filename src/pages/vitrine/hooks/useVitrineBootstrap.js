@@ -56,8 +56,9 @@ function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
   return next;
 }
 
-export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = null }) {
-  const [negocio, setNegocio] = useState(null);
+export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = null, initialBusiness = null }) {
+  const [negocio, setNegocio] = useState(initialBusiness);
+  const initialBusinessRef = useRef(initialBusiness);
   const [profissionais, setProfissionais] = useState([]);
   const [entregaPagesByProf, setEntregaPagesByProf] = useState({});
   const entregas = useMemo(() => flattenEntregaPages(entregaPagesByProf), [entregaPagesByProf]);
@@ -235,7 +236,10 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
     try {
       fetchNowFromDb().catch(() => null);
 
-      const negocioData = await fetchVitrineNegocioBySlug(slug);
+      // Reuse only the first matching public snapshot; retries and other routes fetch fresh data.
+      const initial = initialBusinessRef.current;
+      initialBusinessRef.current = null;
+      const negocioData = initial?.slug === slug ? initial : await fetchVitrineNegocioBySlug(slug);
       if (loadRunRef.current !== runId) return;
       if (!negocioData) {
         setNegocio(null);
