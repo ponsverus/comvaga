@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { isIP } from 'node:net';
+import { NOT_FOUND_TITLE } from '../src/utils/notFoundSeo.js';
 import {
   PUBLIC_ORIGIN, VALID_BUSINESS_SLUG,
   businessLogoUrl, buildBusinessMetadata, metadataEntries, resolveBusinessSeoImage,
@@ -23,9 +24,13 @@ export function renderSeoHtml(template, metadata) {
   if (start < 0 || end < start) throw new Error('SEO markers missing in HTML template');
   const tags = [
     `<title>${escapeMarkup(metadata.title)}</title>`,
-    ...metadataEntries(metadata).map(([attribute, key, content]) =>
-      `<meta ${attribute}="${key}" content="${escapeMarkup(content)}" />`),
-    `<link rel="canonical" href="${escapeMarkup(metadata.canonical)}" />`,
+    ...(metadata.noindex ? [
+      '<meta name="robots" content="noindex" data-comvaga-not-found="true" />',
+    ] : [
+      ...metadataEntries(metadata).map(([attribute, key, content]) =>
+        `<meta ${attribute}="${key}" content="${escapeMarkup(content)}" />`),
+      `<link rel="canonical" href="${escapeMarkup(metadata.canonical)}" />`,
+    ]),
   ].join('\n    ');
   return template.slice(0, start) + START + '\n    ' + tags + '\n    ' + template.slice(end);
 }
@@ -91,6 +96,17 @@ function allowRead(req, res) {
   res.setHeader('Allow', 'GET, HEAD');
   send(req, res, 405, 'text/plain', 'Method not allowed');
   return false;
+}
+
+export async function serveNotFound(req, res, options = {}) {
+  if (!allowRead(req, res)) return;
+  try {
+    const template = await (options.template || (() => readFile(resolve(process.cwd(), 'dist/app.html'), 'utf8')))();
+    send(req, res, 404, 'text/html', renderSeoHtml(template, { title: NOT_FOUND_TITLE, noindex: true }));
+  } catch (error) {
+    console.error('Not-found page unavailable:', error.message);
+    send(req, res, 503, 'text/plain', 'Página temporariamente indisponível. Tente novamente em instantes.');
+  }
 }
 
 export async function serveVitrine(req, res, options = {}) {
