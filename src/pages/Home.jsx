@@ -6,6 +6,7 @@ import { CheckDoubleIcon, ZapIcon, SearchIcon, ProfessionalIcon, CheckIcon } fro
 import { getSupportHref, getCustomPlanHref } from '../support';
 import { saveSelectedPlanIntent } from '../utils/plans';
 import { searchHome } from '../utils/searchHome';
+import { useStaticSeo } from '../hooks/useStaticSeo.js';
 
 const planSignupTo = (planCode) => `/cadastro/profissional?plano=${planCode}`;
 
@@ -181,6 +182,7 @@ function SmileGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
 }
 
 export default function Home({ user, userType, professionalRole = null, onLogout }) {
+  useStaticSeo('/');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
