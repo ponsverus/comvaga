@@ -1,7 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /dashboard
-Disallow: /minha-area
 Disallow: /api/
 
 Sitemap: https://comvaga.com.br/sitemap.xml
