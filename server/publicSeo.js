@@ -1,7 +1,14 @@
-import { readFile } from 'node:fs/promises';
+ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { isIP } from 'node:net';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import PublicBusinessPreview from '../src/components/PublicBusinessPreview.js';
+import {
+  BUSINESS_SCHEMA_ID, PUBLIC_BUSINESS_DATA_ID, publicBusinessSnapshot,
+  buildBusinessStructuredData, serializePublicJson,
+} from '../src/utils/publicBusinessPage.js';
 import { NOT_FOUND_TITLE } from '../src/utils/notFoundSeo.js';
 import {
   PUBLIC_ORIGIN, VALID_BUSINESS_SLUG,
@@ -18,7 +25,7 @@ export function escapeMarkup(value) {
   })[char]);
 }
 
-export function renderSeoHtml(template, metadata) {
+export function renderSeoHtml(template, metadata, business = null) {
   const start = template.indexOf(START);
   const end = template.indexOf(END, start);
   if (start < 0 || end < start) throw new Error('SEO markers missing in HTML template');
@@ -32,7 +39,18 @@ export function renderSeoHtml(template, metadata) {
       `<link rel="canonical" href="${escapeMarkup(metadata.canonical)}" />`,
     ]),
   ].join('\n    ');
-  return template.slice(0, start) + START + '\n    ' + tags + '\n    ' + template.slice(end);
+  let html = template.slice(0, start) + START + '\n    ' + tags + '\n    ' + template.slice(end);
+  if (business) {
+    const root = '<div id="root"></div>';
+    if (!html.includes(root)) throw new Error('Empty application root missing in HTML template');
+    const snapshot = publicBusinessSnapshot(business, metadata.image);
+    if (!snapshot) throw new Error('Invalid public business snapshot');
+    const content = renderToString(createElement(PublicBusinessPreview, { business: snapshot }));
+    const schema = buildBusinessStructuredData(snapshot, metadata.image);
+    html = html.replace(root, () => `<div id="root">${content}</div>\n    <script id="${PUBLIC_BUSINESS_DATA_ID}" type="application/json">${serializePublicJson(snapshot)}</script>`);
+    if (schema) html = html.replace('</head>', () => `    <script id="${BUSINESS_SCHEMA_ID}" type="application/ld+json">${serializePublicJson(schema)}</script>\n  </head>`);
+  }
+  return html;
 }
 
 export function seoProxyHeaders(req, scope, env = process.env) {
@@ -128,7 +146,7 @@ export async function serveVitrine(req, res, options = {}) {
     const candidate = businessLogoUrl(negocio.logo_path, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
     const image = await (options.resolveImage || resolveBusinessSeoImage)(candidate);
     const template = await (options.template || (() => readFile(resolve(process.cwd(), 'dist/index.html'), 'utf8')))();
-    const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image));
+    const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image), negocio);
     send(req, res, 200, 'text/html', html, 300);
   } catch (error) {
     console.error('Public business SEO unavailable:', error.message);

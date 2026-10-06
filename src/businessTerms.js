@@ -8,12 +8,17 @@ function sanitizeBusinessGroup(value) {
   return VALID_BUSINESS_GROUPS.has(value) ? value : DEFAULT_BUSINESS_GROUP;
 }
 
-export function useBusinessGroup(tipoNegocio) {
-  const [businessGroup, setBusinessGroup] = useState(DEFAULT_BUSINESS_GROUP);
+export function useBusinessGroup(tipoNegocio, publicGroup = null) {
+  const [businessGroup, setBusinessGroup] = useState(() => sanitizeBusinessGroup(publicGroup));
 
   useEffect(() => {
     let active = true;
     const pTipo = typeof tipoNegocio === 'string' ? tipoNegocio : null;
+
+    if (VALID_BUSINESS_GROUPS.has(publicGroup)) {
+      setBusinessGroup(publicGroup);
+      return () => { active = false; };
+    }
 
     if (!pTipo?.trim()) {
       setBusinessGroup(DEFAULT_BUSINESS_GROUP);
@@ -33,7 +38,7 @@ export function useBusinessGroup(tipoNegocio) {
       });
 
     return () => { active = false; };
-  }, [tipoNegocio]);
+  }, [tipoNegocio, publicGroup]);
 
   return businessGroup;
 }
