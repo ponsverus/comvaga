@@ -1,4 +1,4 @@
- import { readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { isIP } from 'node:net';
@@ -130,8 +130,9 @@ export async function serveNotFound(req, res, options = {}) {
 export async function serveVitrine(req, res, options = {}) {
   if (!allowRead(req, res)) return;
   const url = new URL(req.url, PUBLIC_ORIGIN);
-  const slug = req.query?.slug ?? url.searchParams.get('slug') ?? url.pathname.split('/v/')[1];
-  if (typeof slug !== 'string' || !VALID_BUSINESS_SLUG.test(slug)) {
+  const requestedSlug = req.query?.slug ?? url.searchParams.get('slug') ?? url.pathname.split('/v/')[1];
+  const slug = typeof requestedSlug === 'string' ? requestedSlug.toLowerCase() : null;
+  if (!slug || !VALID_BUSINESS_SLUG.test(slug)) {
     send(req, res, 404, 'text/plain', 'Vitrine não encontrada.');
     return;
   }
@@ -140,6 +141,13 @@ export async function serveVitrine(req, res, options = {}) {
     const negocio = await rpc('get_public_business_seo', { p_slug: slug });
     if (!negocio) {
       send(req, res, 404, 'text/plain', 'Vitrine não encontrada.');
+      return;
+    }
+    if (requestedSlug !== slug) {
+      // Exclude the internal rewrite parameter so the canonical URL cannot redirect again.
+      url.searchParams.delete('slug');
+      res.setHeader('Location', `/v/${slug}${url.search}`);
+      send(req, res, 308, 'text/plain', 'Redirecionando para o endereço oficial da vitrine.', 300);
       return;
     }
     const env = options.env || process.env;
