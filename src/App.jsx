@@ -6,6 +6,7 @@ import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalize
 import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from './utils/authSession';
 import { ptBR } from './feedback/messages/ptBR.js';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
+import PublicBusinessPreview from './components/PublicBusinessPreview.js';
 
 import FeedbackProvider from './feedback/FeedbackProvider';
 
@@ -138,6 +139,12 @@ function RouteErrorGuard({ children }) {
   return <RouteErrorBoundary key={pathname}>{children}</RouteErrorBoundary>;
 }
 
+function PublicRouteLoading({ initialBusiness }) {
+  const { pathname } = useLocation();
+  return initialBusiness && pathname === `/v/${initialBusiness.slug}`
+    ? <PublicBusinessPreview business={initialBusiness} /> : <FullScreenLoading />;
+}
+
 async function getUserProfileRobust(authUser) {
   if (!authUser?.id) return null;
 
@@ -232,7 +239,7 @@ function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, profess
   return <Navigate to="/dashboard" replace />;
 }
 
-export default function App() {
+export default function App({ initialBusiness = null }) {
   const [user,             setUser]             = useState(null);
   const [userType,         setUserType]         = useState(null);
   const [onboardingStatus, setOnboardingStatus] = useState(null);
@@ -531,9 +538,11 @@ export default function App() {
     }
   }, [safeSet, loadProfile]);
 
-  if (booting) return <FullScreenLoading />;
+  const matchesInitialRoute = initialBusiness && globalThis.location?.pathname === `/v/${initialBusiness.slug}`;
+  const initialPreview = matchesInitialRoute ? <PublicBusinessPreview business={initialBusiness} /> : <FullScreenLoading />;
+  if (booting) return initialPreview;
   if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={handleRetry} />;
-  if (isLoggedIn && !userType && !inRecovery) return <FullScreenLoading text="CARREGANDO PERFIL..." />;
+  if (isLoggedIn && !userType && !inRecovery) return matchesInitialRoute ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
 
   return (
     <Router>
@@ -544,7 +553,7 @@ export default function App() {
         <WhatsAppFloatingButton />
 
         <RouteErrorGuard>
-          <Suspense fallback={<FullScreenLoading />}>
+          <Suspense fallback={<PublicRouteLoading initialBusiness={initialBusiness} />}>
             <Routes>
             <Route path="/" element={<Home user={isLoggedIn ? user : null} userType={isLoggedIn ? userType : null} professionalRole={isLoggedIn ? professionalRole : null} onLogout={handleLogout} />} />
 
@@ -625,7 +634,7 @@ export default function App() {
               ) : <Navigate to="/login" />
             } />
 
-            <Route path="/v/:slug" element={<Vitrine user={isLoggedIn ? user : null} userType={isLoggedIn ? userType : null} professionalRole={professionalRole} onLogout={handleLogout} />} />
+            <Route path="/v/:slug" element={<Vitrine initialBusiness={initialBusiness} user={isLoggedIn ? user : null} userType={isLoggedIn ? userType : null} professionalRole={professionalRole} onLogout={handleLogout} />} />
 
             <Route path="/criar-negocio" element={
               isLoggedIn ? (
