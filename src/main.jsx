@@ -2,6 +2,7 @@
   import ReactDOM from 'react-dom/client';
   import * as Sentry from '@sentry/react';
   import App from './App.jsx';
+  import { readPublicBusinessSnapshot } from './utils/publicBusinessPage.js';
   import './index.css';
 
   const rootElement = document.getElementById('root');
@@ -10,11 +11,15 @@
     throw new Error('Root element not found');
   }
 
-  ReactDOM.createRoot(rootElement, {
+  const initialBusiness = readPublicBusinessSnapshot();
+  const rootOptions = {
     onUncaughtError: Sentry.reactErrorHandler(),
     onCaughtError: Sentry.reactErrorHandler(),
     onRecoverableError: Sentry.reactErrorHandler(),
-  }).render(
-    <App />
-  );
-  
+  };
+  const app = <App initialBusiness={initialBusiness} />;
+  if (initialBusiness && rootElement.querySelector('[data-public-business-preview]')) {
+    ReactDOM.hydrateRoot(rootElement, app, rootOptions);
+  } else {
+    ReactDOM.createRoot(rootElement, rootOptions).render(app);
+  }
