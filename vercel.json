@@ -40,6 +40,15 @@
   ],
   "headers": [
     {
+      "source": "/(login|cadastro|reset-password|criar-negocio|selecionar-negocio|selecionar-negocio-parceiro|conta-profissional|dashboard|minha-area)(/.*)?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         {
