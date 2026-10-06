@@ -37,7 +37,7 @@ export function buildBusinessSeo(negocio, entregas = []) {
     : 'Agende online pela Comvaga.';
   if (nome && services.length) {
     const prefix = [nome, location].filter(Boolean).join(' | ');
-    const serviceDescription = `${prefix}. Serviços: ${services.join(', ')}. Agende online.`;
+    const serviceDescription = `${prefix}. Oferece: ${services.join(', ')}. Agende online.`;
     if (Array.from(serviceDescription).length <= SEO_DESCRIPTION_LIMIT) automaticDescription = serviceDescription;
   }
   return {
