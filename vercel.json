@@ -6,6 +6,10 @@
   },
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/v/:slug",
       "destination": "/api/vitrine?slug=:slug"
     },
@@ -18,8 +22,20 @@
       "destination": "/api/sitemap?page=:page"
     },
     {
+      "source": "/sobre",
+      "destination": "/sobre.html"
+    },
+    {
+      "source": "/termos",
+      "destination": "/termos.html"
+    },
+    {
+      "source": "/privacidade",
+      "destination": "/privacidade.html"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/app.html"
     }
   ],
   "headers": [

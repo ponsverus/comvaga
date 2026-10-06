@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
+import { useStaticSeo } from '../hooks/useStaticSeo.js';
 
 const sections = [
   {
@@ -116,6 +117,7 @@ const sections = [
 ];
 
 export default function TermsOfUsePage() {
+  useStaticSeo('/termos');
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
