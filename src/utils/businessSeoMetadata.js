@@ -4,6 +4,7 @@ export const PUBLIC_ORIGIN = 'https://comvaga.com.br';
 export const DEFAULT_SEO_TITLE = 'Comvaga: Inteligência de Agenda';
 export const DEFAULT_SEO_DESCRIPTION = 'Plataforma inteligente de agendamento';
 export const DEFAULT_SEO_IMAGE = `${PUBLIC_ORIGIN}/og-default.png`;
+export const DEFAULT_SEO_IMAGE_ALT = 'Identidade visual padrão dos negócios na Comvaga';
 export const VALID_BUSINESS_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export function businessLogoUrl(path, supabaseUrl) {
@@ -18,10 +19,56 @@ export function buildBusinessMetadata(negocio, entregas = [], image = DEFAULT_SE
     ...buildBusinessSeo(negocio, entregas),
     canonical: `${PUBLIC_ORIGIN}/v/${encodeURIComponent(negocio.slug)}`,
     image,
-    imageAlt: image === DEFAULT_SEO_IMAGE ? 'Identidade visual padrão dos negócios na Comvaga' : `Logo de ${negocio.nome}`,
+    imageAlt: image === DEFAULT_SEO_IMAGE ? DEFAULT_SEO_IMAGE_ALT : `Logo de ${negocio.nome}`,
   };
 }
 
+
+export async function resolveBusinessSeoImage(candidate, { signal, fetcher = fetch } = {}) {
+  if (candidate === DEFAULT_SEO_IMAGE || signal?.aborted) return DEFAULT_SEO_IMAGE;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort, { once: true });
+  const timeout = setTimeout(abort, 2000);
+  try {
+    const response = await fetcher(candidate, { method: 'HEAD', redirect: 'error', signal: controller.signal });
+    if (response.ok && /^image\/(png|jpeg|webp)(;|$)/i.test(response.headers.get('content-type') || '')) return candidate;
+  } catch {
+    // A missing or unavailable logo must not prevent metadata from loading.
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener('abort', abort);
+  }
+  return DEFAULT_SEO_IMAGE;
+}
+
+export function applyBusinessMetadataWithImage(metadata, candidate, {
+  head = document.head,
+  applyMetadata = applyBusinessMetadata,
+  resolveImage = resolveBusinessSeoImage,
+} = {}) {
+  const canonical = head.querySelector('link[rel="canonical"]')?.getAttribute('href');
+  const image = head.querySelector('meta[property="og:image"]')?.getAttribute('content');
+  const preserveImage = canonical === metadata.canonical && (image === candidate || image === DEFAULT_SEO_IMAGE);
+  const withImage = (value) => ({
+    ...metadata,
+    image: value,
+    imageAlt: value === DEFAULT_SEO_IMAGE ? DEFAULT_SEO_IMAGE_ALT : metadata.imageAlt,
+  });
+  let restore = applyMetadata(withImage(preserveImage ? image : DEFAULT_SEO_IMAGE));
+  const controller = new AbortController();
+  if (!preserveImage && candidate !== DEFAULT_SEO_IMAGE) {
+    void resolveImage(candidate, { signal: controller.signal }).then((resolved) => {
+      if (controller.signal.aborted || resolved === DEFAULT_SEO_IMAGE) return;
+      restore();
+      restore = applyMetadata(withImage(resolved));
+    });
+  }
+  return () => {
+    controller.abort();
+    restore();
+  };
+}
 export function metadataEntries(metadata) {
   return [
     ['name', 'description', metadata.description],
