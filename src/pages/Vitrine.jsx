@@ -17,7 +17,7 @@ import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
 import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
 import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection';
 import VitrineTopSection from './vitrine/sections/VitrineTopSection';
-import { applyBusinessMetadata, buildBusinessMetadata, DEFAULT_SEO_IMAGE } from '../utils/businessSeoMetadata';
+import { applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/businessSeoMetadata';
 
 const NOW_RPC_SEQUENCE = ['now_sp', 'now_sp_fallback'];
 
@@ -529,8 +529,9 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
 
   useEffect(() => {
     if (!negocio?.nome) return;
-    return applyBusinessMetadata(buildBusinessMetadata(negocio, entregas, logoUrl || DEFAULT_SEO_IMAGE));
-  }, [negocio, entregas, logoUrl]);
+    const candidate = businessLogoUrl(negocio.logo_path, import.meta.env.VITE_SUPABASE_URL);
+    return applyBusinessMetadataWithImage(buildBusinessMetadata(negocio, entregas, candidate), candidate);
+  }, [negocio, entregas]);
 
   if (loading) return (<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div>);
   if (error) return (<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div>);
