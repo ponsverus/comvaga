@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { applyNotFoundSeo } from '../utils/notFoundSeo.js';
 
 export default function NotFound() {
+  useEffect(() => applyNotFoundSeo(), []);
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">

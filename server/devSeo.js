@@ -1,7 +1,7 @@
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { resolve, sep } from 'node:path';
 import { loadEnv } from 'vite';
-import { serveVitrine, serveSitemap, escapeMarkup, renderSeoHtml } from './publicSeo.js';
+import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
 import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 
@@ -26,7 +26,12 @@ export function publicSeoPlugin() {
         else this.emitFile({ type: 'asset', fileName: `${path.slice(1)}.html`, source: html });
       }
     },
-    configureServer(server) {
+    async configureServer(server) {
+      const config = JSON.parse(await readFile(resolve(server.config.root, 'vercel.json'), 'utf8'));
+      const spaSource = config.rewrites.find(({ destination }) => destination === '/app.html')?.source;
+      if (!spaSource) throw new Error('SPA routes missing from Vercel configuration');
+      const spaRoutes = new RegExp(`^${spaSource}/?$`);
+      const publicRoot = resolve(server.config.root, 'public');
       const env = { ...process.env, ...loadEnv(server.config.mode, server.config.root, '') };
       const options = { env };
       server.middlewares.use(async (req, res, next) => {
@@ -46,6 +51,26 @@ export function publicSeoPlugin() {
           });
         } else if (/^\/sitemap(?:-\d+)?\.xml$/.test(path)) {
           await serveSitemap(req, res, options);
+        } else if (path === '/api/not-found' || (
+          req.headers.accept?.includes('text/html') && !spaRoutes.test(path)
+          && !/^\/(?:@|src\/|node_modules\/|api\/)/.test(path)
+        )) {
+          let publicFile;
+          try {
+            publicFile = resolve(publicRoot, `.${decodeURIComponent(path)}`);
+          } catch {
+            publicFile = publicRoot;
+          }
+          if (publicFile.startsWith(publicRoot + sep)
+            && await stat(publicFile).then((file) => file.isFile()).catch(() => false)) {
+            next();
+            return;
+          }
+          await serveNotFound(req, res, {
+            template: async () => server.transformIndexHtml(
+              req.url, await readFile(resolve(server.config.root, 'index.html'), 'utf8'),
+            ),
+          });
         } else next();
       });
     },

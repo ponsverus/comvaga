@@ -2,6 +2,9 @@
   "functions": {
     "api/vitrine.js": {
       "includeFiles": "dist/index.html"
+    },
+    "api/not-found.js": {
+      "includeFiles": "dist/app.html"
     }
   },
   "rewrites": [
@@ -34,8 +37,12 @@
       "destination": "/privacidade.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/(login|login/parceiro|cadastro|cadastro/cliente|cadastro/parceiro|cadastro/profissional|cadastro/profissional/retomada|reset-password|dashboard|minha-area|criar-negocio|selecionar-negocio|selecionar-negocio-parceiro|conta-profissional)",
       "destination": "/app.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/not-found"
     }
   ],
   "headers": [
