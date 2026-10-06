@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { isIP } from 'node:net';
 import {
-  PUBLIC_ORIGIN, DEFAULT_SEO_IMAGE, VALID_BUSINESS_SLUG,
-  businessLogoUrl, buildBusinessMetadata, metadataEntries,
+  PUBLIC_ORIGIN, VALID_BUSINESS_SLUG,
+  businessLogoUrl, buildBusinessMetadata, metadataEntries, resolveBusinessSeoImage,
 } from '../src/utils/businessSeoMetadata.js';
 
 const START = '<!-- seo:start -->';
@@ -76,17 +76,6 @@ export function createPublicRpc(env = process.env, fetcher = fetch, req) {
   };
 }
 
-async function availableImage(candidate) {
-  if (candidate === DEFAULT_SEO_IMAGE) return candidate;
-  try {
-    const response = await fetch(candidate, { method: 'HEAD', redirect: 'error', signal: AbortSignal.timeout(2000) });
-    if (response.ok && /^image\/(png|jpeg|webp)(;|$)/i.test(response.headers.get('content-type') || '')) return candidate;
-  } catch {
-    // An unavailable logo must not prevent the business page from loading.
-  }
-  return DEFAULT_SEO_IMAGE;
-}
-
 function send(req, res, status, type, content, ttl = 0) {
   res.statusCode = status;
   res.setHeader('Content-Type', `${type}; charset=utf-8`);
@@ -121,7 +110,7 @@ export async function serveVitrine(req, res, options = {}) {
     }
     const env = options.env || process.env;
     const candidate = businessLogoUrl(negocio.logo_path, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
-    const image = await (options.resolveImage || availableImage)(candidate);
+    const image = await (options.resolveImage || resolveBusinessSeoImage)(candidate);
     const template = await (options.template || (() => readFile(resolve(process.cwd(), 'dist/index.html'), 'utf8')))();
     const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image));
     send(req, res, 200, 'text/html', html, 300);
