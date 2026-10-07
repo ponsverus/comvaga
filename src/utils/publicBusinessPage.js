@@ -39,6 +39,29 @@ export function readPublicBusinessSnapshot(doc = globalThis.document, pathname =
   }
 }
 
+function socialProfileUrl(value, platform) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return null;
+  const domain = `${platform}.com`;
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${domain}/${raw.replace(/^@/, '')}`);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port
+      || ![domain, `www.${domain}`, ...(platform === 'facebook' ? [`m.${domain}`] : [])].includes(url.hostname)) return null;
+    const parts = url.pathname.split('/').filter(Boolean);
+    const handle = parts[0]?.toLowerCase();
+    const reserved = ['instagram', 'facebook', 'home', 'login', 'accounts', 'explore', 'p', 'reel', 'reels',
+      'stories', 'share', 'sharer', 'sharer.php', 'watch', 'groups', 'events', 'marketplace', 'help'];
+    if (platform === 'facebook' && handle === 'profile.php') {
+      const id = url.searchParams.get('id');
+      return parts.length === 1 && /^\d+$/.test(id || '') ? `https://${domain}/profile.php?id=${id}` : null;
+    }
+    if (parts.length !== 1 || reserved.includes(handle) || !/^[a-zA-Z0-9._]+$/.test(parts[0])) return null;
+    return `https://${domain}/${parts[0]}`;
+  } catch {
+    return null;
+  }
+}
+
 export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE) {
   const name = String(business?.nome || '').trim();
   if (!name || !VALID_BUSINESS_SLUG.test(business?.slug || '')) return null;
@@ -52,6 +75,9 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
   };
   if (business.descricao?.trim()) entity.description = business.descricao.trim();
   if (business.telefone?.trim()) entity.telephone = business.telefone.trim();
+  const profiles = [socialProfileUrl(business.instagram, 'instagram'), socialProfileUrl(business.facebook, 'facebook')]
+    .filter(Boolean);
+  if (profiles.length) entity.sameAs = profiles;
   if (image !== DEFAULT_SEO_IMAGE && /^https:\/\//.test(image)) entity.image = image;
   if (hasAddress) {
     entity.address = {
