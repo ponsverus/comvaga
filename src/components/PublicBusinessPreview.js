@@ -2,7 +2,7 @@ import { createElement as h } from 'react';
 import { DEFAULT_SEO_IMAGE } from '../utils/businessSeoMetadata.js';
 
 const HIGHLIGHT_LABELS = {
-  servicos: 'Trabalhos em destaque', consultas: 'Consultas em destaque', aulas: 'Aulas em destaque',
+  servicos: 'Servs em destaque', consultas: 'Consultas em destaque', aulas: 'Aulas em destaque',
 };
 
 export default function PublicBusinessPreview({ business }) {
