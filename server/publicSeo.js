@@ -133,14 +133,14 @@ export async function serveVitrine(req, res, options = {}) {
   const requestedSlug = req.query?.slug ?? url.searchParams.get('slug') ?? url.pathname.split('/v/')[1];
   const slug = typeof requestedSlug === 'string' ? requestedSlug.toLowerCase() : null;
   if (!slug || !VALID_BUSINESS_SLUG.test(slug)) {
-    send(req, res, 404, 'text/plain', 'Vitrine não encontrada.');
+    await serveNotFound(req, res, options);
     return;
   }
   try {
     const rpc = options.rpc || createPublicRpc(options.env || process.env, fetch, req);
     const negocio = await rpc('get_public_business_profile', { p_slug: slug });
     if (!negocio) {
-      send(req, res, 404, 'text/plain', 'Vitrine não encontrada.');
+      await serveNotFound(req, res, options);
       return;
     }
     if (requestedSlug !== slug) {
