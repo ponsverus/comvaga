@@ -1,40 +1,46 @@
 import { createElement as h } from 'react';
 import { DEFAULT_SEO_IMAGE } from '../utils/businessSeoMetadata.js';
-
-const HIGHLIGHT_LABELS = {
-  servicos: 'Servs em destaque', consultas: 'Consultas em destaque', aulas: 'Aulas em destaque',
-};
+import { ptBR } from '../feedback/messages/ptBR.js';
+import VitrineTopSection from '../pages/vitrine/sections/VitrineTopSection.js';
+import VitrineProfessionalsSection from '../pages/vitrine/sections/VitrineProfessionalsSection.js';
+import {
+  buildVitrineProfessionalCard, getVitrineTopStyles, resolveInstagram, resolveFacebook,
+} from '../pages/vitrine/hooks/useVitrinePresentation.js';
 
 export default function PublicBusinessPreview({ business }) {
-  const light = business.tema === 'light';
-  const phone = String(business.telefone || '').replace(/[^\d+]/g, '');
-  return h('main', {
-    className: `min-h-screen bg-vbg text-vtext${light ? ' vitrine-light' : ''}`,
+  const isLight = business.tema === 'light';
+  const styles = getVitrineTopStyles({ isLight });
+  const cards = (business.preview_professionals || []).map((prof) => buildVitrineProfessionalCard(prof, {
+    todayDow: business.preview_today_dow,
+    avatarUrl: prof.avatar_url,
+    totalEntregas: prof.total_entregas,
+    depInfo: prof.rating == null ? null : { media: Number(prof.rating).toFixed(1) },
+  }));
+  return h('div', {
+    className: `min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}`,
     'data-public-business-preview': business.slug,
   },
-  h('header', { className: 'border-b border-vborder bg-vcard px-4 py-4 sm:px-6' },
-    h('div', { className: 'mx-auto max-w-7xl' },
-      h('a', { href: '/', className: 'text-sm uppercase text-vprimary' }, 'Comvaga'))),
-  h('section', { className: 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16' },
-    h('div', { className: 'flex flex-col items-start gap-6 sm:flex-row' },
-      business.seo_image && business.seo_image !== DEFAULT_SEO_IMAGE
-        ? h('img', { src: business.seo_image, alt: `Logo de ${business.nome}`, width: 96, height: 96,
-          className: 'h-24 w-24 shrink-0 rounded-full object-cover' })
-        : h('div', { className: 'flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-vprimary text-3xl text-vprimary-text', 'aria-hidden': true },
-          Array.from(business.nome || 'Comvaga')[0]),
-      h('div', { className: 'min-w-0 flex-1' },
-        h('h1', { className: 'break-words text-3xl font-normal sm:text-4xl' }, business.nome),
-        business.tipo_negocio && h('p', { className: 'mt-2 text-sm uppercase text-vmuted' }, business.tipo_negocio),
-        business.descricao && h('p', { className: 'mt-4 whitespace-pre-line break-words text-base text-vsub sm:text-lg' }, business.descricao),
-        business.endereco && h('p', { className: 'mt-4 break-words text-sm text-vsub' }, business.endereco),
-        !business.endereco && business.endereco_cidade && h('p', { className: 'mt-4 text-sm text-vsub' },
-          [business.endereco_cidade, business.endereco_estado].filter(Boolean).join(' - ')),
-        phone && h('a', { href: `tel:${phone}`, className: 'mt-4 inline-block text-sm text-vprimary' }, business.telefone)))),
-  business.seo_services.length > 0 && h('section', { className: 'border-t border-vborder bg-vcard2 px-4 py-8 sm:px-6' },
-    h('div', { className: 'mx-auto max-w-7xl' },
-      h('h2', { className: 'mb-4 text-2xl font-normal' }, HIGHLIGHT_LABELS[business.business_group] || HIGHLIGHT_LABELS.servicos),
-      h('ul', { className: 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3' },
-        ...business.seo_services.map(({ nome }) => h('li', {
-          key: nome, className: 'break-words border-b border-vborder py-3 text-vsub',
-        }, nome))))));
+  h(VitrineTopSection, {
+    header: {
+      backClass: styles.headerVoltar, depoimentoBtn: styles.depoimentoBtn, favoritoBtn: styles.favoritoBtn,
+      heroBg: styles.heroBg, loading: true,
+    },
+    business: {
+      negocio: business,
+      logoUrl: business.seo_image !== DEFAULT_SEO_IMAGE ? business.seo_image : null,
+      mediaDepoimentos: Number(business.preview_rating || 0).toFixed(1),
+      mediaColor: styles.mediaColor, addrClass: styles.addrClass, telClass: styles.telClass,
+      socialIconCl: styles.socialIconCl,
+      instagramUrl: resolveInstagram(business.instagram), facebookUrl: resolveFacebook(business.facebook),
+    },
+    actions: {
+      onBack: () => globalThis.history?.back(),
+      sanitizeTel: (phone) => String(phone || '').replace(/[^\d+]/g, ''),
+    },
+  }),
+  h(VitrineProfessionalsSection, {
+    cards,
+    counterSingular: ptBR.vitrine.business.counter_singular[business.business_group] || '',
+    counterPlural: ptBR.vitrine.business.counter_plural[business.business_group] || '',
+  }));
 }
