@@ -87,19 +87,12 @@ export function useVitrinePresentation({
   }, [profissionais, entregas]);
 
   const depoimentosPorProf = useMemo(() => {
-    const map = new Map();
-    for (const dep of depoimentos) {
-      if (!dep.profissional_id) continue;
-      if (!map.has(dep.profissional_id)) map.set(dep.profissional_id, []);
-      map.get(dep.profissional_id).push(dep);
-    }
     const medias = new Map();
-    for (const [profId, deps] of map.entries()) {
-      const media = deps.length > 0 ? (deps.reduce((sum, d) => sum + d.nota, 0) / deps.length).toFixed(1) : null;
-      medias.set(profId, { media, count: deps.length });
+    for (const item of negocio?.professional_ratings || []) {
+      medias.set(item.id, { media: Number(item.rating).toFixed(1), count: Number(item.count) });
     }
     return medias;
-  }, [depoimentos]);
+  }, [negocio?.professional_ratings]);
 
   const depoimentosView = useMemo(() => (
     depoimentos.map((dep) => ({
@@ -149,8 +142,7 @@ export function useVitrinePresentation({
       .filter((item) => item.url)
   ), [galeriaItems, getPublicUrl]);
 
-  const depoimentosNegocio = useMemo(() => depoimentos.filter((d) => d.tipo === 'negocio'), [depoimentos]);
-  const mediaDepoimentos = depoimentosNegocio.length > 0 ? (depoimentosNegocio.reduce((sum, d) => sum + d.nota, 0) / depoimentosNegocio.length).toFixed(1) : '0.0';
+  const mediaDepoimentos = Number(negocio?.preview_rating || 0).toFixed(1);
   const temaAtivo = negocio?.tema || 'dark';
   const isLight = temaAtivo === 'light';
 
