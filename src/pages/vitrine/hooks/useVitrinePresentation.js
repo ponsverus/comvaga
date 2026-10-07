@@ -1,9 +1,59 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   getProfissionalStatusDotClass,
   getProfissionalStatusLabel,
   resolveProfissionalStatusKey,
-} from '../../../utils/profissionalStatus';
+} from '../../../utils/profissionalStatus.js';
+
+
+export function buildVitrineProfessionalCard(prof, { todayDow, avatarUrl, totalEntregas, depInfo }) {
+  const horarios = Array.isArray(prof?.horarios) ? prof.horarios : [];
+  const horarioHoje = todayDow == null ? null : horarios.find((h) => Number(h?.dia_semana) === Number(todayDow));
+  const horario = horarioHoje?.ativo !== false && horarioHoje?.horario_inicio && horarioHoje?.horario_fim
+    ? horarioHoje : horarios.find((h) => h?.ativo !== false) || {};
+  const statusKey = resolveProfissionalStatusKey(prof);
+  return {
+    ...prof,
+    avatarUrl,
+    status: { label: getProfissionalStatusLabel(statusKey), color: getProfissionalStatusDotClass(statusKey) },
+    depInfo,
+    profissaoLabel: String(prof?.profissao ?? '').trim(),
+    almoco: { ini: horario.almoco_inicio || null, fim: horario.almoco_fim || null },
+    horarioIni: String(horario.horario_inicio || '08:00').slice(0, 5),
+    horarioFim: String(horario.horario_fim || '18:00').slice(0, 5),
+    todayDow,
+    totalEntregas,
+  };
+}
+
+export function resolveInstagram(instaRaw) {
+  const raw = String(instaRaw || '').trim();
+  if (!raw) return null;
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  const handle = raw.replace(/^@/, '').replace(/\s+/g, '');
+  return handle ? `https://instagram.com/${handle}` : null;
+}
+
+export function resolveFacebook(fbRaw) {
+  const raw = String(fbRaw || '').trim();
+  if (!raw) return null;
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  const handle = raw.replace(/^@/, '').replace(/\s+/g, '');
+  return handle ? `https://facebook.com/${handle}` : null;
+}
+
+export function getVitrineTopStyles({ isLight, isProfessional = false, isFavorito = false }) {
+  return {
+    headerVoltar: isLight ? 'text-vsub hover:text-vtext' : 'text-vsub hover:text-primary',
+    depoimentoBtn: isLight ? (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-vprimary hover:text-vtext bg-vcard') : (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-primary bg-vcard2'),
+    favoritoBtn: isLight ? (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-50 border-red-300 text-red-500' : 'bg-vcard border-vborder text-vsub hover:text-red-500 hover:border-red-300') : (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-vcard2 border-vborder text-vsub hover:text-red-400'),
+    socialIconCl: isLight ? 'border-vborder bg-vcard text-vsub hover:bg-vcard2 hover:border-vprimary/40 hover:text-vtext' : 'border-white/20 bg-white/7 text-white/80 hover:bg-white/15 hover:border-white/35',
+    heroBg: isLight ? 'bg-[linear-gradient(135deg,var(--vcard)_0%,var(--vbg)_48%,var(--vcard2)_100%)]' : 'bg-gradient-to-br from-primary/20 via-vbg to-yellow-600/20',
+    telClass: isLight ? 'text-vtext hover:text-vsub' : 'text-primary hover:text-yellow-500',
+    addrClass: 'text-vsub',
+    mediaColor: isLight ? 'text-vtext' : 'text-primary',
+  };
+}
 
 export function useVitrinePresentation({
   negocio,
@@ -25,36 +75,6 @@ export function useVitrinePresentation({
   const logoUrl = useMemo(() => getPublicUrl('logos', negocio?.logo_path), [getPublicUrl, negocio?.logo_path]);
   const instagramUrl = useMemo(() => resolveInstagram(negocio?.instagram), [negocio?.instagram, resolveInstagram]);
   const facebookUrl = useMemo(() => resolveFacebook(negocio?.facebook), [negocio?.facebook, resolveFacebook]);
-
-  const getHorarioDia = useCallback((p, dow) => {
-    if (Array.isArray(p?.horarios) && dow != null) {
-      const item = p.horarios.find((h) => Number(h?.dia_semana) === Number(dow));
-      if (item) return item;
-    }
-    return null;
-  }, []);
-
-  const getHorarioExibicao = useCallback((p) => {
-    const hojeDow = serverNow.date ? getDowFromDateSP(serverNow.date) : null;
-    const horarioHoje = getHorarioDia(p, hojeDow);
-    if (horarioHoje?.ativo !== false && horarioHoje?.horario_inicio && horarioHoje?.horario_fim) return horarioHoje;
-    if (Array.isArray(p?.horarios)) {
-      const primeiroAtivo = p.horarios.find((h) => h?.ativo !== false);
-      if (primeiroAtivo) return primeiroAtivo;
-    }
-    return {
-      ativo: true,
-      horario_inicio: '08:00',
-      horario_fim: '18:00',
-      almoco_inicio: null,
-      almoco_fim: null,
-    };
-  }, [getDowFromDateSP, getHorarioDia, serverNow.date]);
-
-  const getAlmocoRange = useCallback((p) => {
-    const horario = getHorarioExibicao(p);
-    return { ini: horario?.almoco_inicio || null, fim: horario?.almoco_fim || null };
-  }, [getHorarioExibicao]);
 
   const entregasPorProf = useMemo(() => {
     const map = new Map();
@@ -93,25 +113,14 @@ export function useVitrinePresentation({
       const hojeDow = serverNow.date ? getDowFromDateSP(serverNow.date) : null;
       const totalEntregas = (entregasPorProf.get(prof.id) || []).length;
       const totalEntregasPaginadas = entregaPagesByProf?.[prof.id]?.totalCount;
-      const horarioExibicao = getHorarioExibicao(prof);
-      const statusKey = resolveProfissionalStatusKey(prof);
-      return {
-        ...prof,
-        avatarUrl: getPublicUrl('avatars', prof.avatar_path),
-        status: {
-          label: getProfissionalStatusLabel(statusKey),
-          color: getProfissionalStatusDotClass(statusKey),
-        },
-        depInfo: depoimentosPorProf.get(prof.id),
-        profissaoLabel: String(prof?.profissao ?? '').trim(),
-        almoco: getAlmocoRange(prof),
-        horarioIni: String(horarioExibicao?.horario_inicio || '08:00').slice(0, 5),
-        horarioFim: String(horarioExibicao?.horario_fim || '18:00').slice(0, 5),
+      return buildVitrineProfessionalCard(prof, {
         todayDow: hojeDow,
+        avatarUrl: getPublicUrl('avatars', prof.avatar_path),
+        depInfo: depoimentosPorProf.get(prof.id),
         totalEntregas: Number.isFinite(Number(totalEntregasPaginadas)) ? Number(totalEntregasPaginadas) : totalEntregas,
-      };
+      });
     })
-  ), [depoimentosPorProf, entregaPagesByProf, entregasPorProf, getAlmocoRange, getHorarioExibicao, getPublicUrl, getDowFromDateSP, profissionais, serverNow.date]);
+  ), [depoimentosPorProf, entregaPagesByProf, entregasPorProf, getPublicUrl, getDowFromDateSP, profissionais, serverNow.date]);
 
   const entregaCards = useMemo(() => (
     profissionais.map((prof) => {
@@ -146,14 +155,7 @@ export function useVitrinePresentation({
   const isLight = temaAtivo === 'light';
 
   const styles = {
-    headerVoltar: isLight ? 'text-vsub hover:text-vtext' : 'text-vsub hover:text-primary',
-    depoimentoBtn: isLight ? (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-vprimary hover:text-vtext bg-vcard') : (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-primary bg-vcard2'),
-    favoritoBtn: isLight ? (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-50 border-red-300 text-red-500' : 'bg-vcard border-vborder text-vsub hover:text-red-500 hover:border-red-300') : (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-vcard2 border-vborder text-vsub hover:text-red-400'),
-    socialIconCl: isLight ? 'border-vborder bg-vcard text-vsub hover:bg-vcard2 hover:border-vprimary/40 hover:text-vtext' : 'border-white/20 bg-white/7 text-white/80 hover:bg-white/15 hover:border-white/35',
-    heroBg: isLight ? 'bg-[linear-gradient(135deg,var(--vcard)_0%,var(--vbg)_48%,var(--vcard2)_100%)]' : 'bg-gradient-to-br from-primary/20 via-vbg to-yellow-600/20',
-    telClass: isLight ? 'text-vtext hover:text-vsub' : 'text-primary hover:text-yellow-500',
-    addrClass: 'text-vsub',
-    mediaColor: isLight ? 'text-vtext' : 'text-primary',
+    ...getVitrineTopStyles({ isLight, isProfessional, isFavorito }),
     depBtn: isLight ? (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : 'bg-vcard2 hover:bg-vcard border-vborder text-vtext') : (isProfessional ? 'bg-vcard border-vborder2 text-vmuted cursor-not-allowed' : 'bg-primary/20 hover:bg-primary/30 border-primary/50 text-primary'),
     depoModalBg: isLight ? 'bg-vcard border-vborder' : 'bg-dark-100 border-gray-800',
     depoModalTitle: isLight ? 'text-vtext' : 'text-white',
