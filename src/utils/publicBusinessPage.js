@@ -68,6 +68,10 @@ export function publicBusinessSnapshot(value, image = DEFAULT_SEO_IMAGE, supabas
     .slice(0, 3).map((nome) => ({ nome, ativo: true }));
   business.preview_professionals = previewProfessionals(value.preview_professionals, supabaseUrl);
   business.preview_rating = previewRating(value.preview_rating);
+  business.professional_ratings = (Array.isArray(value.professional_ratings) ? value.professional_ratings : [])
+    .filter((item) => typeof item?.id === 'string' && previewRating(item.rating) != null
+      && Number.isSafeInteger(Number(item.count)) && Number(item.count) > 0)
+    .map((item) => ({ id: item.id, rating: previewRating(item.rating), count: Number(item.count) }));
   business.preview_today_dow = Number.isInteger(value.preview_today_dow) && value.preview_today_dow >= 0 && value.preview_today_dow <= 6
     ? value.preview_today_dow : null;
   return business;
