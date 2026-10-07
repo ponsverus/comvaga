@@ -76,7 +76,7 @@ export function createPublicRpc(env = process.env, fetcher = fetch, req) {
   const key = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
   return async (name, params) => {
     if (!url || !key) throw new Error('Public Supabase configuration missing');
-    const scope = { get_public_business_seo: 'public_seo', get_public_business_sitemap: 'public_sitemap' }[name];
+    const scope = { get_public_business_profile: 'public_seo', get_public_business_sitemap: 'public_sitemap' }[name];
     if (!scope) throw new Error('Unsupported public SEO RPC');
     const response = await fetcher(`${url.replace(/\/$/, '')}/rest/v1/rpc/${name}`, {
       method: 'POST',
@@ -138,7 +138,7 @@ export async function serveVitrine(req, res, options = {}) {
   }
   try {
     const rpc = options.rpc || createPublicRpc(options.env || process.env, fetch, req);
-    const negocio = await rpc('get_public_business_seo', { p_slug: slug });
+    const negocio = await rpc('get_public_business_profile', { p_slug: slug });
     if (!negocio) {
       send(req, res, 404, 'text/plain', 'Vitrine não encontrada.');
       return;
