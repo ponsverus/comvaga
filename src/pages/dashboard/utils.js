@@ -191,4 +191,4 @@ export function getValorAgendamento(a) {
 export const normalizeKey = (s) => String(s || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 export const getBizLabel = (group, key) =>
-  ptBR?.dashboard?.business?.[key]?.[group] ?? ptBR?.dashboard?.business?.[key]?.servicos ?? '';
+  ptBR?.dashboard?.business?.[key]?.[group] ?? '';
