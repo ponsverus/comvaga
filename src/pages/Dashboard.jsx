@@ -8,6 +8,7 @@ import { formatPhoneForDisplay } from '../utils/phone';
 import { useFeedback } from '../feedback/useFeedback';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import { useBusinessGroup } from '../businessTerms';
+import BusinessGroupNotice from '../components/BusinessGroupNotice';
 import EntregaModal from './dashboard/components/EntregaModal';
 import ProfissionalModal from './dashboard/components/ProfissionalModal';
 import GeralSection from './dashboard/sections/GeralSection';
@@ -565,7 +566,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     });
   }, [negocio]);
 
-  const businessGroup = useBusinessGroup(negocio?.tipo_negocio);
+  const { group: businessGroup, status: businessGroupStatus, retry: retryBusinessGroup } =
+    useBusinessGroup(negocio?.tipo_negocio, null, negocio?.id);
 
   const tabEntregasLabel = useMemo(() => getBizLabel(businessGroup, 'tab_title').toUpperCase(), [businessGroup]);
   const sectionTitle     = useMemo(() => getBizLabel(businessGroup, 'tab_title'), [businessGroup]);
@@ -984,7 +986,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
           <DashboardTopCard
             icon={<TrendingUpIcon className="w-8 h-8 text-primary" />}
-            label={tabEntregasLabel}
+            label={tabEntregasLabel || 'ATENDIMENTOS'}
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topEntregas.total || 0) : '--'}
           >
             {topCardsReady ? (
@@ -1020,7 +1022,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 <button key={tab}
                   onClick={() => { setActiveTab(tab); if (tab === 'agendamentos') setNotifAgendamentos(0); }}
                   className={`relative flex-shrink-0 px-6 py-4 text-sm transition-all uppercase font-normal ${activeTab === tab ? 'bg-primary/20 text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}>
-                  {TAB_LABELS[tab]}
+                  {TAB_LABELS[tab] || 'ATENDIMENTOS'}
                   {notif > 0 && (<span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center leading-none">{notif > 99 ? '99+' : notif}</span>)}
                 </button>
               );
@@ -1029,7 +1031,11 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
           <div className="p-6">
 
-            {activeTab === 'visao-geral' && (
+            {!businessGroup && ['visao-geral', 'historico', 'clientes', 'entregas', 'profissionais'].includes(activeTab) && (
+              <BusinessGroupNotice status={businessGroupStatus} onRetry={retryBusinessGroup} />
+            )}
+
+            {businessGroup && activeTab === 'visao-geral' && (
               <GeralSection
                 metricsHoje={metricsHoje}
                 proximoAgendamento={proximoAgendamento}
@@ -1069,7 +1075,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               />
             )}
 
-            {activeTab === 'historico' && (
+            {businessGroup && activeTab === 'historico' && (
               <HistoricoSection
                 negocioNome={negocio?.nome || ''}
                 businessGroup={businessGroup}
@@ -1084,7 +1090,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               />
             )}
 
-            {activeTab === 'clientes' && (
+            {businessGroup && activeTab === 'clientes' && (
               <ClientesSection
                 clientes={clientes}
                 clientesLoading={clientesLoading}
@@ -1097,7 +1103,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               />
             )}
 
-            {activeTab === 'entregas' && (
+            {businessGroup && activeTab === 'entregas' && (
               <EntregasSection
                 sectionTitle={sectionTitle}
                 parceiroProfissional={parceiroProfissional}
@@ -1119,7 +1125,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               />
             )}
 
-            {activeTab === 'profissionais' && (
+            {businessGroup && activeTab === 'profissionais' && (
               <ProfissionaisSection
                 souDono={souDono}
                 adminJaEhProfissional={adminJaEhProfissional}
@@ -1178,7 +1184,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       </div>
 
       <EntregaModal
-        show={showNovaEntrega}
+        show={showNovaEntrega && !!businessGroup}
         editingEntregaId={editingEntregaId}
         modalNewLabel={modalNewLabel}
         modalEditLabel={modalEditLabel}

@@ -392,7 +392,7 @@ export function useDashboardMutations({
 
   const createEntrega = async (e) => {
     e.preventDefault();
-    if (submittingEntrega) return;
+    if (submittingEntrega || !businessGroup) return;
     try {
       setSubmittingEntrega(true);
       if (!negocio?.id) throw new Error('Erro ao carregar o negocio');
@@ -435,7 +435,7 @@ export function useDashboardMutations({
 
   const updateEntrega = async (e) => {
     e.preventDefault();
-    if (submittingEntrega) return;
+    if (submittingEntrega || !businessGroup) return;
     try {
       setSubmittingEntrega(true);
       const profId = formEntrega.profissional_id;
@@ -485,6 +485,7 @@ export function useDashboardMutations({
   };
 
   const deleteEntrega = async (entrega) => {
+    if (!businessGroup) return;
     const lockKey = `entrega-delete:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
     if (!await checarPermissao(entrega.profissional_id)) {
@@ -512,6 +513,7 @@ export function useDashboardMutations({
   };
 
   const toggleStatusEntrega = async (entrega) => {
+    if (!businessGroup) return;
     const lockKey = `entrega-status:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
     if (!await checarPermissao(entrega.profissional_id)) {

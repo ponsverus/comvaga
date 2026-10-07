@@ -16,7 +16,7 @@ import {
 
 export default function HistoricoSection({
   negocioNome = '',
-  businessGroup = 'servicos',
+  businessGroup = null,
   historicoData,
   setHistoricoData,
   hoje,
@@ -45,7 +45,7 @@ export default function HistoricoSection({
   }, []);
 
   const compartilharAgendamento = async (agendamento) => {
-    if (shareLock.current || !pdfRenderer) return;
+    if (shareLock.current || !pdfRenderer || !getBizLabel(businessGroup, 'item_singular')) return;
     shareLock.current = true;
     setSharingId(agendamento.id);
     setShareErrorId(null);
@@ -121,7 +121,7 @@ export default function HistoricoSection({
                 <button
                   type="button"
                   onClick={() => compartilharAgendamento(a)}
-                  disabled={sharingId !== null || !pdfRenderer}
+                  disabled={sharingId !== null || !pdfRenderer || !getBizLabel(businessGroup, 'item_singular')}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/50 bg-primary/20 py-3 px-4 text-sm font-normal uppercase text-primary hover:bg-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Share2 size={18} aria-hidden="true" className="shrink-0" />
