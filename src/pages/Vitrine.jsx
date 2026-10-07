@@ -11,13 +11,13 @@ import { getPublicUrl } from './vitrine/api/vitrineApi';
 import { useVitrineBootstrap } from './vitrine/hooks/useVitrineBootstrap';
 import { useVitrineBooking } from './vitrine/hooks/useVitrineBooking';
 import { useVitrineInteractions } from './vitrine/hooks/useVitrineInteractions';
-import { useVitrinePresentation } from './vitrine/hooks/useVitrinePresentation';
+import { useVitrinePresentation, resolveInstagram, resolveFacebook } from './vitrine/hooks/useVitrinePresentation';
 import BookingConfirmedModal from './vitrine/components/BookingConfirmedModal';
 import VitrineDepoimentosSection from './vitrine/sections/VitrineDepoimentosSection';
 import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
 import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
-import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection';
-import VitrineTopSection from './vitrine/sections/VitrineTopSection';
+import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection.js';
+import VitrineTopSection from './vitrine/sections/VitrineTopSection.js';
 import { applyBusinessMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/businessSeoMetadata';
 import { applyBusinessStructuredData } from '../utils/publicBusinessPage.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
@@ -131,22 +131,6 @@ function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoMin, det
     content,
     filename: `${slugifyFilePart(titulo)}-${String(dataISO || '').replace(/-/g, '')}.ics`,
   };
-}
-
-function resolveInstagram(instaRaw) {
-  const raw = String(instaRaw || '').trim();
-  if (!raw) return null;
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-  const handle = raw.replace(/^@/, '').replace(/\s+/g, '');
-  return handle ? `https://instagram.com/${handle}` : null;
-}
-
-function resolveFacebook(fbRaw) {
-  const raw = String(fbRaw || '').trim();
-  if (!raw) return null;
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-  const handle = raw.replace(/^@/, '').replace(/\s+/g, '');
-  return handle ? `https://facebook.com/${handle}` : null;
 }
 
 function getPrecoFinalEntrega(s) {
