@@ -147,12 +147,20 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
   }, [entregaPagesByProf]);
 
   const refreshDepoimentos = useCallback(async (negocioId) => {
-    const deps = await fetchVitrineDepoimentos(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null });
+    const [deps, profile] = await Promise.all([
+      fetchVitrineDepoimentos(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
+      fetchVitrineNegocioBySlug(slug),
+    ]);
+    if (profile?.id === negocioId) {
+      setNegocio((current) => current?.id === negocioId ? {
+        ...current, preview_rating: profile.preview_rating, professional_ratings: profile.professional_ratings,
+      } : current);
+    }
     const visibleRows = deps.slice(0, DEPOIMENTOS_PAGE_SIZE);
     setDepoimentos(visibleRows);
     setDepoimentosHasMore(deps.length > DEPOIMENTOS_PAGE_SIZE);
     return visibleRows;
-  }, []);
+  }, [slug]);
 
   const applyDepoimentosPage = useCallback((rows, mode = 'replace') => {
     const safeRows = rows || [];
