@@ -25,7 +25,7 @@ export function escapeMarkup(value) {
   })[char]);
 }
 
-export function renderSeoHtml(template, metadata, business = null) {
+export function renderSeoHtml(template, metadata, business = null, supabaseUrl = null) {
   const start = template.indexOf(START);
   const end = template.indexOf(END, start);
   if (start < 0 || end < start) throw new Error('SEO markers missing in HTML template');
@@ -43,7 +43,7 @@ export function renderSeoHtml(template, metadata, business = null) {
   if (business) {
     const root = '<div id="root"></div>';
     if (!html.includes(root)) throw new Error('Empty application root missing in HTML template');
-    const snapshot = publicBusinessSnapshot(business, metadata.image);
+    const snapshot = publicBusinessSnapshot(business, metadata.image, supabaseUrl);
     if (!snapshot) throw new Error('Invalid public business snapshot');
     const content = renderToString(createElement(PublicBusinessPreview, { business: snapshot }));
     const schema = buildBusinessStructuredData(snapshot, metadata.image);
@@ -154,7 +154,7 @@ export async function serveVitrine(req, res, options = {}) {
     const candidate = businessLogoUrl(negocio.logo_path, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
     const image = await (options.resolveImage || resolveBusinessSeoImage)(candidate);
     const template = await (options.template || (() => readFile(resolve(process.cwd(), 'dist/index.html'), 'utf8')))();
-    const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image), negocio);
+    const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image), negocio, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
     send(req, res, 200, 'text/html', html, 300);
   } catch (error) {
     console.error('Public business SEO unavailable:', error.message);
