@@ -50,7 +50,7 @@ export async function fetchOfficialDate(rpcSequence) {
 
 export async function fetchVitrineNegocioBySlug(slug) {
   const { data, error } = await withTimeout(
-    supabase.rpc('get_public_business_seo', { p_slug: slug }),
+    supabase.rpc('get_public_business_profile', { p_slug: slug }),
     7000,
     'negocio'
   );
