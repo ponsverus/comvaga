@@ -253,7 +253,7 @@ export default function BookingCalendar({
       const expired = msg.includes('agendamento_horario_expirado')
         || msg.includes('horario_expirado');
       const overlap = msg.includes('conflito')
-        || msg.includes('almoco')
+        || msg.includes('pausa')
         || msg.includes('overlap')
         || msg.includes('sobrepos')
         || msg.includes('exclusion')
