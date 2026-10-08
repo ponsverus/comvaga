@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchClientesDashboard } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
+import { ptBR } from '../../../feedback/messages/ptBR';
 
 const CLIENTES_PAGE_SIZE = 50;
 
@@ -50,12 +51,12 @@ export function useDashboardClientes({ negocioId }) {
         setClientes([]);
         const requestKey = getRequestErrorKey(error);
         if (requestKey === 'alerts.request_timeout') {
-          setClientesError('O carregamento dos clientes demorou demais. Tente novamente em instantes.');
+          setClientesError(ptBR.dashboard.inline_errors.clients_load_timeout);
         } else if (requestKey === 'alerts.rate_limit_exceeded') {
-          setClientesError('Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.');
+          setClientesError(ptBR.alerts.rate_limit_exceeded.body);
         } else {
           console.error('Dashboard clients load error:', error);
-          setClientesError('Erro ao carregar clientes.');
+          setClientesError(ptBR.dashboard.inline_errors.clients_load_error);
         }
       })
       .finally(() => {
@@ -76,12 +77,12 @@ export function useDashboardClientes({ negocioId }) {
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
       if (requestKey === 'alerts.request_timeout') {
-        setClientesError('O carregamento de mais clientes demorou demais. Tente novamente em instantes.');
+        setClientesError(ptBR.dashboard.inline_errors.clients_load_more_timeout);
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setClientesError('Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.');
+        setClientesError(ptBR.alerts.rate_limit_exceeded.body);
       } else {
         console.error('Dashboard clients load more error:', error);
-        setClientesError('Erro ao carregar mais clientes.');
+        setClientesError(ptBR.dashboard.inline_errors.clients_load_more_error);
       }
     } finally {
       setClientesLoadingMore(false);

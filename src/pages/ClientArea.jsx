@@ -5,6 +5,7 @@ import { SearchIcon, TimePastIcon, UserIcon } from '../components/icons';
 import AppFooter from '../components/AppFooter';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
+import { ptBR } from '../feedback/messages/ptBR.js';
 import { convertImageToWebp, isImageFile } from '../utils/media';
 import { normalizeBrazilPhone, formatPhoneForDisplay } from '../utils/phone';
 import { getRequestErrorKey } from '../utils/requestError';
@@ -118,7 +119,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     } catch (error) {
       setSearchRows([]);
       console.error('Client search error:', error);
-      setSearchError('Houve um erro ao realizar a busca agora.');
+      setSearchError(ptBR.clientArea.search_error.body);
     } finally {
       setSearching(false);
     }
@@ -223,14 +224,14 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
       if (requestKey === 'alerts.request_timeout') {
-        setLoadError('A leitura da área do cliente demorou demais. Tente novamente em instantes.');
+        setLoadError(ptBR.alerts.request_timeout.body);
         uiAlert(requestKey, 'warning');
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setLoadError('Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.');
+        setLoadError(ptBR.alerts.rate_limit_exceeded.body);
         uiAlert(requestKey, 'warning');
       } else {
         console.error('Client area load error:', error);
-        setLoadError('Erro ao carregar dados.');
+        setLoadError(ptBR.clientArea.load_data_error.body);
         uiAlert('clientArea.load_data_error', 'warning');
       }
       setAgendamentos([]);

@@ -177,12 +177,12 @@ export default function BookingCalendar({
       setHorariosAll(final);
       setHorariosHot(hot);
 
-      if (!final.length) setSlotsError('SEM VAGAS PRA HOJE :(');
+      if (!final.length) setSlotsError(ptBR.vitrine.schedule_errors.no_slots);
 
       setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     } catch {
       if (!canApply()) return;
-      setSlotsError('Erro ao buscar horários. Tente novamente.');
+      setSlotsError(ptBR.vitrine.schedule_errors.slots_load_error);
     } finally {
       if (canApply()) setSlotsLoading(false);
     }
@@ -259,21 +259,21 @@ export default function BookingCalendar({
         || msg.includes('exclusion')
         || String(e?.code || '') === '23P01';
       if (scheduleBlocked) {
-        setConfirmError('Agenda indisponível. Este negócio precisa ativar um plano para receber novos agendamentos.');
+        setConfirmError(ptBR.vitrine.schedule_errors.plan_blocked);
       } else if (limited) {
-        setConfirmError('Muitas tentativas de agendamento. Aguarde um minuto e tente novamente.');
+        setConfirmError(ptBR.vitrine.schedule_errors.rate_limit);
       } else if (expired) {
-        setConfirmError('Esse horário expirou. Escolha outro.');
+        setConfirmError(ptBR.vitrine.schedule_errors.slot_expired);
         fetchSlots(selectedDay);
       } else if (overlap) {
-        setConfirmError('Alguém acabou de reservar esse horário. Escolha outro.');
+        setConfirmError(ptBR.vitrine.schedule_errors.slot_conflict);
         fetchSlots(selectedDay);
       } else if (notAllowed) {
-        setConfirmError(ptBR.vitrine.schedule_booking_errors.not_allowed);
+        setConfirmError(ptBR.vitrine.schedule_errors.not_allowed);
       } else if (connectionFailed) {
-        setConfirmError(ptBR.vitrine.schedule_booking_errors.connection);
+        setConfirmError(ptBR.vitrine.schedule_errors.connection);
       } else {
-        setConfirmError(ptBR.vitrine.schedule_booking_errors.unexpected);
+        setConfirmError(ptBR.vitrine.schedule_errors.unexpected);
       }
     } finally {
       setConfirming(false);

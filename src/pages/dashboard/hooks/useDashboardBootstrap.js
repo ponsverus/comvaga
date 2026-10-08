@@ -124,7 +124,7 @@ export function useDashboardBootstrap({
 
   const handleAuthSessionLost = useCallback(async () => {
     await signOutLocalSession();
-    setError('Sessao expirada. Faca login novamente.');
+    setError(ptBR.dashboard.inline_errors.session_expired);
     setBootstrapState('error');
     navigate('/login', { replace: true });
   }, [navigate]);
@@ -359,7 +359,7 @@ export function useDashboardBootstrap({
 
   const loadData = useCallback(async (dataRef) => {
     if (!userId) {
-      setError('Sessao invalida. Faca login novamente.');
+      setError(ptBR.dashboard.inline_errors.session_invalid);
       setBootstrapState('error');
       return;
     }
@@ -430,7 +430,7 @@ export function useDashboardBootstrap({
           clearLastPartnerNegocioId(userId);
           setError(PARTNER_DASHBOARD_ACCESS_ERROR);
         } else {
-          setError('Nenhum negocio cadastrado.');
+          setError(ptBR.dashboard.inline_errors.no_businesses);
         }
         setBootstrapState('error');
         return;
@@ -456,7 +456,7 @@ export function useDashboardBootstrap({
         setGaleriaHasMore(false);
         setGaleriaLoadingMore(false);
         clearLastPartnerNegocioId(userId);
-        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : 'Seu acesso a este negócio foi negado.');
+        setError(professionalRole === 'partner' ? PARTNER_DASHBOARD_ACCESS_ERROR : ptBR.dashboard.inline_errors.business_access_denied);
         setBootstrapState('error');
         return;
       }
@@ -512,14 +512,14 @@ export function useDashboardBootstrap({
 
       const requestKey = getRequestErrorKey(e);
       if (requestKey === 'alerts.request_timeout') {
-        setError('O carregamento do dashboard demorou demais. Tente novamente em instantes.');
+        setError(ptBR.dashboard.inline_errors.bootstrap_load_timeout);
         uiAlert(requestKey, 'warning');
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError('Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.');
+        setError(ptBR.alerts.rate_limit_exceeded.body);
         uiAlert(requestKey, 'warning');
       } else {
         console.error('Dashboard bootstrap error:', e);
-        setError('Erro inesperado.');
+        setError(ptBR.dashboard.inline_errors.bootstrap_load_unexpected);
       }
       setBootstrapState('error');
     }
