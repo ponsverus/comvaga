@@ -80,6 +80,8 @@ export default function VisaoGeralSection({
     : null;
 
   return (
+    <>
+    <h2 className="sr-only">Geral</h2>
     <div className="space-y-6">
       <div className="grid md:grid-cols-3 gap-4 items-start">
         <div className="relative bg-dark-200 border border-gray-800 rounded-custom p-5"><div className="text-xs text-gray-500 mb-2">CANCELAMENTOS HOJE</div><div className="absolute right-4 top-4 inline-flex items-center rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1 text-xs text-red-400">{Number(metricsHoje?.today?.taxa_cancelamento || 0).toFixed(1)}%</div><div className="text-3xl font-normal text-white">{Number(metricsHoje?.today?.cancelados || 0)}</div></div>
@@ -134,5 +136,6 @@ export default function VisaoGeralSection({
         </div>
       </div>
     </div>
+    </>
   );
 }
