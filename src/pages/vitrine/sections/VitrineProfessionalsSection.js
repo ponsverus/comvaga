@@ -47,11 +47,11 @@ export default function VitrineProfessionalsDashboardSection({ cards, counterSin
 	}, itens.map((prof) => {
 		const horarios = normalizeProfissionalHorarios(prof);
 		const horarioHoje = getHorarioPorDia(horarios, prof.todayDow);
-		const almocoInicio = horarioHoje?.almoco_inicio ? String(horarioHoje.almoco_inicio).slice(0, 5) : null;
-		const almocoFim = horarioHoje?.almoco_fim ? String(horarioHoje.almoco_fim).slice(0, 5) : null;
-		const pausaTexto = almocoInicio && almocoFim ? `PAUSA ${almocoInicio} - ${almocoFim}` : "SEM PAUSA";
+		const pausaInicio = horarioHoje?.pausa_inicio ? String(horarioHoje.pausa_inicio).slice(0, 5) : null;
+		const pausaFim = horarioHoje?.pausa_fim ? String(horarioHoje.pausa_fim).slice(0, 5) : null;
+		const pausaTexto = pausaInicio && pausaFim ? `PAUSA ${pausaInicio} - ${pausaFim}` : "SEM PAUSA";
 		const statusLabelRaw = prof.status?.label || "-";
-		const statusLabelView = ["ALMOCO", "ALMOÇO"].includes(String(statusLabelRaw).toUpperCase()) ? "PAUSA" : statusLabelRaw;
+		const statusLabelView = statusLabelRaw;
 		return /* @__PURE__ */ React.createElement("div", {
 			key: prof.id,
 			className: "relative bg-vcard border border-vborder rounded-custom p-5 transition-all hover:border-vprimary/50 self-start"
