@@ -896,6 +896,9 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
           </div>
 
           <div className={activeTab === 'dados' ? '' : 'p-4 sm:p-6'}>
+            <h2 className="sr-only">
+              {activeTab === 'agendamentos' ? 'Agendamentos' : activeTab === 'favoritos' ? 'Favoritos' : 'Dados da conta'}
+            </h2>
 
             {activeTab === 'agendamentos' && (
               <BookingsSection
