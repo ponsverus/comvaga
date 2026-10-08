@@ -59,15 +59,15 @@ export default function ProfissionaisSection({
           const isAtivo = p.status === 'ativo';
           const label = resolveProfissionalStatusKey(p) || normalizeKey(p.status_label);
           const dotClass = STATUS_COLOR_CLASS[label] || 'bg-gray-500';
-          const statusLabelView = label === 'ALMOCO' ? 'PAUSA' : p.status_label;
+          const statusLabelView = p.status_label;
           const isEuMesmo = parceiroProfissional?.id === p.id;
           const entregasCount = entregasCountByProf?.get?.(p.id) ?? p.total_entregas ?? entregas.filter((s) => s.profissional_id === p.id).length;
           const horarios = normalizeProfissionalHorarios(p);
           const horarioHoje = getHorarioPorDia(horarios, todayDow);
-          const almocoInicio = horarioHoje?.almoco_inicio ? String(horarioHoje.almoco_inicio).slice(0, 5) : null;
-          const almocoFim = horarioHoje?.almoco_fim ? String(horarioHoje.almoco_fim).slice(0, 5) : null;
-          const almocoTexto = almocoInicio && almocoFim ? `${almocoInicio} - ${almocoFim}` : 'SEM PAUSA';
-          const pausaTexto = almocoInicio && almocoFim ? `PAUSA ${almocoTexto}` : almocoTexto;
+          const pausaInicio = horarioHoje?.pausa_inicio ? String(horarioHoje.pausa_inicio).slice(0, 5) : null;
+          const pausaFim = horarioHoje?.pausa_fim ? String(horarioHoje.pausa_fim).slice(0, 5) : null;
+          const pausaHorarioTexto = pausaInicio && pausaFim ? `${pausaInicio} - ${pausaFim}` : 'SEM PAUSA';
+          const pausaTexto = pausaInicio && pausaFim ? `PAUSA ${pausaHorarioTexto}` : pausaHorarioTexto;
           const openEditor = () => {
             setEditingProfissionalId(p.id);
             setFormProfissional(buildProfissionalForm(p));
