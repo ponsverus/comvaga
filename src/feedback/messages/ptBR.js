@@ -41,6 +41,18 @@ export const ptBR = {
   },
 
   dashboard: {
+    inline_errors: {
+      session_expired: 'Login expirado. Entre novamente na sua conta.',
+      session_invalid: 'Acesso inválido. Entre novamente.',
+      no_businesses: 'Nenhum negócio cadastrado.',
+      business_access_denied: 'Seu acesso a este negócio foi negado.',
+      bootstrap_load_timeout: 'O carregamento do dashboard demorou demais. Tente novamente em instantes.',
+      bootstrap_load_unexpected: 'Erro inesperado.',
+      clients_load_timeout: 'O carregamento dos clientes demorou demais. Tente novamente em instantes.',
+      clients_load_error: 'Erro ao carregar clientes.',
+      clients_load_more_timeout: 'O carregamento de mais clientes demorou demais. Tente novamente em instantes.',
+      clients_load_more_error: 'Erro ao carregar mais clientes.',
+    },
     business_delete_confirm: {
       title: 'Excluir negócio?',
       body:
@@ -1153,6 +1165,13 @@ export const ptBR = {
   },
 
   clientArea: {
+    search_error: {
+      title: 'Erro na busca',
+      body: 'Houve um erro ao realizar a busca agora.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
     load_data_error: {
       title: 'Erro ao carregar a área do cliente',
       body:
@@ -1845,6 +1864,17 @@ export const ptBR = {
       title: 'Horário oficial indisponível',
       body: 'Ainda estamos sincronizando o horário oficial. Tente novamente em instantes.',
       buttonText: 'ENTENDI',
+    },
+    schedule_errors: {
+      no_slots: 'SEM VAGAS PRA HOJE :(',
+      slots_load_error: 'Erro ao buscar horários. Tente novamente.',
+      plan_blocked: 'Agenda indisponível. Este negócio precisa ativar um plano para receber novos agendamentos.',
+      rate_limit: 'Muitas tentativas de agendamento. Aguarde um minuto e tente novamente.',
+      slot_expired: 'Esse horário expirou. Escolha outro.',
+      slot_conflict: 'Alguém acabou de reservar esse horário. Escolha outro.',
+      not_allowed: 'Você só pode criar agendamentos para a sua própria agenda.',
+      connection: 'Sem acesso à rede. Verifique sua internet e tente novamente.',
+      unexpected: 'Houve um erro ao concluir o agendamento. Tente novamente em alguns instantes.',
     },
 
     business: {
