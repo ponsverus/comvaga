@@ -31,8 +31,8 @@ export const DEFAULT_PROFISSIONAL_HORARIOS = WEEKDAYS.map((dia) => ({
   ativo: [1, 2, 3, 4, 5].includes(dia.value),
   horario_inicio: '08:00',
   horario_fim: '18:00',
-  almoco_inicio: '',
-  almoco_fim: '',
+  pausa_inicio: '',
+  pausa_fim: '',
 }));
 
 export function normalizeProfissionalHorarios(profissional = {}) {
@@ -47,8 +47,8 @@ export function normalizeProfissionalHorarios(profissional = {}) {
         ativo: item?.ativo !== false,
         horario_inicio: String(item?.horario_inicio || '08:00').slice(0, 5),
         horario_fim: String(item?.horario_fim || '18:00').slice(0, 5),
-        almoco_inicio: item?.almoco_inicio ? String(item.almoco_inicio).slice(0, 5) : '',
-        almoco_fim: item?.almoco_fim ? String(item.almoco_fim).slice(0, 5) : '',
+        pausa_inicio: item?.pausa_inicio ? String(item.pausa_inicio).slice(0, 5) : '',
+        pausa_fim: item?.pausa_fim ? String(item.pausa_fim).slice(0, 5) : '',
       });
     }
   }
@@ -58,8 +58,8 @@ export function normalizeProfissionalHorarios(profissional = {}) {
     ativo: [1, 2, 3, 4, 5].includes(dia.value),
     horario_inicio: '08:00',
     horario_fim: '18:00',
-    almoco_inicio: '',
-    almoco_fim: '',
+    pausa_inicio: '',
+    pausa_fim: '',
   });
 }
 

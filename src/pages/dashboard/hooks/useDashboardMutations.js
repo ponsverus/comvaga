@@ -618,11 +618,11 @@ export function useDashboardMutations({
         if (h.ativo === false) continue;
         const inicio = timeToMinutes(h.horario_inicio);
         const fim = timeToMinutes(h.horario_fim);
-        const almocoInicio = h.almoco_inicio ? timeToMinutes(h.almoco_inicio) : null;
-        const almocoFim = h.almoco_fim ? timeToMinutes(h.almoco_fim) : null;
+        const pausaInicio = h.pausa_inicio ? timeToMinutes(h.pausa_inicio) : null;
+        const pausaFim = h.pausa_fim ? timeToMinutes(h.pausa_fim) : null;
         if (!Number.isFinite(inicio) || !Number.isFinite(fim) || inicio >= fim) throw new Error('profissional_horarios_invalidos');
-        if ((almocoInicio == null) !== (almocoFim == null)) throw new Error('profissional_horarios_invalidos');
-        if (almocoInicio != null && (almocoInicio >= almocoFim || almocoInicio < inicio || almocoFim > fim)) throw new Error('profissional_horarios_invalidos');
+        if ((pausaInicio == null) !== (pausaFim == null)) throw new Error('profissional_horarios_invalidos');
+        if (pausaInicio != null && (pausaInicio >= pausaFim || pausaInicio < inicio || pausaFim > fim)) throw new Error('profissional_horarios_invalidos');
       }
       const payload = {
         nome: String(formProfissional.nome || '').trim(),
@@ -633,8 +633,8 @@ export function useDashboardMutations({
           ativo: h.ativo !== false,
           horario_inicio: h.horario_inicio || '08:00',
           horario_fim: h.horario_fim || '18:00',
-          almoco_inicio: h.almoco_inicio || null,
-          almoco_fim: h.almoco_fim || null,
+          pausa_inicio: h.pausa_inicio || null,
+          pausa_fim: h.pausa_fim || null,
         })),
       };
       if (!payload.nome) throw new Error('Nome obrigatorio.');
@@ -646,7 +646,7 @@ export function useDashboardMutations({
     } catch (e) {
       const msg = String(e?.message || '');
       if (msg.includes('profissional_horarios_invalidos') || msg.includes('profissional_horarios_sem_dia_ativo')) await uiAlert('dashboard.professional_update_error', 'error');
-      else if (msg.includes('profissional_almoco_bloqueado')) await uiAlert('dashboard.professional_almoco_blocked', 'error');
+      else if (msg.includes('profissional_pausa_bloqueada')) await uiAlert('dashboard.professional_pausa_blocked', 'error');
       else if (msg.includes('profissional_dia_bloqueado')) await uiAlert('dashboard.professional_dia_blocked', 'error');
       else if (msg.includes('profissional_horario_bloqueado') || msg.includes('profissional_expediente_bloqueado')) await uiAlert('dashboard.professional_schedule_blocked', 'error');
       else await uiAlert('dashboard.professional_update_error', 'error');

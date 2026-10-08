@@ -1,7 +1,6 @@
 export const PROFISSIONAL_STATUS_DOT_CLASS = {
   ABERTO: 'bg-green-500',
   FECHADO: 'bg-red-500',
-  ALMOCO: 'bg-yellow-400',
   PAUSA: 'bg-yellow-400',
   PENDENTE: 'bg-yellow-400',
   INATIVO: 'bg-gray-600',
@@ -23,7 +22,6 @@ export function resolveProfissionalStatusKey(profissional) {
 
 export function getProfissionalStatusLabel(value, fallback = 'FECHADO') {
   const key = normalizeProfissionalStatusKey(value);
-  if (key === 'ALMOCO') return 'PAUSA';
   return key || fallback;
 }
 

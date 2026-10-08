@@ -37,7 +37,7 @@ function previewRating(value) {
 function previewProfessionals(value, supabaseUrl) {
   if (!Array.isArray(value)) return [];
   return value.filter((prof) => prof && typeof prof.id === 'string' && typeof prof.nome === 'string'
-    && ['ABERTO', 'FECHADO', 'ALMOCO', 'PAUSA'].includes(prof.status_key)).slice(0, 3).map((prof) => ({
+    && ['ABERTO', 'FECHADO', 'PAUSA'].includes(prof.status_key)).slice(0, 3).map((prof) => ({
     id: prof.id,
     nome: prof.nome,
     profissao: typeof prof.profissao === 'string' ? prof.profissao : null,
@@ -50,7 +50,7 @@ function previewProfessionals(value, supabaseUrl) {
       .filter((item) => Number.isInteger(item?.dia_semana) && item.dia_semana >= 0 && item.dia_semana <= 6)
       .slice(0, 7).map((item) => ({
         dia_semana: item.dia_semana, ativo: item.ativo === true,
-        ...Object.fromEntries(['horario_inicio', 'horario_fim', 'almoco_inicio', 'almoco_fim'].map((key) => [
+        ...Object.fromEntries(['horario_inicio', 'horario_fim', 'pausa_inicio', 'pausa_fim'].map((key) => [
           key, typeof item[key] === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item[key]) ? item[key] : null,
         ])),
       })),
