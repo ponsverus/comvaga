@@ -59,7 +59,7 @@ export default function AppFooter({
           </div>
 
           <div>
-            <h4 className="text-white font-normal mb-4">PARA VOCÊ</h4>
+            <h2 className="text-white font-normal mb-4">PARA VOCÊ</h2>
             <ul className="space-y-2">
               {isProfessional ? (
                 <>
@@ -88,7 +88,7 @@ export default function AppFooter({
           </div>
 
           <div>
-            <h4 className="text-white font-normal mb-4">EMPRESA</h4>
+            <h2 className="text-white font-normal mb-4">EMPRESA</h2>
             <ul className="space-y-2">
               <li><FooterLink to="/sobre">SOBRE</FooterLink></li>
               <li><FooterLink href="#">BLOG</FooterLink></li>
@@ -96,7 +96,7 @@ export default function AppFooter({
           </div>
 
           <div>
-            <h4 className="text-white font-normal mb-4">LEGAL</h4>
+            <h2 className="text-white font-normal mb-4">LEGAL</h2>
             <ul className="space-y-2">
               <li><FooterLink to="/privacidade">PRIVACIDADE</FooterLink></li>
               <li><FooterLink to="/termos">TERMOS</FooterLink></li>
