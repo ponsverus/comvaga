@@ -127,15 +127,15 @@ export default function ProfissionalModal({
                     <div className="grid grid-cols-2 gap-4">
                       <TimeCell label="PAUSA INÍCIO">
                         <TimePicker
-                          value={item.almoco_inicio || ''}
-                          onChange={(v) => updateHorario(d.value, { almoco_inicio: v })}
+                          value={item.pausa_inicio || ''}
+                          onChange={(v) => updateHorario(d.value, { pausa_inicio: v })}
                           triggerClassName={timePickerClass}
                         />
                       </TimeCell>
                       <TimeCell label="PAUSA FIM">
                         <TimePicker
-                          value={item.almoco_fim || ''}
-                          onChange={(v) => updateHorario(d.value, { almoco_fim: v })}
+                          value={item.pausa_fim || ''}
+                          onChange={(v) => updateHorario(d.value, { pausa_fim: v })}
                           triggerClassName={timePickerClass}
                         />
                       </TimeCell>
