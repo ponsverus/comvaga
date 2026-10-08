@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { FunctionsFetchError, FunctionsRelayError } from '@supabase/supabase-js';
+import { ptBR } from '../feedback/messages/ptBR.js';
 import { supabase } from '../supabase';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
@@ -35,6 +37,20 @@ function getDiasTrabalho(profissional) {
 function isRateLimitError(error) {
   const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
   return raw.includes('rate_limit_exceeded') || raw.includes('muitas tentativas') || raw.includes('too many requests');
+}
+
+function isConnectionError(error) {
+  const cause = error?.cause;
+  const raw = `${error?.code || ''} ${error?.message || ''} ${cause?.code || ''} ${cause?.message || ''}`.toLowerCase();
+
+  return error instanceof FunctionsFetchError
+    || error instanceof FunctionsRelayError
+    || cause instanceof FunctionsFetchError
+    || cause instanceof FunctionsRelayError
+    || raw.includes('request_timeout')
+    || raw.includes('timeout')
+    || raw.includes('failed to fetch')
+    || raw.includes('networkerror');
 }
 
 const MONTH_NAMES   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -229,8 +245,10 @@ export default function BookingCalendar({
         dataISO: selectedDay,
       });
     } catch (e) {
-      const msg     = String(e?.message || '').toLowerCase();
+      const msg     = `${e?.code || ''} ${e?.message || ''} ${e?.details || ''} ${e?.hint || ''}`.toLowerCase();
       const limited = isRateLimitError(e);
+      const notAllowed = msg.includes('acao_nao_permitida');
+      const connectionFailed = isConnectionError(e);
       const scheduleBlocked = msg.includes('blocked');
       const expired = msg.includes('agendamento_horario_expirado')
         || msg.includes('horario_expirado');
@@ -250,8 +268,12 @@ export default function BookingCalendar({
       } else if (overlap) {
         setConfirmError('Alguém acabou de reservar esse horário. Escolha outro.');
         fetchSlots(selectedDay);
+      } else if (notAllowed) {
+        setConfirmError(ptBR.vitrine.schedule_booking_errors.not_allowed);
+      } else if (connectionFailed) {
+        setConfirmError(ptBR.vitrine.schedule_booking_errors.connection);
       } else {
-        setConfirmError('Você só pode criar agendamentos para a sua própria agenda.');
+        setConfirmError(ptBR.vitrine.schedule_booking_errors.unexpected);
       }
     } finally {
       setConfirming(false);
