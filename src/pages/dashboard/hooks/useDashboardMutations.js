@@ -24,7 +24,7 @@ import {
   updateProfissionalStatus,
   fetchUserNome,
 } from '../api/dashboardApi';
-import { convertImageToWebp, isImageFile } from '../../../utils/media';
+import { convertImageToWebp, isImageFile, MEDIA_LIMITS } from '../../../utils/media';
 import { normalizeBrazilPhone } from '../../../utils/phone';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { withAuthRetry } from '../../../utils/authSession';
@@ -138,7 +138,11 @@ export function useDashboardMutations({
     try {
       setLogoUploading(true);
       if (!isImageFile(file)) throw new Error('Formato invalido.');
-      const convertedFile = await convertImageToWebp(file);
+      if (file.size > MEDIA_LIMITS.logoInputBytes) {
+        await uiAlert('dashboard.logo_too_large', 'error', { maxMb: 3 });
+        return false;
+      }
+      const convertedFile = await convertImageToWebp(file, { maxDimension: MEDIA_LIMITS.logoMaxDimension });
       const oldPath = negocio?.logo_path || null;
       const filePath = `${negocio.id}/logo.webp`;
       const { error: upErr } = await withAuthRetry(
@@ -294,14 +298,14 @@ export function useDashboardMutations({
           invalidFormatCount += 1;
           continue;
         }
-        if (file.size > 4 * 1024 * 1024) {
+        if (file.size > MEDIA_LIMITS.galleryInputBytes) {
           tooLargeCount += 1;
           continue;
         }
 
         let convertedFile = null;
         try {
-          convertedFile = await convertImageToWebp(file);
+          convertedFile = await convertImageToWebp(file, { maxDimension: MEDIA_LIMITS.galleryMaxDimension });
         } catch {
           failedCount += 1;
           continue;
