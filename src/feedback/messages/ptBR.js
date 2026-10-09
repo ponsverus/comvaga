@@ -375,6 +375,13 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'OK',
     },
+    logo_too_large: {
+      title: 'Logo muito grande',
+      body: 'A logo original pode ter no máximo 3 MB.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
 
     business_info_updated: {
       title: 'Salvo',
@@ -421,7 +428,7 @@ export const ptBR = {
     },
     gallery_too_large: {
       title: 'Arquivo grande',
-      body: 'Cada imagem pode ter no máximo 4 MB.',
+      body: 'Cada imagem pode ter no máximo 15 MB.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
