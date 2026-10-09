@@ -6,7 +6,7 @@ import AppFooter from '../components/AppFooter';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { ptBR } from '../feedback/messages/ptBR.js';
-import { convertImageToWebp, isImageFile } from '../utils/media';
+import { convertImageToWebp, isImageFile, MEDIA_LIMITS } from '../utils/media';
 import { normalizeBrazilPhone, formatPhoneForDisplay } from '../utils/phone';
 import { getRequestErrorKey } from '../utils/requestError';
 import { searchHome } from '../utils/searchHome';
@@ -340,13 +340,13 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    const maxMb   = 3;
+    const maxMb   = MEDIA_LIMITS.avatarInputBytes / (1024 * 1024);
     if (!isImageFile(file)) { uiAlert('clientArea.avatar_invalid_format', 'error'); return; }
-    if (file.size > maxMb * 1024 * 1024) { uiAlert('clientArea.avatar_too_large', 'error', { maxMb }); return; }
+    if (file.size > MEDIA_LIMITS.avatarInputBytes) { uiAlert('clientArea.avatar_too_large', 'error', { maxMb }); return; }
     let uploadedPath = null;
     try {
       setUploadingAvatar(true);
-      const convertedFile = await convertImageToWebp(file);
+      const convertedFile = await convertImageToWebp(file, { maxDimension: MEDIA_LIMITS.avatarMaxDimension });
       const path = `${user.id}/avatar-${Date.now()}.webp`;
       const { error: upErr } = await withAuthRetry(
         () => supabase.storage.from('avatars').upload(path, convertedFile, { upsert: false, contentType: convertedFile.type }),
