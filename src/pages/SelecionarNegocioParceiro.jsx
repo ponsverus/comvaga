@@ -5,19 +5,9 @@ import { ProfessionalIcon, SearchIcon, UserIcon } from '../components/icons';
 import { ptBR } from '../feedback/messages/ptBR';
 import { supabase } from '../supabase';
 import { withAuthRetry } from '../utils/authSession';
+import { getPublicUrl } from '../utils/storage';
 
 const msgs = ptBR.partnerBusinessCenter;
-
-function getPublicUrl(bucket, path) {
-  if (!bucket || !path) return null;
-  try {
-    const stripped = path.replace(new RegExp(`^${bucket}/`), '');
-    const { data } = supabase.storage.from(bucket).getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
-}
 
 function formatBusinessAddress(negocio) {
   const rua = String(negocio?.endereco_rua || '').trim();
