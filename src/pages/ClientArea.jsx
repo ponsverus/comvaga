@@ -7,6 +7,8 @@ import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import { convertImageToWebp, isImageFile, MEDIA_LIMITS } from '../utils/media';
+import { getPublicUrl } from '../utils/storage';
+import { isRateLimitError } from '../utils/errorUtils';
 import { normalizeBrazilPhone, formatPhoneForDisplay } from '../utils/phone';
 import { getRequestErrorKey } from '../utils/requestError';
 import { searchHome } from '../utils/searchHome';
@@ -28,8 +30,6 @@ import FavoritesSection from './clientArea/components/FavoritesSection';
 import SearchResults from './clientArea/components/SearchResults';
 import {
   PAGE_SIZE,
-  getPublicUrl,
-  isRateLimitError,
   maskedPrivateValue,
   mergeById,
   sortByDateThenTimeDesc,
