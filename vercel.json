@@ -1,5 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/vitrine.js": {
       "includeFiles": "dist/index.html"
@@ -8,19 +7,6 @@
       "includeFiles": "dist/app.html"
     }
   },
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.comvaga.com.br"
-        }
-      ],
-      "destination": "https://comvaga.com.br/:path*",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     {
       "source": "/",
