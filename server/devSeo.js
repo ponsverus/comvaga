@@ -18,7 +18,6 @@ export function publicSeoPlugin() {
       const index = bundle['index.html'];
       if (!index || index.type !== 'asset') throw new Error('HTML entry missing from build');
       const template = String(index.source);
-      // Keep the neutral SPA shell separate from the public home page.
       this.emitFile({ type: 'asset', fileName: 'app.html', source: template });
       for (const [path, metadata] of Object.entries(STATIC_SEO)) {
         const html = renderSeoHtml(template, metadata);
