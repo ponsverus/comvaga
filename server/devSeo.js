@@ -4,7 +4,6 @@ import { loadEnv } from 'vite';
 import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
 import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
-import { renderHomeSeoShell } from './homeSeo.js';
 
 export function publicSeoPlugin() {
   return {
@@ -22,10 +21,7 @@ export function publicSeoPlugin() {
       // Keep the neutral SPA shell separate from the public home page.
       this.emitFile({ type: 'asset', fileName: 'app.html', source: template });
       for (const [path, metadata] of Object.entries(STATIC_SEO)) {
-        const pageTemplate = path === '/'
-          ? template.replace('<div id="root"></div>', `<div id="root">${renderHomeSeoShell()}</div>`)
-          : template;
-        const html = renderSeoHtml(pageTemplate, metadata);
+        const html = renderSeoHtml(template, metadata);
         if (path === '/') index.source = html;
         else this.emitFile({ type: 'asset', fileName: `${path.slice(1)}.html`, source: html });
       }
