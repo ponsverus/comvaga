@@ -21,7 +21,13 @@ export function publicSeoPlugin() {
       // Keep the neutral SPA shell separate from the public home page.
       this.emitFile({ type: 'asset', fileName: 'app.html', source: template });
       for (const [path, metadata] of Object.entries(STATIC_SEO)) {
-        const html = renderSeoHtml(template, metadata);
+        const pageTemplate = path === '/'
+          ? template.replace(
+            '<div id="root"></div>',
+            '<div id="root"><main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:#000;color:#fff;text-align:center"><h1 style="margin:0;font-size:clamp(2.25rem,7vw,5.5rem);line-height:1.05;font-weight:900">SUA AGENDA,<br /><span style="color:#d4af37">MATEMATICAMENTE PERFEITA</span></h1></main></div>',
+          )
+          : template;
+        const html = renderSeoHtml(pageTemplate, metadata);
         if (path === '/') index.source = html;
         else this.emitFile({ type: 'asset', fileName: `${path.slice(1)}.html`, source: html });
       }
