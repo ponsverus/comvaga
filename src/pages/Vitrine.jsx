@@ -8,6 +8,7 @@ import AppFooter from '../components/AppFooter';
 import { ptBR } from '../feedback/messages/ptBR';
 import { useBusinessGroup } from '../businessTerms';
 import { getPublicUrl } from './vitrine/api/vitrineApi';
+import { isRateLimitError } from '../utils/errorUtils';
 import { useVitrineBootstrap } from './vitrine/hooks/useVitrineBootstrap';
 import { useVitrineBooking } from './vitrine/hooks/useVitrineBooking';
 import { useVitrineInteractions } from './vitrine/hooks/useVitrineInteractions';
@@ -144,11 +145,6 @@ function sanitizeTel(raw) {
   const v = String(raw || '').trim();
   if (!v) return '';
   return v.replace(/[^\d+]/g, '');
-}
-
-function isRateLimitError(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  return raw.includes('rate_limit_exceeded') || raw.includes('limite diário') || raw.includes('too many requests');
 }
 
 function AlertModal({ open, onClose, title, body, buttonText, isLight }) {
