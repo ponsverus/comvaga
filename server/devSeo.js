@@ -4,6 +4,7 @@ import { loadEnv } from 'vite';
 import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
 import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
+import { renderHomeSeoShell } from './homeSeo.js';
 
 export function publicSeoPlugin() {
   return {
@@ -22,10 +23,7 @@ export function publicSeoPlugin() {
       this.emitFile({ type: 'asset', fileName: 'app.html', source: template });
       for (const [path, metadata] of Object.entries(STATIC_SEO)) {
         const pageTemplate = path === '/'
-          ? template.replace(
-            '<div id="root"></div>',
-            '<div id="root"><main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:#000;color:#fff;text-align:center"><h1 style="margin:0;font-size:clamp(2.25rem,7vw,5.5rem);line-height:1.05;font-weight:900">SUA AGENDA,<br /><span style="color:#d4af37">MATEMATICAMENTE PERFEITA</span></h1></main></div>',
-          )
+          ? template.replace('<div id="root"></div>', `<div id="root">${renderHomeSeoShell()}</div>`)
           : template;
         const html = renderSeoHtml(pageTemplate, metadata);
         if (path === '/') index.source = html;
