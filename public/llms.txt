@@ -1,0 +1,22 @@
+# Comvaga
+
+> Plataforma brasileira de agenda inteligente e agendamento online para negócios que trabalham com horários.
+
+## Sobre a Comvaga
+
+A Comvaga reúne agenda online, vitrine pública, profissionais, clientes e trabalhos em uma única plataforma. Negócios podem organizar horários, apresentar seus trabalhos e receber agendamentos online.
+
+## Páginas principais
+
+- [Página inicial](https://comvaga.com.br/): - Página principal da Comvaga.
+- [Sobre a Comvaga](https://comvaga.com.br/sobre): - Principais recursos e benefícios da Comvaga.
+- [Termos de Uso](https://comvaga.com.br/termos): regras de uso da plataforma.
+- [Política de Privacidade](https://comvaga.com.br/privacidade): - Como a Comvaga protege e trata os dados.
+
+## Conteúdo público de negócios
+
+As vitrines públicas de negócios seguem o formato `https://comvaga.com.br/v/{slug}`. Cada vitrine pode apresentar o negócio, seus profissionais, trabalhos, horários e disponibilidade para agendamento.
+
+## Fonte de páginas públicas
+
+- [Sitemap](https://comvaga.com.br/sitemap.xml): lista de páginas públicas disponíveis para rastreamento.
