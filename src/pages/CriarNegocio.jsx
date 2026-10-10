@@ -5,8 +5,8 @@ import { supabase } from '../supabase';
 import { withAuthRetry } from '../utils/authSession';
 import { useFeedback } from '../feedback/useFeedback';
 import { normalizeBrazilPhone } from '../utils/phone';
+import { sleep } from '../utils/async';
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function onlyTrim(v) {
   return String(v || '').trim();
