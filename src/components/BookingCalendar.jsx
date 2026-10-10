@@ -7,6 +7,7 @@ import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
 import { withAuthRetry } from '../utils/authSession';
 import { invokeProtectedAction } from '../utils/protectedAction';
+import { isRateLimitError } from '../utils/errorUtils';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -32,11 +33,6 @@ function getDiasTrabalho(profissional) {
       .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
   }
   return [1, 2, 3, 4, 5];
-}
-
-function isRateLimitError(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  return raw.includes('rate_limit_exceeded') || raw.includes('muitas tentativas') || raw.includes('too many requests');
 }
 
 function isConnectionError(error) {

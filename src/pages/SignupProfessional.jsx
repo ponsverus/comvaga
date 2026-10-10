@@ -5,11 +5,8 @@ import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { ProfessionalIcon } from '../components/icons';
 import { DEFAULT_PLAN_CODE, getPlanFromSearch, getSelectedPlanIntent, saveSelectedPlanIntent } from '../utils/plans';
-import { fetchUserAccessProfile } from '../utils/profileAccess';
+import { fetchProfileTypeWithRetry, fetchUserAccessProfile } from '../utils/profileAccess';
 
-const PROFILE_TABLE = 'users';
-const isValidType = (t) => t === 'client' || t === 'professional';
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function isEmailAlreadyExistsError(err) {
   const text = String(err?.message || err?.error_description || err?.details || '').toLowerCase();
@@ -29,23 +26,6 @@ function getEmailAvailabilityMessageKey(checkResult) {
   if (reason === 'email_already_registered') return 'signupProfessional.email_already_exists';
 
   return 'alerts.action_failed_support';
-}
-
-async function fetchProfileTypeWithRetry(userId) {
-  const delays = [200, 300, 400, 500, 600, 600, 700, 800];
-
-  for (let i = 0; i < delays.length; i++) {
-    const { data, error } = await supabase
-      .from(PROFILE_TABLE)
-      .select('type')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (!error && isValidType(data?.type)) return data.type;
-    await sleep(delays[i]);
-  }
-
-  return null;
 }
 
 function onlyTrim(v) {
@@ -135,7 +115,7 @@ export default function SignupProfessional({ onLogin }) {
       }
 
       const sessionUser = authData.user;
-      const dbType = await fetchProfileTypeWithRetry(sessionUser.id);
+      const dbType = await fetchProfileTypeWithRetry(sessionUser.id, [200, 300, 400, 500, 600, 600, 700, 800]);
 
       if (!dbType) { showMessage('signupProfessional.profile_not_created'); return; }
       if (dbType !== 'professional') { showMessage('signupProfessional.profile_wrong_type'); return; }

@@ -1,5 +1,3 @@
-import { supabase } from '../../supabase';
-
 export const PAGE_SIZE = 50;
 export const maskedPrivateValue = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
 
@@ -29,22 +27,6 @@ export const getValorAgendamento = (a) => {
   if (Number.isFinite(frozen) && frozen > 0) return frozen;
   return getPrecoFinalEntrega(a?.entregas);
 };
-
-export function isRateLimitError(error) {
-  const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
-  return raw.includes('rate_limit_exceeded') || raw.includes('limite di\u00e1rio') || raw.includes('too many requests');
-}
-
-export function getPublicUrl(bucket, path) {
-  if (!path) return null;
-  try {
-    const stripped = path.replace(new RegExp(`^${bucket}/`), '');
-    const { data } = supabase.storage.from(bucket).getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
-}
 
 export const mergeById = (current, incoming) => {
   const seen = new Set();

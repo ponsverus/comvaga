@@ -4,10 +4,8 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { UserIcon } from '../components/icons';
+import { fetchProfileTypeWithRetry } from '../utils/profileAccess';
 
-const PROFILE_TABLE = 'users';
-const isValidType = (t) => t === 'client' || t === 'professional';
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function isEmailAlreadyExistsError(err) {
   const text = String(err?.message || err?.error_description || err?.details || '').toLowerCase();
@@ -27,23 +25,6 @@ function getEmailAvailabilityMessageKey(checkResult) {
   if (reason === 'email_already_registered') return 'signupClient.email_already_exists';
 
   return 'alerts.action_failed_support';
-}
-
-async function fetchProfileTypeWithRetry(userId) {
-  const delays = [200, 300, 400, 500, 600, 600];
-
-  for (let i = 0; i < delays.length; i++) {
-    const { data, error } = await supabase
-      .from(PROFILE_TABLE)
-      .select('type')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (!error && isValidType(data?.type)) return data.type;
-    await sleep(delays[i]);
-  }
-
-  return null;
 }
 
 export default function SignupClient({ onLogin }) {
@@ -104,7 +85,7 @@ export default function SignupClient({ onLogin }) {
         return;
       }
 
-      const dbType = await fetchProfileTypeWithRetry(authData.user.id);
+      const dbType = await fetchProfileTypeWithRetry(authData.user.id, [200, 300, 400, 500, 600, 600]);
 
       if (!dbType) { showMessage('signupClient.profile_not_ready'); return; }
 

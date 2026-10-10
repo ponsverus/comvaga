@@ -3,16 +3,7 @@ import { withTimeout } from '../../../utils/withTimeout';
 import { withAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
 
-export function getPublicUrl(bucket, path) {
-  if (!path) return null;
-  try {
-    const stripped = path.replace(new RegExp(`^${bucket}/`), '');
-    const { data } = supabase.storage.from(bucket).getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
-}
+export { getPublicUrl } from '../../../utils/storage';
 
 export async function fetchOfficialDate(rpcSequence) {
   let lastErr = null;

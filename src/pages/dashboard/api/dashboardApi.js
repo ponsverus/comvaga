@@ -1,6 +1,7 @@
 import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
+export { getPublicUrl } from '../../../utils/storage';
 
 function isAdminExcludedProfessional(row) {
   return row?.status === 'excluido';
@@ -66,17 +67,6 @@ async function normalizeFunctionError(error) {
   return nextError;
 }
 
-
-export function getPublicUrl(bucket, path) {
-  if (!bucket || !path) return null;
-  try {
-    const stripped = path.replace(new RegExp(`^${bucket}/`), '');
-    const { data } = supabase.storage.from(bucket).getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
-}
 
 export function normalizeAgRow(a) {
   const profId = a?.prof_id ?? a?.profissional_id ?? null;

@@ -22,8 +22,8 @@ import NotFound               from './pages/NotFound';
 import About                  from './pages/About';
 import PrivacyPolicy          from './pages/PrivacyPolicy';
 import TermsOfUse             from './pages/TermsOfUse';
+import { sleep } from './utils/async';
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
 const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
 

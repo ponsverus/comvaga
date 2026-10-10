@@ -4,17 +4,7 @@ import { ProfessionalIcon, UserIcon } from '../components/icons';
 import { LogOut, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../utils/authSession';
-
-function getPublicUrl(bucket, path) {
-  if (!bucket || !path) return null;
-  try {
-    const stripped = path.replace(new RegExp(`^${bucket}/`), '');
-    const { data } = supabase.storage.from(bucket).getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
-}
+import { getPublicUrl } from '../utils/storage';
 
 function formatBusinessAddress(negocio) {
   const rua = String(negocio?.endereco_rua || '').trim();
