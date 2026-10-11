@@ -1,10 +1,7 @@
 {
   "functions": {
     "api/vitrine.js": {
-      "includeFiles": [
-        "dist/index.html",
-        "dist/index.template.html"
-      ]
+      "includeFiles": "dist/index*.html"
     },
     "api/not-found.js": {
       "includeFiles": "dist/app.html"
