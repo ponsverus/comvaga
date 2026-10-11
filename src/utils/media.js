@@ -4,8 +4,8 @@ export function isImageFile(file) {
 
 export const MEDIA_LIMITS = Object.freeze({
   galleryInputBytes: 15 * 1024 * 1024,
-  logoInputBytes: 3 * 1024 * 1024,
-  avatarInputBytes: 3 * 1024 * 1024,
+  logoInputBytes: 5 * 1024 * 1024,
+  avatarInputBytes: 5 * 1024 * 1024,
   galleryMaxDimension: 1600,
   logoMaxDimension: 512,
   avatarMaxDimension: 512,
