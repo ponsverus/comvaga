@@ -18,7 +18,10 @@
     onRecoverableError: Sentry.reactErrorHandler(),
   };
   const app = <App initialBusiness={initialBusiness} />;
-  if (initialBusiness && rootElement.querySelector('[data-public-business-preview]')) {
+  if (
+    (initialBusiness && rootElement.querySelector('[data-public-business-preview]'))
+    || rootElement.querySelector('[data-public-home-preview]')
+  ) {
     ReactDOM.hydrateRoot(rootElement, app, rootOptions);
   } else {
     ReactDOM.createRoot(rootElement, rootOptions).render(app);

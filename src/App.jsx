@@ -7,6 +7,7 @@ import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '
 import { ptBR } from './feedback/messages/ptBR.js';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 import PublicBusinessPreview from './components/PublicBusinessPreview.js';
+import HomePublicPreview from './components/HomePublicPreview.jsx';
 
 import FeedbackProvider from './feedback/FeedbackProvider';
 
@@ -539,8 +540,12 @@ export default function App({ initialBusiness = null }) {
   }, [safeSet, loadProfile]);
 
   const matchesInitialRoute = initialBusiness && globalThis.location?.pathname === `/v/${initialBusiness.slug}`;
-  const initialPreview = matchesInitialRoute ? <PublicBusinessPreview business={initialBusiness} /> : <FullScreenLoading />;
-  if (booting) return initialPreview;
+  const initialPreview = matchesInitialRoute
+    ? <PublicBusinessPreview business={initialBusiness} />
+    : globalThis.location?.pathname === '/'
+      ? <HomePublicPreview />
+      : <FullScreenLoading />;
+  if (booting) return <Router>{initialPreview}</Router>;
   if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={handleRetry} />;
   if (isLoggedIn && !userType && !inRecovery) return matchesInitialRoute ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
 
