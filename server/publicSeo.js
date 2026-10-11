@@ -153,7 +153,10 @@ export async function serveVitrine(req, res, options = {}) {
     const env = options.env || process.env;
     const candidate = businessLogoUrl(negocio.logo_path, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
     const image = await (options.resolveImage || resolveBusinessSeoImage)(candidate);
-    const template = await (options.template || (() => readFile(resolve(process.cwd(), 'dist/index.html'), 'utf8')))();
+    const template = await (
+      options.template ||
+      (() => readFile(resolve(process.cwd(), 'dist/index.template.html'), 'utf8'))
+    )();
     const html = renderSeoHtml(template, buildBusinessMetadata(negocio, [], image), negocio, env.SUPABASE_URL || env.VITE_SUPABASE_URL);
     send(req, res, 200, 'text/html', html, 300);
   } catch (error) {
