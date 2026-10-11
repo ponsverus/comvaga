@@ -25,6 +25,7 @@ await build({
 const renderer = await import(pathToFileURL(resolve(prerenderDir, 'entry-home-server.mjs')).href);
 const indexPath = resolve(root, 'dist/index.html');
 const template = await readFile(indexPath, 'utf8');
+await writeFile(resolve(root, 'dist/index.template.html'), template);
 const rootMarkup = '<div id="root"></div>';
 
 if (!template.includes(rootMarkup)) {
