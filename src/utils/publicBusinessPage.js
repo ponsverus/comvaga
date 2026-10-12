@@ -149,10 +149,15 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
 export function applyBusinessStructuredData(business, image, doc = globalThis.document) {
   const data = buildBusinessStructuredData(business, image);
   if (!data) return () => {};
-  let element = doc.getElementById(BUSINESS_SCHEMA_ID);
+  return applyStructuredData(BUSINESS_SCHEMA_ID, data, doc);
+}
+
+export function applyStructuredData(id, data, doc = globalThis.document) {
+  if (!id || !data || !doc) return () => {};
+  let element = doc.getElementById(id);
   if (!element) {
     element = doc.createElement('script');
-    element.id = BUSINESS_SCHEMA_ID;
+    element.id = id;
     element.type = 'application/ld+json';
     doc.head.appendChild(element);
   }
