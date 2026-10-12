@@ -1,8 +1,8 @@
 export const BLOG_POSTS = [
   {
     slug: 'sistema-de-agendamento-online',
-    title: 'Sistema de agendamento online: como escolher a melhor plataforma para seu negócio',
-    description: 'Veja o que uma plataforma de agendamento precisa oferecer e descubra os diferenciais da Comvaga para organizar o seu negócio.',
+    title: 'Sistema de agendamento online: como escolher a melhor plataforma para sua empresa',
+    description: 'Veja o que uma plataforma de agendamento precisa oferecer e conheça os diferenciais da Comvaga para organizar sua operação.',
     category: 'Agendamento online',
     readTime: '5 min de leitura',
     publishedAt: '2026-10-12',
