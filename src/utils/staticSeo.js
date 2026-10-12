@@ -1,4 +1,6 @@
 import { PUBLIC_ORIGIN } from './businessSeoMetadata.js';
+import { BLOG_POSTS } from '../data/blogPosts.js';
+import { buildBlogMetadata } from './blogSeo.js';
 
 const pages = {
   '/': {
@@ -23,11 +25,15 @@ const pages = {
   },
 };
 
+for (const post of BLOG_POSTS) {
+  pages[`/blog/${post.slug}`] = buildBlogMetadata(post);
+}
+
 export const STATIC_SEO = Object.freeze(Object.fromEntries(
   Object.entries(pages).map(([path, metadata]) => [path, Object.freeze({
     ...metadata,
-    canonical: `${PUBLIC_ORIGIN}${path}`,
-    image: `${PUBLIC_ORIGIN}/Comvaga%20Logo.png`,
-    imageAlt: 'Logo da Comvaga',
+    canonical: metadata.canonical || `${PUBLIC_ORIGIN}${path}`,
+    image: metadata.image || `${PUBLIC_ORIGIN}/Comvaga%20Logo.png`,
+    imageAlt: metadata.imageAlt || 'Logo da Comvaga',
   })]),
 ));
