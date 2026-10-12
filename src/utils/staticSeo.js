@@ -17,6 +17,10 @@ const pages = {
     title: 'Política de Privacidade | Comvaga',
     description: 'Saiba como a Comvaga coleta, utiliza e protege dados pessoais. Veja como funcionam o compartilhamento, o armazenamento e os seus direitos.',
   },
+  '/blog': {
+    title: 'Blog Comvaga | Agendamento online e controle de negócios',
+    description: 'Guias rápidos sobre agendamento online, gerenciamento de profissionais, clientes e rotina de horários.',
+  },
 };
 
 export const STATIC_SEO = Object.freeze(Object.fromEntries(
