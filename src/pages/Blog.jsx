@@ -7,7 +7,7 @@ export default function Blog() {
   useStaticSeo('/blog');
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div data-public-blog-preview className="min-h-screen bg-black text-white">
       <header className="border-b border-gray-900 bg-black px-4 py-6 sm:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
