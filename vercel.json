@@ -37,6 +37,14 @@
       "destination": "/privacidade.html"
     },
     {
+      "source": "/blog",
+      "destination": "/blog.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/blog/:slug.html"
+    },
+    {
       "source": "/(login|login/parceiro|cadastro|cadastro/cliente|cadastro/parceiro|cadastro/profissional|cadastro/profissional/retomada|reset-password|dashboard|minha-area|criar-negocio|selecionar-negocio|selecionar-negocio-parceiro|conta-profissional)",
       "destination": "/app.html"
     },
