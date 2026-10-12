@@ -21,6 +21,7 @@
   if (
     (initialBusiness && rootElement.querySelector('[data-public-business-preview]'))
     || rootElement.querySelector('[data-public-home-preview]')
+    || rootElement.querySelector('[data-public-blog-preview]')
   ) {
     ReactDOM.hydrateRoot(rootElement, app, rootOptions);
   } else {
