@@ -23,6 +23,8 @@ import NotFound               from './pages/NotFound';
 import About                  from './pages/About';
 import PrivacyPolicy          from './pages/PrivacyPolicy';
 import TermsOfUse             from './pages/TermsOfUse';
+import Blog                   from './pages/Blog';
+import BlogPost               from './pages/BlogPost';
 import { sleep } from './utils/async';
 
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
@@ -565,6 +567,8 @@ export default function App({ initialBusiness = null }) {
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/sobre" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
 
             <Route path="/reset-password" element={<ResetPassword />} />
 
