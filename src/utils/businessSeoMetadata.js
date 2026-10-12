@@ -72,7 +72,7 @@ export function applyBusinessMetadataWithImage(metadata, candidate, {
 export function metadataEntries(metadata) {
   return [
     ['name', 'description', metadata.description],
-    ['property', 'og:type', 'website'],
+    ['property', 'og:type', metadata.type || 'website'],
     ['property', 'og:locale', 'pt_BR'],
     ['property', 'og:site_name', 'Comvaga'],
     ['property', 'og:title', metadata.title],
@@ -84,6 +84,7 @@ export function metadataEntries(metadata) {
     ['name', 'twitter:title', metadata.title],
     ['name', 'twitter:description', metadata.description],
     ['name', 'twitter:image', metadata.image],
+    ...(metadata.publishedAt ? [['property', 'article:published_time', metadata.publishedAt]] : []),
   ];
 }
 

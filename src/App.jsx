@@ -23,8 +23,7 @@ import NotFound               from './pages/NotFound';
 import About                  from './pages/About';
 import PrivacyPolicy          from './pages/PrivacyPolicy';
 import TermsOfUse             from './pages/TermsOfUse';
-import Blog                   from './pages/Blog';
-import BlogPost               from './pages/BlogPost';
+import BlogRoutes              from './components/BlogRoutes';
 import { sleep } from './utils/async';
 
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
@@ -541,15 +540,19 @@ export default function App({ initialBusiness = null }) {
     }
   }, [safeSet, loadProfile]);
 
-  const matchesInitialRoute = initialBusiness && globalThis.location?.pathname === `/v/${initialBusiness.slug}`;
+  const currentPath = globalThis.location?.pathname || '';
+  const matchesInitialRoute = initialBusiness && currentPath === `/v/${initialBusiness.slug}`;
+  const isBlogRoute = currentPath === '/blog' || currentPath.startsWith('/blog/');
   const initialPreview = matchesInitialRoute
     ? <PublicBusinessPreview business={initialBusiness} />
-    : globalThis.location?.pathname === '/'
-      ? <HomePublicPreview />
-      : <FullScreenLoading />;
+    : isBlogRoute
+      ? <BlogRoutes />
+      : currentPath === '/'
+        ? <HomePublicPreview />
+        : <FullScreenLoading />;
   if (booting) return <Router>{initialPreview}</Router>;
   if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={handleRetry} />;
-  if (isLoggedIn && !userType && !inRecovery) return matchesInitialRoute ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
+  if (isLoggedIn && !userType && !inRecovery) return (matchesInitialRoute || isBlogRoute) ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
 
   return (
     <Router>
@@ -567,8 +570,7 @@ export default function App({ initialBusiness = null }) {
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/sobre" element={<About />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/*" element={<BlogRoutes nested />} />
 
             <Route path="/reset-password" element={<ResetPassword />} />
 

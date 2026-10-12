@@ -14,10 +14,11 @@ import {
   PUBLIC_ORIGIN, VALID_BUSINESS_SLUG,
   businessLogoUrl, buildBusinessMetadata, metadataEntries, resolveBusinessSeoImage,
 } from '../src/utils/businessSeoMetadata.js';
+import { STATIC_SEO } from '../src/utils/staticSeo.js';
 
 const START = '<!-- seo:start -->';
 const END = '<!-- seo:end -->';
-const STATIC_PAGES = ['/', '/sobre', '/termos', '/privacidade'];
+const STATIC_PAGES = Object.keys(STATIC_SEO);
 
 export function escapeMarkup(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({
@@ -25,7 +26,7 @@ export function escapeMarkup(value) {
   })[char]);
 }
 
-export function renderSeoHtml(template, metadata, business = null, supabaseUrl = null) {
+export function renderSeoHtml(template, metadata, business = null, supabaseUrl = null, options = {}) {
   const start = template.indexOf(START);
   const end = template.indexOf(END, start);
   if (start < 0 || end < start) throw new Error('SEO markers missing in HTML template');
@@ -49,6 +50,9 @@ export function renderSeoHtml(template, metadata, business = null, supabaseUrl =
     const schema = buildBusinessStructuredData(snapshot, metadata.image);
     html = html.replace(root, () => `<div id="root">${content}</div>\n    <script id="${PUBLIC_BUSINESS_DATA_ID}" type="application/json">${serializePublicJson(snapshot)}</script>`);
     if (schema) html = html.replace('</head>', () => `    <script id="${BUSINESS_SCHEMA_ID}" type="application/ld+json">${serializePublicJson(schema)}</script>\n  </head>`);
+  }
+  if (options.jsonLd?.id && options.jsonLd.data) {
+    html = html.replace('</head>', () => `    <script id="${escapeMarkup(options.jsonLd.id)}" type="application/ld+json">${serializePublicJson(options.jsonLd.data)}</script>\n  </head>`);
   }
   return html;
 }

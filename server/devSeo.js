@@ -4,6 +4,8 @@ import { loadEnv } from 'vite';
 import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
 import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
+import { getBlogPost } from '../src/data/blogPosts.js';
+import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
 
 export function publicSeoPlugin() {
   return {
@@ -39,8 +41,16 @@ export function publicSeoPlugin() {
           const template = await server.transformIndexHtml(
             req.url, await readFile(resolve(server.config.root, 'index.html'), 'utf8'),
           );
+          const post = path.startsWith('/blog/') ? getBlogPost(path.slice('/blog/'.length)) : null;
+          let html = renderSeoHtml(template, STATIC_SEO[path], null, null, {
+            jsonLd: post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined,
+          });
+          if (path === '/blog' || post) {
+            const renderer = await server.ssrLoadModule('/src/entry-home-server.jsx');
+            html = html.replace('<div id="root"></div>', `<div id="root">${renderer.renderBlog(path)}</div>`);
+          }
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          res.end(req.method === 'HEAD' ? undefined : renderSeoHtml(template, STATIC_SEO[path]));
+          res.end(req.method === 'HEAD' ? undefined : html);
         } else if (/^\/v\/[^/]+$/.test(path)) {
           await serveVitrine(req, res, {
             ...options,
