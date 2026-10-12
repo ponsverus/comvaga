@@ -1,8 +1,12 @@
 import { build } from 'vite';
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
+import { STATIC_SEO } from '../src/utils/staticSeo.js';
+import { getBlogPost } from '../src/data/blogPosts.js';
+import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
+import { renderSeoHtml } from '../server/publicSeo.js';
 
 const root = resolve(import.meta.dirname, '..');
 const prerenderDir = resolve(root, '.prerender');
@@ -34,3 +38,14 @@ if (!template.includes(rootMarkup)) {
 
 const html = template.replace(rootMarkup, `<div id="root">${renderer.renderHome()}</div>`);
 await writeFile(indexPath, html);
+
+for (const path of Object.keys(STATIC_SEO).filter((entry) => entry === '/blog' || entry.startsWith('/blog/'))) {
+  const post = path.startsWith('/blog/') ? getBlogPost(path.slice('/blog/'.length)) : null;
+  const content = renderer.renderBlog(path);
+  const jsonLd = post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined;
+  const pageTemplate = renderSeoHtml(template, STATIC_SEO[path], null, null, { jsonLd });
+  const pageHtml = pageTemplate.replace(rootMarkup, `<div id="root">${content}</div>`);
+  const outputPath = resolve(root, 'dist', `${path.slice(1)}.html`);
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, pageHtml);
+}
