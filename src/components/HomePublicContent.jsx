@@ -565,9 +565,9 @@ export default function HomePublicContent({
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-400 hover:text-primary transition-colors text-sm">
+                  <Link to="/blog" className="text-gray-400 hover:text-primary transition-colors text-sm">
                     BLOG
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
