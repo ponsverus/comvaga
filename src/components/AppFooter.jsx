@@ -91,7 +91,7 @@ export default function AppFooter({
             <h2 className="text-white font-normal mb-4">EMPRESA</h2>
             <ul className="space-y-2">
               <li><FooterLink to="/sobre">SOBRE</FooterLink></li>
-              <li><FooterLink href="#">BLOG</FooterLink></li>
+              <li><FooterLink to="/blog">BLOG</FooterLink></li>
             </ul>
           </div>
 
