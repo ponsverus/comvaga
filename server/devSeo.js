@@ -6,6 +6,7 @@ import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/seoMeta
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 import { getBlogPost } from '../src/data/blogPosts/index.js';
 import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
+import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../src/utils/homeSeo.js';
 
 export function publicSeoPlugin() {
   return {
@@ -43,7 +44,9 @@ export function publicSeoPlugin() {
           );
           const post = path.startsWith('/blog/') ? getBlogPost(path.slice('/blog/'.length)) : null;
           let html = renderSeoHtml(template, STATIC_SEO[path], null, null, {
-            jsonLd: post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined,
+            jsonLd: path === '/'
+              ? { id: HOME_SCHEMA_ID, data: buildHomeStructuredData(STATIC_SEO[path]) }
+              : post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined,
           });
           if (path === '/blog' || post) {
             const renderer = await server.ssrLoadModule('/src/entry-server.jsx');
