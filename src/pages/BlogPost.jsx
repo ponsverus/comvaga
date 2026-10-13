@@ -2,15 +2,15 @@ import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
 import { getBlogPost } from '../data/blogPosts/index.js';
-import { applyBusinessMetadata } from '../utils/businessSeoMetadata.js';
-import { applyStructuredData } from '../utils/publicBusinessPage.js';
+import { applyMetadata } from '../utils/seoMetadata.js';
+import { applyStructuredData } from '../utils/structuredData.js';
 import { BLOG_SCHEMA_ID, buildBlogMetadata, buildBlogStructuredData } from '../utils/blogSeo.js';
 
 function useBlogPostSeo(post) {
   useEffect(() => {
     if (!post) return undefined;
 
-    const restore = applyBusinessMetadata(buildBlogMetadata(post));
+    const restore = applyMetadata(buildBlogMetadata(post));
     const removeSchema = applyStructuredData(BLOG_SCHEMA_ID, buildBlogStructuredData(post));
 
     return () => {
