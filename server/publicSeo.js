@@ -7,13 +7,14 @@ import { renderToString } from 'react-dom/server';
 import PublicBusinessPreview from '../src/components/PublicBusinessPreview.js';
 import {
   BUSINESS_SCHEMA_ID, PUBLIC_BUSINESS_DATA_ID, publicBusinessSnapshot,
-  buildBusinessStructuredData, serializePublicJson,
+  buildBusinessStructuredData,
 } from '../src/utils/publicBusinessPage.js';
+import { serializePublicJson } from '../src/utils/structuredData.js';
 import { NOT_FOUND_TITLE } from '../src/utils/notFoundSeo.js';
 import {
   PUBLIC_ORIGIN, VALID_BUSINESS_SLUG,
   businessLogoUrl, buildBusinessMetadata, metadataEntries, resolveBusinessSeoImage,
-} from '../src/utils/businessSeoMetadata.js';
+} from '../src/utils/seoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 
 const START = '<!-- seo:start -->';

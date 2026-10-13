@@ -1,4 +1,4 @@
-import { PUBLIC_ORIGIN } from './businessSeoMetadata.js';
+import { PUBLIC_ORIGIN } from './seoMetadata.js';
 import { BLOG_POSTS } from '../data/blogPosts/index.js';
 import { buildBlogMetadata } from './blogSeo.js';
 

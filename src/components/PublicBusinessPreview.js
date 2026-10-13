@@ -1,5 +1,5 @@
 import { createElement as h } from 'react';
-import { DEFAULT_SEO_IMAGE } from '../utils/businessSeoMetadata.js';
+import { DEFAULT_SEO_IMAGE } from '../utils/seoMetadata.js';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import VitrineTopSection from '../pages/vitrine/sections/VitrineTopSection.js';
 import VitrineProfessionalsSection from '../pages/vitrine/sections/VitrineProfessionalsSection.js';

@@ -19,7 +19,7 @@ import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
 import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
 import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection.js';
 import VitrineTopSection from './vitrine/sections/VitrineTopSection.js';
-import { applyBusinessMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/businessSeoMetadata';
+import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/seoMetadata.js';
 import { applyBusinessStructuredData } from '../utils/publicBusinessPage.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
@@ -519,7 +519,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     const candidate = businessLogoUrl(negocio.logo_path, import.meta.env.VITE_SUPABASE_URL);
     return applyBusinessMetadataWithImage(buildBusinessMetadata(negocio, entregas, candidate), candidate, {
       applyMetadata: (metadata) => {
-        const restoreMetadata = applyBusinessMetadata(metadata);
+        const restoreMetadata = applyMetadata(metadata);
         const removeSchema = applyBusinessStructuredData(negocio, metadata.image);
         return () => { restoreMetadata(); removeSchema(); };
       },

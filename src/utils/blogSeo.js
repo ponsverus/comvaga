@@ -1,4 +1,4 @@
-import { PUBLIC_ORIGIN } from './businessSeoMetadata.js';
+import { PUBLIC_ORIGIN } from './seoMetadata.js';
 
 export const BLOG_SCHEMA_ID = 'comvaga-blog-schema';
 

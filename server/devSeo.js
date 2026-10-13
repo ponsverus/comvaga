@@ -2,7 +2,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { loadEnv } from 'vite';
 import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
-import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
+import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/seoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 import { getBlogPost } from '../src/data/blogPosts/index.js';
 import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
@@ -46,7 +46,7 @@ export function publicSeoPlugin() {
             jsonLd: post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined,
           });
           if (path === '/blog' || post) {
-            const renderer = await server.ssrLoadModule('/src/entry-home-server.jsx');
+            const renderer = await server.ssrLoadModule('/src/entry-server.jsx');
             html = html.replace('<div id="root"></div>', `<div id="root">${renderer.renderBlog(path)}</div>`);
           }
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
