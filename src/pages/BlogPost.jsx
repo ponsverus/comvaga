@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
-import { getBlogPost } from '../data/blogPosts';
+import { getBlogPost } from '../data/blogPosts/index.js';
 import { applyBusinessMetadata } from '../utils/businessSeoMetadata.js';
 import { applyStructuredData } from '../utils/publicBusinessPage.js';
 import { BLOG_SCHEMA_ID, buildBlogMetadata, buildBlogStructuredData } from '../utils/blogSeo.js';
