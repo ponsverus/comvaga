@@ -1,7 +1,7 @@
 import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import HomePublicPreview from './components/HomePublicPreview.jsx';
-import BlogRoutes from './components/BlogRoutes.jsx';
+import BlogPublicPreview from './components/BlogPublicPreview.jsx';
 
 export function renderHome() {
   return renderToString(
@@ -14,7 +14,7 @@ export function renderHome() {
 export function renderBlog(path) {
   return renderToString(
     <MemoryRouter initialEntries={[path]}>
-      <BlogRoutes />
+      <BlogPublicPreview />
     </MemoryRouter>
   );
 }

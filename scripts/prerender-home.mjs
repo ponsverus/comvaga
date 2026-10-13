@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
-import { getBlogPost } from '../src/data/blogPosts.js';
+import { getBlogPost } from '../src/data/blogPosts/index.js';
 import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
 import { renderSeoHtml } from '../server/publicSeo.js';
 
