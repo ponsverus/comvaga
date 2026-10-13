@@ -24,6 +24,7 @@ import About                  from './pages/About';
 import PrivacyPolicy          from './pages/PrivacyPolicy';
 import TermsOfUse             from './pages/TermsOfUse';
 import BlogRoutes              from './components/BlogRoutes';
+import BlogPublicPreview        from './components/BlogPublicPreview';
 import { sleep } from './utils/async';
 
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
@@ -546,7 +547,7 @@ export default function App({ initialBusiness = null }) {
   const initialPreview = matchesInitialRoute
     ? <PublicBusinessPreview business={initialBusiness} />
     : isBlogRoute
-      ? <BlogRoutes />
+      ? <BlogPublicPreview />
       : currentPath === '/'
         ? <HomePublicPreview />
         : <FullScreenLoading />;
