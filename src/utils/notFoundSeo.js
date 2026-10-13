@@ -1,4 +1,4 @@
-import { DEFAULT_SEO_TITLE } from './businessSeoMetadata.js';
+import { DEFAULT_SEO_TITLE } from './seoMetadata.js';
 
 export const NOT_FOUND_TITLE = 'Página inexistente | Comvaga';
 
