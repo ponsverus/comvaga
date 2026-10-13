@@ -1,5 +1,5 @@
 import { PUBLIC_ORIGIN } from './businessSeoMetadata.js';
-import { BLOG_POSTS } from '../data/blogPosts.js';
+import { BLOG_POSTS } from '../data/blogPosts/index.js';
 import { buildBlogMetadata } from './blogSeo.js';
 
 const pages = {
