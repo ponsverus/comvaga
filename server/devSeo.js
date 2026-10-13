@@ -4,7 +4,7 @@ import { loadEnv } from 'vite';
 import { serveVitrine, serveSitemap, serveNotFound, escapeMarkup, renderSeoHtml } from './publicSeo.js';
 import { DEFAULT_SEO_TITLE, DEFAULT_SEO_DESCRIPTION } from '../src/utils/businessSeoMetadata.js';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
-import { getBlogPost } from '../src/data/blogPosts.js';
+import { getBlogPost } from '../src/data/blogPosts/index.js';
 import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
 
 export function publicSeoPlugin() {
