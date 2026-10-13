@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 import { getBlogPost } from '../src/data/blogPosts/index.js';
 import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
+import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../src/utils/homeSeo.js';
 import { renderSeoHtml } from '../server/publicSeo.js';
 
 const root = resolve(import.meta.dirname, '..');
@@ -36,7 +37,10 @@ if (!template.includes(rootMarkup)) {
   throw new Error('Empty application root missing from dist/index.html');
 }
 
-const html = template.replace(rootMarkup, `<div id="root">${renderer.renderHome()}</div>`);
+const homeTemplate = renderSeoHtml(template, STATIC_SEO['/'], null, null, {
+  jsonLd: { id: HOME_SCHEMA_ID, data: buildHomeStructuredData(STATIC_SEO['/']) },
+});
+const html = homeTemplate.replace(rootMarkup, `<div id="root">${renderer.renderHome()}</div>`);
 await writeFile(indexPath, html);
 
 for (const path of Object.keys(STATIC_SEO).filter((entry) => entry === '/blog' || entry.startsWith('/blog/'))) {
