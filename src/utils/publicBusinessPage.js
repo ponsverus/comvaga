@@ -1,4 +1,5 @@
-import { PUBLIC_ORIGIN, VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './businessSeoMetadata.js';
+import { PUBLIC_ORIGIN, VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './seoMetadata.js';
+import { applyStructuredData } from './structuredData.js';
 
 export const PUBLIC_BUSINESS_DATA_ID = 'comvaga-public-business';
 export const BUSINESS_SCHEMA_ID = 'comvaga-business-schema';
@@ -77,11 +78,6 @@ export function publicBusinessSnapshot(value, image = DEFAULT_SEO_IMAGE, supabas
   return business;
 }
 
-export function serializePublicJson(value) {
-  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (char) =>
-    `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
-}
-
 export function readPublicBusinessSnapshot(doc = globalThis.document, pathname = globalThis.location?.pathname) {
   const element = doc?.getElementById(PUBLIC_BUSINESS_DATA_ID);
   if (!element || element.getAttribute('type') !== 'application/json') return null;
@@ -150,17 +146,4 @@ export function applyBusinessStructuredData(business, image, doc = globalThis.do
   const data = buildBusinessStructuredData(business, image);
   if (!data) return () => {};
   return applyStructuredData(BUSINESS_SCHEMA_ID, data, doc);
-}
-
-export function applyStructuredData(id, data, doc = globalThis.document) {
-  if (!id || !data || !doc) return () => {};
-  let element = doc.getElementById(id);
-  if (!element) {
-    element = doc.createElement('script');
-    element.id = id;
-    element.type = 'application/ld+json';
-    doc.head.appendChild(element);
-  }
-  element.textContent = serializePublicJson(data);
-  return () => element.remove();
 }
