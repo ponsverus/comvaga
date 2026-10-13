@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
-import { BLOG_POSTS } from '../data/blogPosts';
+import { BLOG_POSTS } from '../data/blogPosts/index.js';
 import { useStaticSeo } from '../hooks/useStaticSeo.js';
 
 export default function Blog() {
