@@ -1,6 +1,5 @@
 import { PUBLIC_ORIGIN, VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './seoMetadata.js';
 import { applyStructuredData } from './structuredData.js';
-import { formatBrazilianPostalCode } from './businessAddress.js';
 
 export const PUBLIC_BUSINESS_DATA_ID = 'comvaga-public-business';
 export const BUSINESS_SCHEMA_ID = 'comvaga-business-schema';
@@ -12,6 +11,12 @@ const TEXT_FIELDS = [
 ];
 const GROUPS = new Set(['servicos', 'consultas', 'aulas']);
 
+function formatBrazilianPostalCode(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^\d{5}-?\d{3}$/.test(raw)) return null;
+  const digits = raw.replace('-', '');
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
 
 function previewAvatarUrl(prof, supabaseUrl) {
   try {
