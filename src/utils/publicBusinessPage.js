@@ -142,6 +142,7 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
       streetAddress: [street, business.endereco_numero, business.endereco_complemento]
         .filter((part) => typeof part === 'string' && part.trim()).map((part) => part.trim()).join(', '),
       addressLocality: city,
+      addressCountry: 'BR',
     };
     if (business.endereco_estado?.trim()) entity.address.addressRegion = business.endereco_estado.trim();
     const postalCode = formatBrazilianPostalCode(business.endereco_cep);
