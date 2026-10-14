@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CheckDoubleIcon, ZapIcon, CheckIcon } from './icons';
 import { getCustomPlanHref, getSupportHref } from '../support';
 import { saveSelectedPlanIntent } from '../utils/plans';
+import { HOME_PLANS, formatHomePlanPrice } from '../data/homePlans';
 
 const planSignupTo = (planCode) => `/cadastro/profissional?plano=${planCode}`;
 
@@ -358,32 +359,7 @@ export default function HomePublicContent({
               <p className="text-gray-400">Estrutura flexível para qualquer volume de trabalho. Encontre o limite perfeito para a sua equipe e garanta a capacidade operacional que seu negócio precisa.</p>
             </div>
 
-            {[
-              {
-                code: 'essencial',
-                name: 'Essencial',
-                capacity: '1 profissional',
-                oldPrice: null,
-                price: 'R$ 69,99',
-                badge: null,
-              },
-              {
-                code: 'profissional',
-                name: 'Profissional',
-                capacity: 'Até 3 profissionais',
-                oldPrice: 'R$ 99,99',
-                price: 'R$ 69,99',
-                badge: 'OFERTA',
-              },
-              {
-                code: 'premium',
-                name: 'Premium',
-                capacity: 'Até 9 profissionais',
-                oldPrice: null,
-                price: 'R$ 129,99',
-                badge: null,
-              },
-            ].map((plan) => (
+            {HOME_PLANS.map((plan) => (
               <div
                 key={plan.code}
                 className={[
@@ -411,9 +387,9 @@ export default function HomePublicContent({
                       {plan.capacity}
                     </p>
                     <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
-                      {plan.oldPrice && (
+                      {plan.oldPriceCents !== null && (
                         <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
-                          {plan.oldPrice}
+                          {formatHomePlanPrice(plan.oldPriceCents)}
                         </span>
                       )}
                       <span
@@ -421,7 +397,7 @@ export default function HomePublicContent({
                           plan.code === 'profissional' ? 'text-green-400' : 'text-white'
                         }`}
                       >
-                        {plan.price}
+                        {formatHomePlanPrice(plan.priceCents)}
                         <span className="text-sm font-normal text-gray-500">/mês</span>
                       </span>
                     </div>
