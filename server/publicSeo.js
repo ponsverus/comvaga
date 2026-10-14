@@ -5,10 +5,8 @@ import { isIP } from 'node:net';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import PublicBusinessPreview from '../src/components/PublicBusinessPreview.js';
-import {
-  BUSINESS_SCHEMA_ID, PUBLIC_BUSINESS_DATA_ID, publicBusinessSnapshot,
-  buildBusinessStructuredData,
-} from '../src/utils/publicBusinessPage.js';
+import { PUBLIC_BUSINESS_DATA_ID, publicBusinessSnapshot } from '../src/utils/publicBusinessPage.js';
+import { BUSINESS_SCHEMA_ID, buildBusinessStructuredData } from '../src/utils/businessSeo.js';
 import { serializePublicJson } from '../src/utils/structuredData.js';
 import { NOT_FOUND_TITLE } from '../src/utils/notFoundSeo.js';
 import {
