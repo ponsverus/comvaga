@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
 import { getBlogPost } from '../data/blogPosts/index.js';
+import { COMVAGA_ORGANIZATION } from '../utils/comvagaOrganization.js';
 import { applyMetadata } from '../utils/seoMetadata.js';
 import { applyStructuredData } from '../utils/structuredData.js';
 import { BLOG_SCHEMA_ID, buildBlogMetadata, buildBlogStructuredData } from '../utils/blogSeo.js';
@@ -66,7 +67,8 @@ export default function BlogPost() {
         <Link to="/blog" className="text-xs font-bold uppercase tracking-[0.2em] text-primary hover:text-white">← Voltar para o blog</Link>
         <article className="mt-8">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-primary">{post.category} · {post.readTime}</p>
-          <h1 className="mb-7 text-4xl font-black leading-tight sm:text-6xl">{post.title}</h1>
+          <h1 className="mb-3 text-4xl font-black leading-tight sm:text-6xl">{post.title}</h1>
+          <p className="mb-8 text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
           <p className="mb-12 border-l-2 border-primary pl-5 text-xl leading-relaxed text-gray-300">{post.intro}</p>
 
           {post.sections.map((section) => (

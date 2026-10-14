@@ -1,5 +1,6 @@
 import { PUBLIC_ORIGIN } from './seoMetadata.js';
 import { HOME_PLANS } from '../data/homePlans.js';
+import { COMVAGA_ORGANIZATION } from './comvagaOrganization.js';
 
 export const HOME_SCHEMA_ID = 'comvaga-home-schema';
 
@@ -20,10 +21,6 @@ export function buildHomeStructuredData(metadata = {}) {
       priceCurrency: 'BRL',
       url: `${PUBLIC_ORIGIN}/cadastro/profissional?plano=${plan.code}`,
     })),
-    publisher: {
-      '@type': 'Organization',
-      name: 'Comvaga',
-      url: PUBLIC_ORIGIN,
-    },
+    publisher: COMVAGA_ORGANIZATION,
   };
 }
