@@ -21,7 +21,7 @@ export default function Blog() {
       <main className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
         <div className="mb-12 max-w-3xl">
           <p className="mb-4 text-xs font-bold uppercase text-primary">Conteúdos Comvaga</p>
-          <h1 className="mb-5 text-4xl font-black leading-tight sm:text-6xl">Ideias para fazer sua agenda trabalhar melhor</h1>
+          <h1 className="mb-5 text-4xl font-normal leading-tight sm:text-6xl">Ideias para fazer sua agenda trabalhar melhor</h1>
           <p className="text-lg leading-relaxed text-gray-400">Guias rápidos para organizar atendimentos, profissionais, clientes e oportunidades de negócio.</p>
         </div>
 
@@ -34,13 +34,13 @@ export default function Blog() {
                   alt={post.coverAlt || ''}
                   loading="lazy"
                   decoding="async"
-                  className="mx-auto mb-6 h-44 w-44 rounded-full object-cover sm:h-52 sm:w-52"
+                  className="mx-auto mb-6 h-44 w-44 rounded-[3px] object-cover sm:h-52 sm:w-52"
                 />
               )}
               <p className="mb-3 text-xs font-bold uppercase text-primary">{post.category}</p>
-              <h2 className="mb-4 text-2xl font-black leading-tight">{post.title}</h2>
+              <h2 className="mb-4 text-2xl font-normal leading-tight">{post.title}</h2>
               <p className="mb-7 flex-1 leading-relaxed text-gray-400">{post.description}</p>
-              <Link to={`/blog/${post.slug}`} className="mx-auto mt-auto inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Ler artigo</Link>
+              <Link to={`/blog/${post.slug}`} className="mt-auto inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Ler artigo</Link>
             </article>
           ))}
         </section>
