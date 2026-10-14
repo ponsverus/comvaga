@@ -12,38 +12,35 @@ export default function Blog() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
             <img src="/Comvaga Logo.png" alt="Comvaga" className="h-12 w-auto" />
-            <span className="hidden text-xl font-black tracking-wide sm:inline">COMVAGA</span>
+            <span className="hidden text-xl font-black sm:inline">COMVAGA</span>
           </Link>
-          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
+          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
         <div className="mb-12 max-w-3xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-primary">Conteúdos Comvaga</p>
+          <p className="mb-4 text-xs font-bold uppercase text-primary">Conteúdos Comvaga</p>
           <h1 className="mb-5 text-4xl font-black leading-tight sm:text-6xl">Ideias para fazer sua agenda trabalhar melhor</h1>
           <p className="text-lg leading-relaxed text-gray-400">Guias rápidos para organizar atendimentos, profissionais, clientes e oportunidades de negócio.</p>
         </div>
 
-        <section aria-label="Posts do blog" className="grid gap-6 md:grid-cols-2">
+        <section aria-label="Posts do blog" className="grid gap-x-12 gap-y-16 md:grid-cols-2">
           {BLOG_POSTS.map((post) => (
-            <article key={post.slug} className="flex flex-col rounded-2xl border border-white/10 bg-dark-100 p-7 transition hover:-translate-y-1 hover:border-primary/40">
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">{post.category}</p>
-              <h2 className="mb-4 text-2xl font-black leading-tight">{post.title}</h2>
+            <article key={post.slug} className="flex flex-col">
               {post.coverImage && (
                 <img
                   src={post.coverImage}
                   alt={post.coverAlt || ''}
                   loading="lazy"
                   decoding="async"
-                  className="mb-5 aspect-video w-full rounded-xl object-cover"
+                  className="mx-auto mb-6 h-44 w-44 rounded-full object-cover sm:h-52 sm:w-52"
                 />
               )}
+              <p className="mb-3 text-xs font-bold uppercase text-primary">{post.category}</p>
+              <h2 className="mb-4 text-2xl font-black leading-tight">{post.title}</h2>
               <p className="mb-7 flex-1 leading-relaxed text-gray-400">{post.description}</p>
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-5 text-xs text-gray-500">
-                <span>{post.readTime}</span>
-                <Link to={`/blog/${post.slug}`} className="font-bold uppercase tracking-wide text-primary hover:text-white">Ler artigo →</Link>
-              </div>
+              <Link to={`/blog/${post.slug}`} className="mx-auto mt-auto inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Ler artigo</Link>
             </article>
           ))}
         </section>
