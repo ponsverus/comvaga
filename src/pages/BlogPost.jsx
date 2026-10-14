@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import AppFooter from '../components/AppFooter';
 import { getBlogPost } from '../data/blogPosts/index.js';
 import { COMVAGA_ORGANIZATION } from '../utils/comvagaOrganization.js';
@@ -64,7 +65,10 @@ export default function BlogPost() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-14 sm:px-8 sm:py-24">
-        <Link to="/blog" className="text-xs font-bold uppercase text-primary hover:text-white">← Voltar para o blog</Link>
+        <Link to="/blog" className="group inline-flex items-center gap-2 text-gray-400 transition-colors hover:text-primary">
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <span className="text-sm font-normal">VOLTAR</span>
+        </Link>
         <article className="mt-8">
           <div className={post.coverImage ? 'mb-12 grid items-center gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : 'mb-8'}>
             {post.coverImage && (
@@ -77,7 +81,7 @@ export default function BlogPost() {
             )}
             <div>
               <p className="mb-4 text-xs font-bold uppercase text-primary">{post.category} · {post.readTime}</p>
-              <h1 className="mb-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
+              <h1 className="mb-3 text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
               <p className="text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
             </div>
           </div>
@@ -85,7 +89,7 @@ export default function BlogPost() {
 
           {post.sections.map((section) => (
             <section key={section.heading} className="mb-12">
-              <h2 className="mb-4 text-2xl font-black leading-tight text-white sm:text-3xl">{section.heading}</h2>
+              <h2 className="mb-4 text-2xl font-normal leading-tight text-white sm:text-3xl">{section.heading}</h2>
               {section.paragraphs?.map((paragraph) => <p key={paragraph} className="mb-4 leading-relaxed text-gray-400">{paragraph}</p>)}
               {section.bullets && <ul className="my-6 space-y-3 text-gray-300">{section.bullets.map((item) => <li key={item} className="flex gap-3"><span className="text-primary">✓</span><span>{item}</span></li>)}</ul>}
               {section.comparison && <ComparisonTable rows={section.comparison} />}
@@ -93,7 +97,7 @@ export default function BlogPost() {
           ))}
 
           <section className="mb-12 rounded-2xl border border-primary/30 bg-primary/10 p-7 sm:p-10">
-            <h2 className="mb-3 text-2xl font-black">Veja uma plataforma feita para a rotina real</h2>
+            <h2 className="mb-3 text-2xl font-normal">Veja uma plataforma feita para a rotina real</h2>
             <p className="mb-6 leading-relaxed text-gray-300">Conheça a home da Comvaga, encontre uma vitrine pública e veja como a plataforma organiza o atendimento.</p>
             <div className="flex flex-wrap gap-3">
               <Link to="/" className="rounded-full bg-primary px-5 py-3 text-sm font-black uppercase text-black hover:shadow-lg hover:shadow-primary/30">Conhecer a Comvaga</Link>
