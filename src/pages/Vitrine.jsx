@@ -20,7 +20,7 @@ import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
 import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection.js';
 import VitrineTopSection from './vitrine/sections/VitrineTopSection.js';
 import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/seoMetadata.js';
-import { applyBusinessStructuredData } from '../utils/publicBusinessPage.js';
+import { applyBusinessStructuredData } from '../utils/businessSeo.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
 
