@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { publicSeoPlugin } from './server/devSeo.js';
+import { publicSeoPlugin } from './server/publicSeoPlugin.js';
   import react from '@vitejs/plugin-react';
   import { sentryVitePlugin } from '@sentry/vite-plugin';
 
