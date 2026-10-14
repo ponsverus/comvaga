@@ -4,6 +4,7 @@ import CheckedIcon from "../../../components/icons/CheckedIcon.js";
 import ProfessionalIcon from "../../../components/icons/ProfessionalIcon.js";
 import LocationIcon from "../../../components/icons/LocationIcon.js";
 import { formatPhoneForDisplay } from "../../../utils/phone.js";
+import { getBusinessAddressRows } from "../../../utils/businessAddress.js";
 function FacebookIcon({ className = "", size = 16 }) {
 	return /* @__PURE__ */ React.createElement("svg", {
 		xmlns: "http://www.w3.org/2000/svg",
@@ -67,7 +68,18 @@ function StarChar({ size = 18, className = "" }) {
 		"aria-hidden": "true"
 	}, "★");
 }
+function BusinessAddress({ rows, fallback }) {
+	if (!rows.length) return /* @__PURE__ */ React.createElement("span", { className: "font-normal" }, fallback);
+	return /* @__PURE__ */ React.createElement("address", { className: "not-italic" },
+		/* @__PURE__ */ React.createElement("dl", { className: "space-y-1" }, rows.map(([label, value]) =>
+			/* @__PURE__ */ React.createElement("div", { key: label, className: "flex flex-wrap gap-x-1" },
+				/* @__PURE__ */ React.createElement("dt", { className: "font-semibold" }, `${label}:`),
+				/* @__PURE__ */ React.createElement("dd", null, value)))));
+}
+
 export default function VitrineTopSection({ header, business, actions }) {
+	const addressRows = getBusinessAddressRows(business.negocio);
+	const hasAddress = addressRows.length > 0 || Boolean(business.negocio.endereco);
 	return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bg-primary overflow-hidden relative h-10 flex items-center" }, /* @__PURE__ */ React.createElement("div", { className: "announcement-bar-marquee flex whitespace-nowrap" }, /* @__PURE__ */ React.createElement("div", { className: "flex animate-marquee-sync" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center shrink-0" }, [...Array(20)].map((_, i) => /* @__PURE__ */ React.createElement("div", {
 		key: `a-${i}`,
 		className: "flex items-center"
@@ -108,7 +120,7 @@ export default function VitrineTopSection({ header, business, actions }) {
 	})), /* @__PURE__ */ React.createElement("p", { className: "text-base sm:text-lg text-vsub mb-4 font-normal" }, business.negocio.descricao), /* @__PURE__ */ React.createElement("div", { className: "flex flex-wrap items-center gap-4 sm:gap-6" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement(StarChar, {
 		size: 18,
 		className: "text-primary"
-	}), /* @__PURE__ */ React.createElement("span", { className: `text-xl font-normal ${business.mediaColor}` }, business.mediaDepoimentos)), business.negocio.endereco && /* @__PURE__ */ React.createElement("div", { className: `flex items-center gap-2 text-sm ${business.addrClass}` }, /* @__PURE__ */ React.createElement(LocationIcon, { className: "w-4 h-4 opacity-80" }), /* @__PURE__ */ React.createElement("span", { className: "font-normal" }, business.negocio.endereco)), business.negocio.telefone && /* @__PURE__ */ React.createElement("a", {
+	}), /* @__PURE__ */ React.createElement("span", { className: `text-xl font-normal ${business.mediaColor}` }, business.mediaDepoimentos)), hasAddress && /* @__PURE__ */ React.createElement("div", { className: `w-full flex items-start gap-2 text-sm ${business.addrClass}` }, /* @__PURE__ */ React.createElement(LocationIcon, { className: "w-4 h-4 mt-0.5 shrink-0 opacity-80" }), /* @__PURE__ */ React.createElement(BusinessAddress, { rows: addressRows, fallback: business.negocio.endereco })), business.negocio.telefone && /* @__PURE__ */ React.createElement("a", {
 		href: `tel:${actions.sanitizeTel(business.negocio.telefone) || business.negocio.telefone}`,
 		className: `flex items-center gap-2 text-sm font-normal transition-colors ${business.telClass}`
 	}, /* @__PURE__ */ React.createElement(Phone, {
