@@ -57,14 +57,14 @@ export default function BlogPost() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
             <img src="/Comvaga Logo.png" alt="Comvaga" className="h-12 w-auto" />
-            <span className="hidden text-xl font-black tracking-wide sm:inline">COMVAGA</span>
+            <span className="hidden text-xl font-black sm:inline">COMVAGA</span>
           </Link>
-          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase tracking-wide text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
+          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-14 sm:px-8 sm:py-24">
-        <Link to="/blog" className="text-xs font-bold uppercase tracking-[0.2em] text-primary hover:text-white">← Voltar para o blog</Link>
+        <Link to="/blog" className="text-xs font-bold uppercase text-primary hover:text-white">← Voltar para o blog</Link>
         <article className="mt-8">
           <div className={post.coverImage ? 'mb-12 grid items-center gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : 'mb-8'}>
             {post.coverImage && (
@@ -72,11 +72,11 @@ export default function BlogPost() {
                 src={post.coverImage}
                 alt={post.coverAlt || ''}
                 decoding="async"
-                className="aspect-square w-full rounded-2xl object-cover"
+                className="mx-auto h-48 w-48 rounded-full object-cover sm:h-56 sm:w-56 md:h-64 md:w-64"
               />
             )}
             <div>
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-primary">{post.category} · {post.readTime}</p>
+              <p className="mb-4 text-xs font-bold uppercase text-primary">{post.category} · {post.readTime}</p>
               <h1 className="mb-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
               <p className="text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
             </div>
