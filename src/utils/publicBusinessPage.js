@@ -1,12 +1,13 @@
 import { PUBLIC_ORIGIN, VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './seoMetadata.js';
 import { applyStructuredData } from './structuredData.js';
+import { formatBrazilianPostalCode } from './businessAddress.js';
 
 export const PUBLIC_BUSINESS_DATA_ID = 'comvaga-public-business';
 export const BUSINESS_SCHEMA_ID = 'comvaga-business-schema';
 
 const TEXT_FIELDS = [
   'id', 'nome', 'slug', 'descricao', 'telefone', 'tipo_negocio', 'instagram', 'facebook',
-  'logo_path', 'tema', 'endereco', 'endereco_rua', 'endereco_numero', 'endereco_complemento',
+  'logo_path', 'tema', 'endereco', 'endereco_cep', 'endereco_rua', 'endereco_numero', 'endereco_complemento',
   'endereco_bairro', 'endereco_cidade', 'endereco_estado', 'seo_title', 'seo_description',
 ];
 const GROUPS = new Set(['servicos', 'consultas', 'aulas']);
@@ -138,6 +139,8 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
       addressLocality: city,
     };
     if (business.endereco_estado?.trim()) entity.address.addressRegion = business.endereco_estado.trim();
+    const postalCode = formatBrazilianPostalCode(business.endereco_cep);
+    if (postalCode) entity.address.postalCode = postalCode;
   }
   return { '@context': 'https://schema.org', '@type': 'WebPage', '@id': `${url}#webpage`, url, name, mainEntity: entity };
 }
