@@ -1,4 +1,5 @@
 import { PUBLIC_ORIGIN } from './seoMetadata.js';
+import { COMVAGA_ORGANIZATION } from './comvagaOrganization.js';
 
 export const BLOG_SCHEMA_ID = 'comvaga-blog-schema';
 
@@ -28,7 +29,7 @@ export function buildBlogStructuredData(post) {
     datePublished: post.publishedAt,
     dateModified: post.publishedAt,
     mainEntityOfPage: metadata.canonical,
-    author: { '@type': 'Organization', name: 'Comvaga', url: PUBLIC_ORIGIN },
-    publisher: { '@type': 'Organization', name: 'Comvaga', url: PUBLIC_ORIGIN },
+    author: COMVAGA_ORGANIZATION,
+    publisher: COMVAGA_ORGANIZATION,
   };
 }
