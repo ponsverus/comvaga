@@ -30,6 +30,15 @@ export default function Blog() {
             <article key={post.slug} className="flex flex-col rounded-2xl border border-white/10 bg-dark-100 p-7 transition hover:-translate-y-1 hover:border-primary/40">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">{post.category}</p>
               <h2 className="mb-4 text-2xl font-black leading-tight">{post.title}</h2>
+              {post.coverImage && (
+                <img
+                  src={post.coverImage}
+                  alt={post.coverAlt || ''}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-video w-full rounded-xl object-cover"
+                />
+              )}
               <p className="mb-7 flex-1 leading-relaxed text-gray-400">{post.description}</p>
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-5 text-xs text-gray-500">
                 <span>{post.readTime}</span>
