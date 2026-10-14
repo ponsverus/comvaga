@@ -5,6 +5,8 @@ const post = {
   category: 'Agendamento online',
   readTime: '5 min de leitura',
   publishedAt: '2026-10-12',
+  coverImage: '/blog/Primeiro.png',
+  coverAlt: 'Pessoa com camiseta vermelha e calça jeans em fundo amarelo',
   intro: 'Escolher um sistema de agendamento não é apenas encontrar uma agenda digital. A plataforma precisa ajudar sua empresa a atender melhor, ocupar horários e manter a operação sob controle.',
   sections: [
     {
