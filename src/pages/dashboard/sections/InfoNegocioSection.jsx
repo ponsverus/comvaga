@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import TemaToggle from '../components/TemaToggle';
-import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT } from '../../../utils/businessSeo';
+import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT } from '../../../utils/businessSeoRules';
 
 function InfoRow({ label, children, action, last = false }) {
   return (

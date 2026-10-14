@@ -1,4 +1,4 @@
-import { buildBusinessSeo } from './businessSeo.js';
+import { buildBusinessSeo } from './businessSeoRules.js';
 
 export const PUBLIC_ORIGIN = 'https://comvaga.com.br';
 export const DEFAULT_SEO_TITLE = 'Comvaga: Inteligência de Agenda';

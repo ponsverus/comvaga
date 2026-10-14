@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT, normalizeSeoText } from '../../../utils/businessSeo';
+import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT, normalizeSeoText } from '../../../utils/businessSeoRules';
 import { supabase } from '../../../supabase';
 import { getDiasTrabalhoFromHorarios, timeToMinutes, toNumberOrNull, toUpperClean } from '../utils';
 import {

@@ -1,47 +1,72 @@
-export const SEO_TITLE_LIMIT = 60;
-export const SEO_DESCRIPTION_LIMIT = 160;
+import { PUBLIC_ORIGIN, VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './seoMetadata.js';
+import { applyStructuredData } from './structuredData.js';
 
-export function normalizeSeoText(value) {
-  return String(value ?? '').replace(/\s+/gu, ' ').trim();
+export const BUSINESS_SCHEMA_ID = 'comvaga-business-schema';
+
+function formatBrazilianPostalCode(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^\d{5}-?\d{3}$/.test(raw)) return null;
+  const digits = raw.replace('-', '');
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
-function shorten(value, limit) {
-  const chars = Array.from(value);
-  if (chars.length <= limit) return value;
-  const prefix = chars.slice(0, limit - 3).join('');
-  const boundary = prefix.lastIndexOf(' ');
-  return `${(boundary > 0 ? prefix.slice(0, boundary) : prefix).trimEnd()}...`;
-}
-
-function comparisonText(value) {
-  return normalizeSeoText(value).normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('pt-BR');
-}
-
-export function buildBusinessSeo(negocio, entregas = []) {
-  entregas = Array.isArray(negocio?.seo_services) ? negocio.seo_services : entregas;
-  const nome = normalizeSeoText(negocio?.nome);
-  const tipo = normalizeSeoText(negocio?.tipo_negocio).toLocaleLowerCase('pt-BR');
-  const cidade = normalizeSeoText(negocio?.endereco_cidade);
-  const includesType = tipo && ` ${comparisonText(nome)} `.includes(` ${comparisonText(tipo)} `);
-  const category = includesType ? '' : tipo;
-  const location = category && cidade ? `${category} em ${cidade}` : category || cidade;
-  let automaticTitle = [nome || 'Comvaga', location].filter(Boolean).join(' | ');
-  if (Array.from(automaticTitle).length > SEO_TITLE_LIMIT) {
-    automaticTitle = [nome || 'Comvaga', category].filter(Boolean).join(' | ');
+function socialProfileUrl(value, platform) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return null;
+  const domain = `${platform}.com`;
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${domain}/${raw.replace(/^@/, '')}`);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port
+      || ![domain, `www.${domain}`, ...(platform === 'facebook' ? [`m.${domain}`] : [])].includes(url.hostname)) return null;
+    const parts = url.pathname.split('/').filter(Boolean);
+    const handle = parts[0]?.toLowerCase();
+    const reserved = ['instagram', 'facebook', 'home', 'login', 'accounts', 'explore', 'p', 'reel', 'reels',
+      'stories', 'share', 'sharer', 'sharer.php', 'watch', 'groups', 'events', 'marketplace', 'help'];
+    if (platform === 'facebook' && handle === 'profile.php') {
+      const id = url.searchParams.get('id');
+      return parts.length === 1 && /^\d+$/.test(id || '') ? `https://${domain}/profile.php?id=${id}` : null;
+    }
+    if (parts.length !== 1 || reserved.includes(handle) || !/^[a-zA-Z0-9._]+$/.test(parts[0])) return null;
+    return `https://${domain}/${parts[0]}`;
+  } catch {
+    return null;
   }
-  if (Array.from(automaticTitle).length > SEO_TITLE_LIMIT) automaticTitle = nome || 'Comvaga';
-  if (Array.from(`${automaticTitle} | Comvaga`).length <= SEO_TITLE_LIMIT && nome) automaticTitle += ' | Comvaga';
-  const services = [...new Set(entregas.filter((item) => item?.ativo === true && !item.excluido_em && !item.motivo_excluido).map((item) => normalizeSeoText(item.nome)).filter(Boolean))].slice(0, 3);
-  let automaticDescription = nome
-    ? `Agende online com ${nome}${location ? ` (${location})` : ''} pela Comvaga.`
-    : 'Agende online pela Comvaga.';
-  if (nome && services.length) {
-    const prefix = [nome, location].filter(Boolean).join(' | ');
-    const serviceDescription = `${prefix}. Oferece: ${services.join(', ')}. Agende online.`;
-    if (Array.from(serviceDescription).length <= SEO_DESCRIPTION_LIMIT) automaticDescription = serviceDescription;
-  }
-  return {
-    title: shorten(normalizeSeoText(negocio?.seo_title) || automaticTitle, SEO_TITLE_LIMIT),
-    description: shorten(normalizeSeoText(negocio?.seo_description) || normalizeSeoText(negocio?.descricao) || automaticDescription, SEO_DESCRIPTION_LIMIT),
+}
+
+export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE) {
+  const name = String(business?.nome || '').trim();
+  if (!name || !VALID_BUSINESS_SLUG.test(business?.slug || '')) return null;
+  const url = `${PUBLIC_ORIGIN}/v/${business.slug}`;
+  const street = String(business.endereco_rua || '').trim();
+  const city = String(business.endereco_cidade || '').trim();
+  const hasAddress = Boolean(street && city && business.endereco?.trim());
+  const entity = {
+    '@type': hasAddress ? 'LocalBusiness' : 'Organization',
+    '@id': `${url}#business`, name, url,
   };
+  if (business.descricao?.trim()) entity.description = business.descricao.trim();
+  if (business.telefone?.trim()) entity.telephone = business.telefone.trim();
+  const profiles = [socialProfileUrl(business.instagram, 'instagram'), socialProfileUrl(business.facebook, 'facebook')]
+    .filter(Boolean);
+  if (profiles.length) entity.sameAs = profiles;
+  if (image !== DEFAULT_SEO_IMAGE && /^https:\/\//.test(image)) entity.image = image;
+  if (hasAddress) {
+    entity.address = {
+      '@type': 'PostalAddress',
+      streetAddress: [street, business.endereco_numero, business.endereco_complemento]
+        .filter((part) => typeof part === 'string' && part.trim()).map((part) => part.trim()).join(', '),
+      addressLocality: city,
+      addressCountry: 'BR',
+    };
+    if (business.endereco_estado?.trim()) entity.address.addressRegion = business.endereco_estado.trim();
+    const postalCode = formatBrazilianPostalCode(business.endereco_cep);
+    if (postalCode) entity.address.postalCode = postalCode;
+  }
+  return { '@context': 'https://schema.org', '@type': 'WebPage', '@id': `${url}#webpage`, url, name, mainEntity: entity };
+}
+
+export function applyBusinessStructuredData(business, image, doc = globalThis.document) {
+  const data = buildBusinessStructuredData(business, image);
+  if (!data) return () => {};
+  return applyStructuredData(BUSINESS_SCHEMA_ID, data, doc);
 }
