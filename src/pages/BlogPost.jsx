@@ -66,9 +66,21 @@ export default function BlogPost() {
       <main className="mx-auto max-w-4xl px-4 py-14 sm:px-8 sm:py-24">
         <Link to="/blog" className="text-xs font-bold uppercase tracking-[0.2em] text-primary hover:text-white">← Voltar para o blog</Link>
         <article className="mt-8">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-primary">{post.category} · {post.readTime}</p>
-          <h1 className="mb-3 text-4xl font-black leading-tight sm:text-6xl">{post.title}</h1>
-          <p className="mb-8 text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
+          <div className={post.coverImage ? 'mb-12 grid items-center gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : 'mb-8'}>
+            {post.coverImage && (
+              <img
+                src={post.coverImage}
+                alt={post.coverAlt || ''}
+                decoding="async"
+                className="aspect-square w-full rounded-2xl object-cover"
+              />
+            )}
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-primary">{post.category} · {post.readTime}</p>
+              <h1 className="mb-3 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
+              <p className="text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
+            </div>
+          </div>
           <p className="mb-12 border-l-2 border-primary pl-5 text-xl leading-relaxed text-gray-300">{post.intro}</p>
 
           {post.sections.map((section) => (
