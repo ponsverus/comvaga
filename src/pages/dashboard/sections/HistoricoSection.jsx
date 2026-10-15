@@ -3,6 +3,7 @@ import { Share2 } from 'lucide-react';
 import DatePicker from '../../../components/DatePicker';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
+import { useFeedback } from '../../../feedback/useFeedback';
 import {
   computeStatusFromDb,
   formatDateBRFromISO,
@@ -26,9 +27,9 @@ export default function HistoricoSection({
   historicoLoadingMore,
   historicoError,
 }) {
+  const feedback = useFeedback();
   const shareLock = useRef(false);
   const [sharingId, setSharingId] = useState(null);
-  const [shareErrorId, setShareErrorId] = useState(null);
   const [pdfRenderer, setPdfRenderer] = useState(null);
   const [pdfPreparationError, setPdfPreparationError] = useState(false);
   const historicoErrorMsg = historicoError ? ptBR.dashboard?.history_load_error : null;
@@ -48,7 +49,6 @@ export default function HistoricoSection({
     if (shareLock.current || !pdfRenderer || !getBizLabel(businessGroup, 'item_singular')) return;
     shareLock.current = true;
     setSharingId(agendamento.id);
-    setShareErrorId(null);
     try {
       const status = computeStatusFromDb(agendamento);
       const statusText = isCancelStatus(status) ? 'CANCELADO' : isDoneStatus(status) ? 'CONCLUÍDO' : 'AGENDADO';
@@ -75,7 +75,13 @@ export default function HistoricoSection({
         secureContext: window.isSecureContext,
         nativeShareAvailable: typeof navigator.share === 'function',
       });
-      setShareErrorId(agendamento.id);
+      feedback.showCustom({
+        title: 'Compartilhamento',
+        body: 'Falha ao compartilhar. Tente novamente.',
+        variant: 'danger',
+        screen: 'dark',
+        buttonText: 'OK',
+      });
     } finally {
       shareLock.current = false;
       setSharingId(null);
@@ -127,9 +133,6 @@ export default function HistoricoSection({
                   <Share2 size={18} aria-hidden="true" className="shrink-0" />
                   {pdfPreparationError ? 'PDF INDISPONÍVEL' : !pdfRenderer ? 'PREPARANDO PDF...' : sharingId === a.id ? 'COMPARTILHANDO...' : 'COMPARTILHAR'}
                 </button>
-                {shareErrorId === a.id && (
-                  <p role="alert" className="mt-2 text-sm text-red-300">Falha ao compartilhar. Tente novamente.</p>
-                )}
               </div>
             );
           })}
