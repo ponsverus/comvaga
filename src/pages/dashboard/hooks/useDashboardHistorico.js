@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AG_PAGE_SIZE, compareAgendamentoDateTimeDesc } from '../utils';
 import { fetchAgendamentosNegocio } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
+import { useFeedback } from '../../../feedback/useFeedback';
 
 export function useDashboardHistorico({
   negocioId,
   hoje,
   parceiroProfissionalId,
 }) {
+  const feedback = useFeedback();
   const [historicoAgendamentos, setHistoricoAgendamentos] = useState([]);
   const [historicoCursor, setHistoricoCursor] = useState(null);
   const [historicoHasMore, setHistoricoHasMore] = useState(false);
@@ -73,7 +75,7 @@ export function useDashboardHistorico({
       await fetchHistoricoPage({ profIds: historicoProfIds, date: historicoData, cursor: historicoCursor, append: true });
     } catch (error) {
       console.warn('Falha ao carregar mais histórico.', error);
-      setHistoricoError('dashboard.history_load_error');
+      feedback.showMessage('dashboard.history_load_error');
     } finally {
       setHistoricoLoadingMore(false);
     }
@@ -84,6 +86,7 @@ export function useDashboardHistorico({
     historicoHasMore,
     historicoLoadingMore,
     historicoProfIds,
+    feedback,
     negocioId,
   ]);
 
