@@ -219,9 +219,6 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('subscription_due_payment_not_found') || raw.includes('subscription_overdue_payment_not_found')) {
     return messageBody('dashboard.billing_recovery_invoice_not_found');
   }
-  if (raw.includes('multiple_overdue_subscription_payments')) {
-    return messageBody('dashboard.billing_recovery_multiple_invoices');
-  }
   if (raw.includes('subscription_recovery_unavailable') || raw.includes('subscription_invoice_unavailable') || raw.includes('subscription_not_recoverable') || raw.includes('subscription_state_changed')) {
     return messageBody('dashboard.billing_recovery_invoice_not_found');
   }
