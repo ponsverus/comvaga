@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { FunctionsFetchError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ptBR } from '../feedback/messages/ptBR.js';
+import { useFeedback } from '../feedback/useFeedback';
+import { getFeedbackState } from '../feedback/feedbackStore';
 import { supabase } from '../supabase';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
@@ -64,6 +66,7 @@ export default function BookingCalendar({
   assistedBooking = false,
   temaAtivo = 'dark',
 }) {
+  const feedback = useFeedback();
   const isLight = temaAtivo === 'light';
   const entregaIds = Array.isArray(entrega?.entrega_ids) && entrega.entrega_ids.length
     ? entrega.entrega_ids.filter(Boolean)
@@ -84,7 +87,6 @@ export default function BookingCalendar({
   const [slotsError,   setSlotsError]   = useState(null);
 
   const [confirming,   setConfirming]   = useState(false);
-  const [confirmError, setConfirmError] = useState(null);
 
   const containerRef = useRef(null);
   const slotsRef     = useRef(null);
@@ -94,7 +96,7 @@ export default function BookingCalendar({
 
   useEffect(() => {
     function handle(e) {
-      if (confirming) return;
+      if (confirming || getFeedbackState().open) return;
       if (containerRef.current && !containerRef.current.contains(e.target)) onClose?.();
     }
     document.addEventListener('mousedown', handle);
@@ -116,7 +118,6 @@ export default function BookingCalendar({
       setHorariosAll([]);
       setShowAll(false);
       setSlotsError(null);
-      setConfirmError(null);
       setSlotsLoading(false);
     }
   }, [todayISO]);
@@ -134,7 +135,6 @@ export default function BookingCalendar({
     setHorariosAll([]);
     setShowAll(false);
     setSelectedSlot(null);
-    setConfirmError(null);
 
     try {
       const dur = Number(entrega.duracao_minutos);
@@ -192,7 +192,6 @@ export default function BookingCalendar({
 
   const handleSelectSlot = slot => {
     setSelectedSlot(slot);
-    setConfirmError(null);
     setTimeout(() => resumeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
   };
 
@@ -202,7 +201,6 @@ export default function BookingCalendar({
     if (assistedBooking && !clienteIdAssistido) return;
 
     setConfirming(true);
-    setConfirmError(null);
     try {
       const isMultiplo = entregaIds.length > 1;
       const bookingRequest = () => isMultiplo
@@ -254,23 +252,31 @@ export default function BookingCalendar({
         || msg.includes('sobrepos')
         || msg.includes('exclusion')
         || String(e?.code || '') === '23P01';
+      let errorMessage;
       if (scheduleBlocked) {
-        setConfirmError(ptBR.vitrine.schedule_errors.plan_blocked);
+        errorMessage = ptBR.vitrine.schedule_errors.plan_blocked;
       } else if (limited) {
-        setConfirmError(ptBR.vitrine.schedule_errors.rate_limit);
+        errorMessage = ptBR.vitrine.schedule_errors.rate_limit;
       } else if (expired) {
-        setConfirmError(ptBR.vitrine.schedule_errors.slot_expired);
+        errorMessage = ptBR.vitrine.schedule_errors.slot_expired;
         fetchSlots(selectedDay);
       } else if (overlap) {
-        setConfirmError(ptBR.vitrine.schedule_errors.slot_conflict);
+        errorMessage = ptBR.vitrine.schedule_errors.slot_conflict;
         fetchSlots(selectedDay);
       } else if (notAllowed) {
-        setConfirmError(ptBR.vitrine.schedule_errors.not_allowed);
+        errorMessage = ptBR.vitrine.schedule_errors.not_allowed;
       } else if (connectionFailed) {
-        setConfirmError(ptBR.vitrine.schedule_errors.connection);
+        errorMessage = ptBR.vitrine.schedule_errors.connection;
       } else {
-        setConfirmError(ptBR.vitrine.schedule_errors.unexpected);
+        errorMessage = ptBR.vitrine.schedule_errors.unexpected;
       }
+      feedback.showCustom({
+        title: 'Agendamento',
+        body: errorMessage,
+        variant: expired || overlap || limited ? 'warning' : 'danger',
+        screen: isLight ? 'light' : 'dark',
+        buttonText: 'OK',
+      });
     } finally {
       setConfirming(false);
     }
@@ -465,12 +471,6 @@ export default function BookingCalendar({
 
           {todayISO && selectedSlot && (
             <div ref={resumeRef}>
-              {confirmError && (
-                <div className={`mb-3 border rounded-custom px-4 py-3 text-xs ${isLight ? 'border-red-200 bg-red-50/60 text-red-600' : 'border-red-500/20 bg-red-500/5 text-red-300'}`}>
-                  {confirmError}
-                </div>
-              )}
-
               <button
                 type="button"
                 onClick={handleConfirm}
