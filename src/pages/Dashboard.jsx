@@ -444,6 +444,38 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   }, [reloadBillingStatus, souDono]);
 
   useEffect(() => {
+    const status = String(billingStatus?.status || '').toLowerCase();
+    const remaining = Number(billingStatus?.due_charge_count || 0);
+    const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
+    if (!souDono || !negocio?.id || !['blocked', 'past_due'].includes(status)
+      || (remaining < 1 && paymentStatus !== 'valid')) return undefined;
+
+    let stopped = false;
+    let attempts = 0;
+    let timer;
+    const pollPaymentConfirmation = async () => {
+      if (stopped || document.visibilityState !== 'visible') return;
+      attempts += 1;
+      try {
+        const nextStatus = await fetchBusinessBillingStatus(negocio.id);
+        if (stopped) return;
+        setBillingStatus(nextStatus);
+        setBillingStatusLoadError(false);
+        if (!['blocked', 'past_due'].includes(String(nextStatus?.status || '').toLowerCase())
+          || Number(nextStatus?.due_charge_count || 0) !== remaining) return;
+      } catch {
+        if (stopped) return;
+      }
+      if (attempts < 8) timer = window.setTimeout(pollPaymentConfirmation, 15_000);
+    };
+    timer = window.setTimeout(pollPaymentConfirmation, 15_000);
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+    };
+  }, [billingStatus?.status, billingStatus?.due_charge_count, billingStatus?.payment_method_status, negocio?.id, souDono]);
+
+  useEffect(() => {
     const syncStatus = String(billingStatus?.provider_sync_status || '').toLowerCase();
     const scheduledDowngrade = isScheduledDowngradeSync(billingStatus);
     if (!souDono
