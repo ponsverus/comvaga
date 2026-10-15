@@ -3,26 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { ptBR } from '../feedback/messages/ptBR';
+import { useFeedback } from '../feedback/useFeedback';
 import { fetchUserAccessProfile } from '../utils/profileAccess';
 import { getParceiroLoginAlert } from '../utils/friendlyErrors';
 
 const msgs = ptBR.parceiroLogin;
 
-
-function Alerta({ msg }) {
-  if (!msg) return null;
-  const estilos = {
-    erro: 'bg-red-500/10 border-red-500/30 text-red-400',
-    aviso: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
-    sucesso: 'bg-green-500/10 border-green-500/30 text-green-400',
-  };
-  const classe = estilos[msg.variant] || estilos.erro;
-  return (
-    <div className={`border rounded-custom px-4 py-3 text-sm font-normal ${classe}`}>
-      {msg.body}
-    </div>
-  );
-}
 
 function FieldRow({ label, children, last = false }) {
   return (
@@ -37,22 +23,31 @@ const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white plac
 
 export default function LoginParceiro({ onLogin, suppressAuthRef }) {
   const navigate = useNavigate();
+  const feedback = useFeedback();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-  const [alerta, setAlerta] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
+  const showPartnerAlert = (msg) => {
+    feedback.showCustom({
+      title: 'Login parceiro',
+      body: msg.body,
+      variant: msg.variant === 'sucesso' ? 'success' : msg.variant === 'aviso' ? 'warning' : 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setAlerta(null);
 
     const emailClean = email.trim().toLowerCase();
 
-    if (!emailClean || !emailClean.includes('@')) return setAlerta(msgs.email_invalid);
-    if (senha.length < 7) return setAlerta(msgs.senha_too_short);
+    if (!emailClean || !emailClean.includes('@')) return showPartnerAlert(msgs.email_invalid);
+    if (senha.length < 7) return showPartnerAlert(msgs.senha_too_short);
 
     setLoading(true);
     if (suppressAuthRef) suppressAuthRef.current = true;
@@ -65,7 +60,7 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
 
       if (signInErr) {
         if (String(signInErr.message || '').toLowerCase().includes('invalid')) {
-          return setAlerta(msgs.credentials_invalid);
+          return showPartnerAlert(msgs.credentials_invalid);
         }
         throw signInErr;
       }
@@ -76,17 +71,17 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
       const accessProfile = await fetchUserAccessProfile();
       if (accessProfile?.type !== 'professional') {
         await supabase.auth.signOut();
-        return setAlerta(msgs.not_partner);
+        return showPartnerAlert(msgs.not_partner);
       }
 
       if (accessProfile?.professionalRole === 'owner') {
         await supabase.auth.signOut();
-        return setAlerta(ptBR.parceiroCadastro.owner_cannot_request_partner_access);
+        return showPartnerAlert(ptBR.parceiroCadastro.owner_cannot_request_partner_access);
       }
 
       if (accessProfile?.professionalRole !== 'partner') {
         await supabase.auth.signOut();
-        return setAlerta(msgs.not_partner);
+        return showPartnerAlert(msgs.not_partner);
       }
 
       if (suppressAuthRef) suppressAuthRef.current = false;
@@ -99,7 +94,7 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
       );
       navigate('/selecionar-negocio-parceiro', { replace: true });
     } catch (e2) {
-      setAlerta(getParceiroLoginAlert(e2, msgs));
+      showPartnerAlert(getParceiroLoginAlert(e2, msgs));
       console.error('Partner login error:', e2);
       await supabase.auth.signOut();
     } finally {
@@ -112,19 +107,18 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
     if (resetLoading) return;
     const emailClean = email.trim().toLowerCase();
     if (!emailClean || !emailClean.includes('@')) {
-      setAlerta(msgs.reset_email_required);
+      showPartnerAlert(msgs.reset_email_required);
       return;
     }
     setResetLoading(true);
-    setAlerta(null);
     try {
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(emailClean, {
         redirectTo: `${window.location.origin}/reset-password?next=${encodeURIComponent('/login/parceiro')}`,
       });
       if (resetErr) throw resetErr;
-      setAlerta(msgs.reset_sent);
+      showPartnerAlert(msgs.reset_sent);
     } catch {
-      setAlerta(msgs.reset_error);
+      showPartnerAlert(msgs.reset_error);
     } finally {
       setResetLoading(false);
     }
@@ -182,8 +176,6 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
               </div>
             </FieldRow>
           </div>
-
-          <Alerta msg={alerta} />
 
           <div className="space-y-2">
             <button
