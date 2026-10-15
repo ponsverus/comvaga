@@ -145,15 +145,8 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_recovery_invoice_not_found: {
-      title: 'Fatura pendente indisponível',
-      body: 'A busca por faturas vencidas na assinatura atual retornou sem resultados. Atualize o status em instantes ou contate o suporte.',
-      variant: 'warning',
-      screen: 'dark',
-      buttonText: 'ENTENDI',
-    },
-    billing_recovery_multiple_invoices: {
-      title: 'Faturas pendentes precisam de conferência',
-      body: 'Há mais de uma fatura vencida nesta assinatura. Para evitar pagamentos incorretos, contate o suporte para conferirmos os valores.',
+      title: 'Fatura em aberto indisponível',
+      body: 'Houve um erro ao abrir a fatura em aberto com vencimento até hoje nesta assinatura. Atualize o status em instantes ou contate o suporte.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
