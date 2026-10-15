@@ -340,6 +340,13 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
+    billing_cancel_debt_open: {
+      title: 'Débito em aberto',
+      body: 'Quite os débitos com vencimento até hoje antes de cancelar o plano.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
     billing_cancel_gateway_error: {
       title: 'Erro no cancelamento',
       body: 'O cancelamento da assinatura falhou no gateway de pagamento. Tente novamente em instantes.',
