@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, LogOut, RefreshCw, Send } from 'lucide-react';
 import { ProfessionalIcon, SearchIcon, UserIcon } from '../components/icons';
 import { ptBR } from '../feedback/messages/ptBR';
+import { useFeedback } from '../feedback/useFeedback';
 import { supabase } from '../supabase';
 import { withAuthRetry } from '../utils/authSession';
 import { getPublicUrl } from '../utils/storage';
@@ -87,6 +88,7 @@ function AlertBox({ alert }) {
 
 export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const navigate = useNavigate();
+  const feedback = useFeedback();
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -100,6 +102,10 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const desktopSearchRef = useRef(null);
   const desktopSearchInputRef = useRef(null);
   const searchResultsRef = useRef(null);
+
+  const showRequestAlert = (message, variant = 'warning') => {
+    feedback.showCustom({ title: 'Solicitação de acesso', body: message, variant, screen: 'dark', buttonText: 'OK' });
+  };
 
   const loadProfileName = useCallback(async () => {
     const fallback = String(user?.user_metadata?.nome || '').trim();
@@ -119,7 +125,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitacao(nome);
   }, [user?.id, user?.user_metadata?.nome]);
 
-  const loadCenter = useCallback(async ({ silent = false } = {}) => {
+  const loadCenter = useCallback(async ({ silent = false, notifyOnError = false } = {}) => {
     if (!silent) setLoading(true);
     setAlert(null);
     try {
@@ -132,15 +138,16 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       setLinks(data || []);
     } catch (error) {
       console.error('Partner business center load error:', error);
-      setAlert({
-        type: 'error',
-        message: msgs.load_error,
-      });
+      if (notifyOnError) {
+        feedback.showCustom({ title: 'Central de negócios', body: msgs.load_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
+      } else {
+        setAlert({ type: 'error', message: msgs.load_error });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [feedback]);
 
   useEffect(() => {
     loadProfileName();
@@ -245,9 +252,9 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
       const status = String(data?.status || '');
       if (status === 'pending_approval') {
-        setAlert({ type: 'success', message: msgs.request_pending_approval });
+        showRequestAlert(msgs.request_pending_approval, 'success');
       } else if (status === 'ok') {
-        setAlert({ type: 'success', message: msgs.request_active });
+        showRequestAlert(msgs.request_active, 'success');
       }
 
       await loadCenter({ silent: true });
@@ -265,18 +272,18 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     } catch (error) {
       const raw = String(error?.message || '').toLowerCase();
       if (raw.includes('access_inactive')) {
-        setAlert({ type: 'warning', message: msgs.access_inactive });
+        showRequestAlert(msgs.access_inactive);
       } else if (raw.includes('future_plan_professional_limit_reached')) {
-        setAlert({ type: 'warning', message: msgs.future_plan_professional_limit_reached });
+        showRequestAlert(msgs.future_plan_professional_limit_reached);
       } else if (raw.includes('plan_professional_limit_reached')) {
-        setAlert({ type: 'warning', message: msgs.plan_professional_limit_reached });
+        showRequestAlert(msgs.plan_professional_limit_reached);
       } else if (raw.includes('partner_plan_unavailable')) {
-        setAlert({ type: 'warning', message: ptBR.dashboard.partner_plan_unavailable.body });
+        showRequestAlert(ptBR.dashboard.partner_plan_unavailable.body);
       } else if (raw.includes('owner_cannot_request_partner_access')) {
-        setAlert({ type: 'warning', message: msgs.owner_cannot_request_partner_access });
+        showRequestAlert(msgs.owner_cannot_request_partner_access);
       } else {
         console.error('Partner access request error:', error);
-        setAlert({ type: 'error', message: msgs.request_error });
+        showRequestAlert(msgs.request_error, 'danger');
       }
     } finally {
       setRequestingId(null);
@@ -285,7 +292,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
   const refresh = () => {
     setRefreshing(true);
-    loadCenter({ silent: true });
+    loadCenter({ silent: true, notifyOnError: true });
   };
 
   const renderBusinessRow = (row, { searchResult = false } = {}) => {
