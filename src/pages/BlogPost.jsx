@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pause, Play } from 'lucide-react';
 import AppFooter from '../components/AppFooter';
 import { getBlogPost } from '../data/blogPosts/index.js';
 import { COMVAGA_ORGANIZATION } from '../utils/comvagaOrganization.js';
@@ -48,6 +48,7 @@ function ComparisonTable({ rows }) {
 export default function BlogPost() {
   const { slug } = useParams();
   const post = getBlogPost(slug);
+  const [announcementPaused, setAnnouncementPaused] = useState(false);
   useBlogPostSeo(post);
 
   if (!post) return <Navigate to="/blog" replace />;
@@ -82,7 +83,9 @@ export default function BlogPost() {
             <div>
               <p className="mb-4 text-xs font-bold uppercase text-primary">{post.category} · {post.readTime}</p>
               <h1 className="mb-3 text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
-              <p className="text-sm text-gray-400">Por {COMVAGA_ORGANIZATION.name}</p>
+              <p className="text-sm uppercase text-gray-400">
+                Por {COMVAGA_ORGANIZATION.name}
+              </p>
             </div>
           </div>
           <p className="mb-12 border-l-2 border-primary pl-5 text-xl leading-relaxed text-gray-300">{post.intro}</p>
@@ -95,18 +98,35 @@ export default function BlogPost() {
               {section.comparison && <ComparisonTable rows={section.comparison} />}
             </section>
           ))}
-
-          <section className="mb-12 rounded-2xl border border-primary/30 bg-primary/10 p-7 sm:p-10">
-            <h2 className="mb-3 text-2xl font-normal">Veja uma plataforma feita para a rotina real</h2>
-            <p className="mb-6 leading-relaxed text-gray-300">Conheça a home da Comvaga, encontre uma vitrine pública e veja como a plataforma organiza o atendimento.</p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/" className="rounded-full bg-primary px-5 py-3 text-sm font-black uppercase text-black hover:shadow-lg hover:shadow-primary/30">Conhecer a Comvaga</Link>
-              <Link to="/v/vikings" className="rounded-full border border-white/20 px-5 py-3 text-sm font-bold uppercase text-white hover:border-primary hover:text-primary">Ver vitrine exemplo</Link>
-              <Link to="/privacidade" className="rounded-full border border-white/20 px-5 py-3 text-sm font-bold uppercase text-white hover:border-primary hover:text-primary">Política de privacidade</Link>
-            </div>
-          </section>
         </article>
       </main>
+
+      <nav aria-label="Conheça a Comvaga" className="blog-announcement flex h-12 w-full items-center bg-yellow-400 text-black">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className={`announcement-bar-wrapper flex ${announcementPaused ? 'is-paused' : ''}`}>
+            {[0, 1].map((copy) => (
+              <div
+                key={copy}
+                className="announcement-bar-track flex w-screen min-w-max shrink-0 items-center justify-around gap-8 whitespace-nowrap px-4"
+                aria-hidden={copy === 1}
+              >
+                <Link to="/" tabIndex={copy === 1 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Conhecer a Comvaga</Link>
+                <span aria-hidden="true">●</span>
+                <Link to="/v/vikings" tabIndex={copy === 1 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Ver vitrine exemplo</Link>
+                <span aria-hidden="true">●</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAnnouncementPaused((paused) => !paused)}
+          aria-label={announcementPaused ? 'Retomar animação da faixa' : 'Pausar animação da faixa'}
+          className="flex h-12 w-12 shrink-0 items-center justify-center text-black/70 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-black motion-reduce:hidden"
+        >
+          {announcementPaused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      </nav>
 
       <AppFooter />
     </div>
