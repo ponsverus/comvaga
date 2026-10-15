@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { fetchClientesDashboard } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { ptBR } from '../../../feedback/messages/ptBR';
+import { useFeedback } from '../../../feedback/useFeedback';
 
 const CLIENTES_PAGE_SIZE = 50;
 
 export function useDashboardClientes({ negocioId }) {
+  const feedback = useFeedback();
   const [clientes, setClientes] = useState([]);
   const [clientesHasMore, setClientesHasMore] = useState(false);
   const [clientesLoading, setClientesLoading] = useState(false);
@@ -76,18 +78,20 @@ export function useDashboardClientes({ negocioId }) {
       await loadClientes({ cursor, append: true });
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
+      let message;
       if (requestKey === 'alerts.request_timeout') {
-        setClientesError(ptBR.dashboard.inline_errors.clients_load_more_timeout);
+        message = ptBR.dashboard.inline_errors.clients_load_more_timeout;
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setClientesError(ptBR.alerts.rate_limit_exceeded.body);
+        message = ptBR.alerts.rate_limit_exceeded.body;
       } else {
         console.error('Dashboard clients load more error:', error);
-        setClientesError(ptBR.dashboard.inline_errors.clients_load_more_error);
+        message = ptBR.dashboard.inline_errors.clients_load_more_error;
       }
+      feedback.showCustom({ title: 'Clientes', body: message, variant: 'danger', screen: 'dark', buttonText: 'OK' });
     } finally {
       setClientesLoadingMore(false);
     }
-  }, [clientes, clientesHasMore, clientesLoadingMore, loadClientes, negocioId]);
+  }, [clientes, clientesHasMore, clientesLoadingMore, feedback, loadClientes, negocioId]);
 
   return {
     clientes,

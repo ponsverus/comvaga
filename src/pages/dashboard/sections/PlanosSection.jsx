@@ -317,6 +317,10 @@ export default function PlanosSection({
   const [cancelingCheckout, setCancelingCheckout] = useState(false);
   const [error, setError] = useState('');
 
+  const showPlanAlert = (body, variant = 'danger') => {
+    feedback.showCustom({ title: 'Planos', body, variant, screen: 'dark', buttonText: 'OK' });
+  };
+
   const loadPlans = useCallback(async () => {
     if (!negocioId) {
       setPlans([]);
@@ -378,12 +382,12 @@ export default function PlanosSection({
       && planCode !== billingStatus?.pending_plan_code
       && Number(targetPlan.sort_order) < Number(selectedPlan.sort_order);
     if (providerSyncPending && !replacingDowngrade) {
-      setError(messageBody('dashboard.billing_provider_sync_in_progress'));
+      showPlanAlert(messageBody('dashboard.billing_provider_sync_in_progress'), 'warning');
       return;
     }
     const targetLimit = getPlanLimit(targetPlan);
     if (targetLimit != null && billableProfessionalsCount > targetLimit) {
-      setError(getPlanLimitMessage(targetPlan, billableProfessionalsCount));
+      showPlanAlert(getPlanLimitMessage(targetPlan, billableProfessionalsCount), 'warning');
       return;
     }
     if (hasActiveCheckout && activeCheckoutPlanCode === planCode && activeCheckoutUrl) {
@@ -419,11 +423,11 @@ export default function PlanosSection({
       console.error(freeAccessOpen ? 'setBusinessPlan error:' : 'createAsaasCheckout error:', err);
       const requestKey = getRequestErrorKey(err);
       if (requestKey === 'alerts.request_timeout') {
-        setError(freeAccessOpen ? messageBody('dashboard.billing_plan_change_error') : messageBody('dashboard.billing_checkout_timeout'));
+        showPlanAlert(freeAccessOpen ? messageBody('dashboard.billing_plan_change_error') : messageBody('dashboard.billing_checkout_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
+        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
       } else {
-        setError(getPlanChangeErrorMessage(err));
+        showPlanAlert(getPlanChangeErrorMessage(err));
       }
     } finally {
       setSavingPlan('');
@@ -433,7 +437,7 @@ export default function PlanosSection({
   const handleCancelPlan = async (planCode) => {
     if (!negocioId || savingPlan || cancelingPlan || cancelingCheckout) return;
     if (hasActiveCheckout || providerSyncPending) {
-      setError(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'));
+      showPlanAlert(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'), 'warning');
       return;
     }
     const confirmed = await feedback.confirm('dashboard.billing_cancel_confirm');
@@ -452,11 +456,11 @@ export default function PlanosSection({
       console.error('cancelAsaasSubscription error:', err);
       const requestKey = getRequestErrorKey(err);
       if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
+        showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
+        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
       } else {
-        setError(getPlanCancelErrorMessage(err));
+        showPlanAlert(getPlanCancelErrorMessage(err));
       }
     } finally {
       setCancelingPlan('');
@@ -481,11 +485,11 @@ export default function PlanosSection({
       console.error('cancelAsaasPlanDowngrade error:', err);
       const requestKey = getRequestErrorKey(err);
       if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
+        showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
+        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
       } else {
-        setError(getDowngradeCancelErrorMessage(err));
+        showPlanAlert(getDowngradeCancelErrorMessage(err));
       }
     } finally {
       setCancelingDowngrade(false);
@@ -511,11 +515,11 @@ export default function PlanosSection({
       console.error('cancelAsaasCheckout error:', err);
       const requestKey = getRequestErrorKey(err);
       if (requestKey === 'alerts.request_timeout') {
-        setError(messageBody('dashboard.billing_cancel_timeout'));
+        showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setError(messageBody('alerts.rate_limit_exceeded'));
+        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
       } else {
-        setError(getCheckoutCancelErrorMessage(err));
+        showPlanAlert(getCheckoutCancelErrorMessage(err));
       }
     } finally {
       setCancelingCheckout(false);
