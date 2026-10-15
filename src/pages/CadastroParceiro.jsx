@@ -3,25 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { ptBR } from '../feedback/messages/ptBR';
+import { useFeedback } from '../feedback/useFeedback';
 import { getParceiroCadastroAlert } from '../utils/friendlyErrors';
 import { fetchUserAccessProfile } from '../utils/profileAccess';
 
 const msgs = ptBR.parceiroCadastro;
-
-function Alerta({ msg }) {
-  if (!msg) return null;
-  const estilos = {
-    erro: 'bg-red-500/10 border-red-500/30 text-red-400',
-    aviso: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
-    sucesso: 'bg-green-500/10 border-green-500/30 text-green-400',
-  };
-  const classe = estilos[msg.variant] || estilos.erro;
-  return (
-    <div className={`border rounded-custom px-4 py-3 text-sm font-normal ${classe}`}>
-      {msg.body}
-    </div>
-  );
-}
 
 function FieldRow({ label, children, last = false }) {
   return (
@@ -45,25 +31,34 @@ function getEmailAvailabilityAlert(checkResult) {
 
 export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
   const navigate = useNavigate();
+  const feedback = useFeedback();
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [alerta, setAlerta] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
+
+  const showPartnerAlert = (msg) => {
+    feedback.showCustom({
+      title: 'Cadastro parceiro',
+      body: msg.body,
+      variant: msg.variant === 'sucesso' ? 'success' : msg.variant === 'aviso' ? 'warning' : 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setAlerta(null);
 
     const nomeClean = nome.trim().replace(/\s+/g, ' ');
     const emailClean = email.trim().toLowerCase();
 
-    if (!nomeClean) return setAlerta(msgs.nome_required);
-    if (!emailClean || !emailClean.includes('@')) return setAlerta(msgs.email_invalid);
-    if (senha.length < 7) return setAlerta(msgs.senha_too_short);
+    if (!nomeClean) return showPartnerAlert(msgs.nome_required);
+    if (!emailClean || !emailClean.includes('@')) return showPartnerAlert(msgs.email_invalid);
+    if (senha.length < 7) return showPartnerAlert(msgs.senha_too_short);
 
     setLoading(true);
     if (suppressAuthRef) suppressAuthRef.current = true;
@@ -75,7 +70,7 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
 
       if (emailStatusErr) throw emailStatusErr;
       if (emailStatus?.available === false) {
-        return setAlerta(getEmailAvailabilityAlert(emailStatus));
+        return showPartnerAlert(getEmailAvailabilityAlert(emailStatus));
       }
 
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
@@ -93,7 +88,7 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
 
       if (signUpErr) {
         if (String(signUpErr.message || '').toLowerCase().includes('already')) {
-          return setAlerta(msgs.access_unavailable);
+          return showPartnerAlert(msgs.access_unavailable);
         }
         throw signUpErr;
       }
@@ -113,7 +108,7 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
       onLogin?.(signUpData.user, profile.type, profile.onboardingStatus, profile.accessState, profile.professionalRole);
       navigate('/selecionar-negocio-parceiro', { replace: true });
     } catch (e) {
-      setAlerta(getParceiroCadastroAlert(e, msgs));
+      showPartnerAlert(getParceiroCadastroAlert(e, msgs));
       console.error('Partner signup error:', e);
       await supabase.auth.signOut();
     } finally {
@@ -197,8 +192,6 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
             </FieldRow>
 
           </div>
-
-          <Alerta msg={alerta} />
 
           <div className="space-y-2">
             <button
