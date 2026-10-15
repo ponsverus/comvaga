@@ -74,12 +74,14 @@ function hasPaymentHistory(status) {
 function canRequestSubscriptionInvoice(status) {
   const current = String(status?.status || '').toLowerCase();
   const providerStatus = String(status?.provider_status || '').toUpperCase();
+  const dueChargeCount = Number(status?.due_charge_count || 0);
   return String(status?.provider || '').toLowerCase() === 'asaas'
     && Boolean(status?.provider_subscription_id)
     && !status?.cancellation_scheduled
     && !TERMINAL_SUBSCRIPTION_STATUSES.has(providerStatus)
     && ['blocked', 'past_due', 'payment_grace', 'active'].includes(current)
-    && ['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase())
+    && (['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase())
+      || (current === 'blocked' && dueChargeCount > 0))
     && !status?.has_active_checkout
     && !status?.provider_sync_pending
     && !status?.plan_change_scheduled;
@@ -129,7 +131,14 @@ function statusButtonText(status) {
   if (status?.provider_sync_pending) return 'Aguarde atualiza.';
   if (status?.has_active_checkout) return 'Pagamento em andamento';
   if (status?.plan_change_scheduled) return 'Troca agendada';
-  if (canRequestSubscriptionInvoice(status)) return 'Regularizar pagamento';
+  if (canRequestSubscriptionInvoice(status)) {
+    const dueChargeCount = Number(status?.due_charge_count || 0);
+    return dueChargeCount > 1
+      ? `Pagar 1 de ${dueChargeCount} faturas`
+      : String(status?.payment_method_status || '').toLowerCase() === 'valid'
+        ? 'Pagar fatura restante'
+        : 'Regularizar pagamento';
+  }
 
   const current = String(status?.status || '').toLowerCase();
   if (['blocked', 'past_due', 'payment_grace'].includes(current)) {
@@ -156,6 +165,9 @@ function statusButtonClass(status) {
 
 function getPlanCancelErrorMessage(error) {
   const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  if (raw.includes('subscription_debt_must_be_paid')) {
+    return messageBody('dashboard.billing_cancel_debt_open');
+  }
   if (raw.includes('subscription_not_cancelable')) {
     return messageBody('dashboard.billing_cancel_not_cancelable');
   }
@@ -204,7 +216,7 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('provider_subscription_recovery_required')) {
     return messageBody('dashboard.billing_existing_subscription_recovery');
   }
-  if (raw.includes('subscription_overdue_payment_not_found')) {
+  if (raw.includes('subscription_due_payment_not_found') || raw.includes('subscription_overdue_payment_not_found')) {
     return messageBody('dashboard.billing_recovery_invoice_not_found');
   }
   if (raw.includes('multiple_overdue_subscription_payments')) {
@@ -553,6 +565,10 @@ export default function PlanosSection({
           const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
           const currentStatus = String(billingStatus?.status || '').toLowerCase();
           const freeAccessOpen = currentStatus === 'trialing';
+          const awaitingPaymentConfirmation = active
+            && currentStatus === 'blocked'
+            && paymentStatus === 'valid'
+            && Number(billingStatus?.due_charge_count || 0) === 0;
           const selectedCanceledOrCancellationScheduled = active && canceledOrCancellationScheduled;
           const canCancelDowngrade = active
             && !providerSyncFailed
@@ -563,9 +579,11 @@ export default function PlanosSection({
           const activeFreeAccess = active && freeAccessOpen;
           const needsPayment = active
             && !activeFreeAccess
-            && paymentStatus !== 'valid';
+            && (paymentStatus !== 'valid'
+              || (['blocked', 'past_due', 'payment_grace'].includes(currentStatus)
+                && Number(billingStatus?.due_charge_count || 0) > 0));
           const planChangeBlocksPayment = active && needsPayment && planChangeScheduled;
-          const activeWithoutAction = active && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
+          const activeWithoutAction = active && currentStatus === 'active' && !activeFreeAccess && !needsPayment && !selectedCanceledOrCancellationScheduled;
           const planLimit = getPlanLimit(plan);
           const planLimitBlocked = !active && planLimit != null && billableProfessionalsCount > planLimit;
           const selectedStatusLabel = statusText(billingStatus);
@@ -589,6 +607,8 @@ export default function PlanosSection({
               ? 'Agendado'
               : activeFreeAccess
                 ? 'Teste grátis'
+                : awaitingPaymentConfirmation
+                  ? 'Aguardando confirmação'
                 : activeWithoutAction
                   ? 'Plano ativo'
                   : saving
@@ -605,7 +625,7 @@ export default function PlanosSection({
               node: (
                 <button
                   type="button"
-                  disabled={planLimitBlocked || movementBlocked || planChangeBlocksPayment || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
+                  disabled={planLimitBlocked || movementBlocked || planChangeBlocksPayment || awaitingPaymentConfirmation || (!checkoutCanResume && (activeWithoutAction || activeFreeAccess || pendingForPlan)) || !!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout}
                   onClick={() => handleSelectPlan(plan.code)}
                   className={`flex min-h-[42px] w-full items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                     activeFreeAccess
