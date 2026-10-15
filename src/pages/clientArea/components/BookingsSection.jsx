@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { supabase } from '../../../supabase';
 import { ptBR } from '../../../feedback/messages/ptBR';
+import { useFeedback } from '../../../feedback/useFeedback';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
 import { CalendarIcon } from '../../../components/icons';
 import ReviewStar from './ReviewStar';
@@ -120,9 +121,6 @@ function BookingGroup({
                     </button>
                   )}
                 </div>
-                {shareState.errorId === booking.id && (
-                  <p role="alert" className="mt-2 text-sm text-red-300">{'Falha ao compartilhar o PDF. Tente novamente.'}</p>
-                )}
               </div>
               {depoimentoAberto && (
                 <div className="border-t border-gray-800 px-3 py-3 sm:px-5">
@@ -193,11 +191,11 @@ export default function BookingsSection({
   reviewLoading,
   onSubmitReview,
 }) {
+  const feedback = useFeedback();
   const [renderer, setRenderer] = useState(null);
   const [groupsByType, setGroupsByType] = useState({});
   const [preparationFailed, setPreparationFailed] = useState(false);
   const [sharingId, setSharingId] = useState(null);
-  const [errorId, setErrorId] = useState(null);
   const shareLock = useRef(false);
   const typeRequests = useRef(new Map());
   const typesKey = JSON.stringify([...new Set([...groups.concluidos, ...groups.cancelados]
@@ -241,12 +239,11 @@ export default function BookingsSection({
   }, [typesKey]);
 
   const ready = !!renderer && !preparationFailed && JSON.parse(typesKey).every((type) => groupsByType[type]);
-  const shareState = { ready, failed: preparationFailed, sharingId, errorId };
+  const shareState = { ready, failed: preparationFailed, sharingId };
   const onShare = async (booking) => {
     if (!ready || shareLock.current) return;
     shareLock.current = true;
     setSharingId(booking.id);
-    setErrorId(null);
     try {
       const negocio = booking.profissionais?.negocios;
       const group = groupsByType[negocio?.tipo_negocio] || 'servicos';
@@ -266,7 +263,13 @@ export default function BookingsSection({
       await shareHistoryPdf(file);
     } catch (error) {
       console.error('Falha ao compartilhar PDF do cliente.', error);
-      setErrorId(booking.id);
+      feedback.showCustom({
+        title: 'Compartilhamento',
+        body: 'Falha ao compartilhar o PDF. Tente novamente.',
+        variant: 'danger',
+        screen: 'dark',
+        buttonText: 'OK',
+      });
     } finally {
       shareLock.current = false;
       setSharingId(null);
