@@ -118,6 +118,9 @@ body {
 }
 
 .announcement-bar-wrapper:hover { animation-play-state: paused; }
+.blog-announcement .announcement-bar-wrapper { animation-duration: 30s; }
+.blog-announcement .announcement-bar-wrapper:focus-within,
+.blog-announcement .announcement-bar-wrapper.is-paused { animation-play-state: paused; }
 .announcement-bar-track a {
   position: relative;
   z-index: 10;
