@@ -406,7 +406,7 @@ export const ptBR = {
     },
     business_seo_too_long: {
       title: 'Texto muito longo',
-      body: 'Use até 60 caracteres no título e até 160 na meta description do Google.',
+      body: 'Use até 50 caracteres no título e até 130 na meta description do Google.',
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',
