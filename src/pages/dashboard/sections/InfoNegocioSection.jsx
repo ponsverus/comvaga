@@ -280,8 +280,8 @@ export default function InfoNegocioSection({
         {googleExpanded ? (
           <div id="business-google-fields" className="mt-3">
             {[
-              { key: 'seo_title', label: 'Título para o Google', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Escreva o título para o Google com nome do negócio, especialidade e cidade; até 60 caracteres.' },
-              { key: 'seo_description', label: 'Meta description', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Escreva a meta description para o Google sobre o negócio, trabalhos e cidade; até 160 caracteres.' },
+              { key: 'seo_title', label: 'Título para o Google', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Escreva o título para o Google com nome do negócio, especialidade e cidade; até 50 caracteres.' },
+              { key: 'seo_description', label: 'Meta description', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Escreva a meta description para o Google sobre o negócio, trabalhos e cidade; até 130 caracteres.' },
             ].map(({ key, label, limit, rows, placeholder }, index) => (
               <div key={key}>
                 {index > 0 ? <div className="-mx-4 my-3 border-t border-gray-800 sm:-mx-6" /> : null}
