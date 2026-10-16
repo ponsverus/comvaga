@@ -1,5 +1,5 @@
-export const SEO_TITLE_LIMIT = 60;
-export const SEO_DESCRIPTION_LIMIT = 160;
+export const SEO_TITLE_LIMIT = 50;
+export const SEO_DESCRIPTION_LIMIT = 130;
 
 export function normalizeSeoText(value) {
   return String(value ?? '').replace(/\s+/gu, ' ').trim();
