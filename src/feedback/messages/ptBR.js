@@ -144,6 +144,27 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
+    billing_subscription_reconciliation_pending: {
+      title: 'Verificando assinatura',
+      body: 'O gateway ainda está processando o estado da assinatura. Aguarde alguns instantes e tente novamente. Caso persista, contate o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_subscription_suspended_with_debt: {
+      title: 'Assinatura suspensa',
+      body: 'Há uma fatura em aberto nesta assinatura. Pague pelo link abaixo. O pagamento da fatura apenas quita o débito e após o pagamento o negócio poderá ser reativado.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_new_checkout_debt_open: {
+      title: 'Pagamento pendente',
+      body: 'Quite as faturas em aberto da assinatura atual antes de contratar outro plano.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
     billing_recovery_invoice_not_found: {
       title: 'Fatura em aberto indisponível',
       body: 'Houve um erro ao abrir a fatura em aberto com vencimento até hoje nesta assinatura. Atualize o status em instantes ou contate o suporte.',
