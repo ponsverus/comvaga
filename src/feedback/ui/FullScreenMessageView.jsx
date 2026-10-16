@@ -145,7 +145,7 @@ export default function FullScreenMessageView({ open, payload, onClose }) {
           <button
             type="button"
             onClick={closeWithPrimary}
-            className={`h-11 rounded-button px-5 text-xs font-normal uppercase transition-colors ${tone.buttonClass}`}
+            className={`h-11 rounded-button px-5 text-xs font-normal uppercase transition-colors ${isConfirm || isPrompt ? '' : 'w-full'} ${tone.buttonClass}`}
           >
             {payload.confirmText || payload.buttonText || 'OK'}
           </button>
