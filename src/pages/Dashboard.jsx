@@ -163,10 +163,33 @@ function getBillingAnnouncement(status) {
   }
   const current = String(status.status || '').toLowerCase();
   const paymentStatus = String(status.payment_method_status || '').toLowerCase();
+  const providerStatus = String(status.provider_status || '').toUpperCase();
   const daysUntilTrialEnd = Number(status.days_until_trial_end);
   const daysUntilBlock = Number(status.days_until_block);
   const trialDays = Number(status.trial_days);
   const pendingPlanChangeSuffix = getPendingPlanChangeSuffix(status);
+
+  if (status.reactivation_awaiting_payment) {
+    return {
+      tone: Number(status.due_charge_count || 0) > 0 ? 'danger' : 'warning',
+      text: dashboardBillingMessage(Number(status.due_charge_count || 0) > 0
+        ? 'billing_blocked_header' : 'billing_reactivation_awaiting_payment_header'),
+    };
+  }
+
+  if (providerStatus === 'INACTIVE' || providerStatus === 'EXPIRED') {
+    const prefix = providerStatus === 'INACTIVE' ? 'billing_inactive' : 'billing_expired';
+    const hasDebt = Number(status.due_charge_count || 0) > 0;
+    const hasPaidAccess = status.booking_allowed === true && Boolean(status.access_ends_label);
+    const key = status.reactivation_pending
+      ? 'billing_reactivation_pending_header'
+      : hasDebt ? `${prefix}_debt_header`
+      : hasPaidAccess ? `${prefix}_paid_header` : `${prefix}_header`;
+    return {
+      tone: hasDebt ? 'danger' : 'warning',
+      text: dashboardBillingMessage(key, { date: status.access_ends_label || '' }),
+    };
+  }
 
   if (isCancellationScheduled(status)) {
     const accessEndLabel = status?.access_ends_label || '';
