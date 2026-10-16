@@ -226,6 +226,19 @@ export async function createAsaasCheckout(negocioId, planCode) {
   return data;
 }
 
+export async function reactivateAsaasSubscription(negocioId) {
+  const { data, error } = await withAuthRetry(
+    () => supabase.functions.invoke('asaas-reactivate-subscription', {
+      body: { negocio_id: negocioId },
+    }),
+    40000,
+    'asaas-reactivate-subscription'
+  );
+  if (error) throw await normalizeFunctionError(error);
+  if (!data?.billing_status) throw new Error('billing_status_missing');
+  return data;
+}
+
 export async function cancelAsaasSubscription(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-cancel-subscription', {
