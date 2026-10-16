@@ -46,6 +46,7 @@ function getAccessEndDate(status) {
 function getAccessDateLabel(status) {
   if (!getAccessEndDate(status)) return '';
   if (isCancellationScheduled(status)) return 'ACESSO ATÉ';
+  if (String(status?.provider_status || '').toUpperCase() === 'INACTIVE') return 'ACESSO ATÉ';
 
   const current = String(status?.status || '').toLowerCase();
   const paymentStatus = String(status?.payment_method_status || '').toLowerCase();
@@ -60,7 +61,8 @@ function isCanceledOrCancellationScheduled(status) {
   return String(status?.status || '').toLowerCase() === 'canceled' || isCancellationScheduled(status);
 }
 
-const TERMINAL_SUBSCRIPTION_STATUSES = new Set(['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED']);
+const REMOVED_SUBSCRIPTION_STATUSES = new Set(['CANCELED', 'CANCELLED', 'DELETED']);
+const SUSPENDED_SUBSCRIPTION_STATUSES = new Set(['INACTIVE', 'EXPIRED']);
 
 function hasPaymentHistory(status) {
   return Boolean(
@@ -75,19 +77,23 @@ function canRequestSubscriptionInvoice(status) {
   const current = String(status?.status || '').toLowerCase();
   const providerStatus = String(status?.provider_status || '').toUpperCase();
   const dueChargeCount = Number(status?.due_charge_count || 0);
+  const suspendedWithDebt = SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus) && dueChargeCount > 0;
   return String(status?.provider || '').toLowerCase() === 'asaas'
     && Boolean(status?.provider_subscription_id)
-    && !status?.cancellation_scheduled
-    && !TERMINAL_SUBSCRIPTION_STATUSES.has(providerStatus)
-    && ['blocked', 'past_due', 'payment_grace', 'active'].includes(current)
+    && (!status?.cancellation_scheduled || suspendedWithDebt)
+    && !REMOVED_SUBSCRIPTION_STATUSES.has(providerStatus)
+    && (!SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus) || suspendedWithDebt)
+    && (['blocked', 'past_due', 'payment_grace', 'active'].includes(current)
+      || (current === 'canceled' && suspendedWithDebt))
     && (['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase())
-      || (current === 'blocked' && dueChargeCount > 0))
+      || (dueChargeCount > 0 && (current === 'blocked' || suspendedWithDebt)))
     && !status?.has_active_checkout
     && !status?.provider_sync_pending
     && !status?.plan_change_scheduled;
 }
 
 function statusText(status) {
+  if (String(status?.provider_status || '').toUpperCase() === 'INACTIVE') return 'Assinatura suspensa';
   if (isCancellationScheduled(status)) return 'Cancelado';
   const current = String(status?.status || '').toLowerCase();
   if (current === 'active') return 'Ativo';
@@ -100,6 +106,9 @@ function statusText(status) {
 }
 
 function statusBadgeClass(status) {
+  if (String(status?.provider_status || '').toUpperCase() === 'INACTIVE') {
+    return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-200';
+  }
   if (isCancellationScheduled(status)) {
     return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-200';
   }
@@ -127,7 +136,6 @@ function statusBadgeClass(status) {
 }
 
 function statusButtonText(status) {
-  if (isCancellationScheduled(status)) return 'Reativar plano';
   if (status?.provider_sync_pending) return 'Aguarde atualiza.';
   if (status?.has_active_checkout) return 'Pagamento em andamento';
   if (status?.plan_change_scheduled) return 'Troca agendada';
@@ -139,6 +147,7 @@ function statusButtonText(status) {
         ? 'Pagar fatura restante'
         : 'Regularizar pagamento';
   }
+  if (isCancellationScheduled(status)) return 'Reativar plano';
 
   const current = String(status?.status || '').toLowerCase();
   if (['blocked', 'past_due', 'payment_grace'].includes(current)) {
@@ -215,6 +224,12 @@ function getPlanChangeErrorMessage(error) {
   }
   if (raw.includes('provider_subscription_recovery_required')) {
     return messageBody('dashboard.billing_existing_subscription_recovery');
+  }
+  if (raw.includes('provider_subscription_reconciliation_pending')) {
+    return messageBody('dashboard.billing_subscription_reconciliation_pending');
+  }
+  if (raw.includes('subscription_debt_must_be_paid')) {
+    return messageBody('dashboard.billing_new_checkout_debt_open');
   }
   if (raw.includes('subscription_due_payment_not_found') || raw.includes('subscription_overdue_payment_not_found')) {
     return messageBody('dashboard.billing_recovery_invoice_not_found');
@@ -351,6 +366,8 @@ export default function PlanosSection({
   const loading = plansLoading || billingLoading;
   const currentPlanCode = billingStatus?.plan_code || '';
   const canceledOrCancellationScheduled = isCanceledOrCancellationScheduled(billingStatus);
+  const suspendedWithDebt = String(billingStatus?.provider_status || '').toUpperCase() === 'INACTIVE'
+    && Number(billingStatus?.due_charge_count || 0) > 0;
   const planChangeScheduled = Boolean(billingStatus?.plan_change_scheduled);
   const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
   const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
@@ -548,6 +565,12 @@ export default function PlanosSection({
         </div>
       )}
 
+      {suspendedWithDebt && (
+        <div className="rounded-custom border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-100">
+          {messageBody('dashboard.billing_subscription_suspended_with_debt')}
+        </div>
+      )}
+
       <div className="-mx-6 -mb-6 bg-gray-800 border-t border-gray-800 grid grid-cols-1 lg:grid-cols-3 gap-px">
         {plans.map((plan) => {
           const active = plan.code === currentPlanCode;
@@ -581,6 +604,7 @@ export default function PlanosSection({
           const needsPayment = active
             && !activeFreeAccess
             && (paymentStatus !== 'valid'
+              || suspendedWithDebt
               || (['blocked', 'past_due', 'payment_grace'].includes(currentStatus)
                 && Number(billingStatus?.due_charge_count || 0) > 0));
           const planChangeBlocksPayment = active && needsPayment && planChangeScheduled;
