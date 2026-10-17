@@ -164,7 +164,9 @@ function SearchBox({
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
             </span>
-            <span className="home-search-empty-mouth" />
+            <svg className="mt-[3px] h-3 w-[26px]" viewBox="0 0 26 12" aria-hidden="true">
+              <path d="M2 10 Q13 2 24 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </span>
         </div>
       )}
