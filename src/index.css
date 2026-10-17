@@ -107,10 +107,11 @@ body {
 .home-search-empty-face { animation: home-search-no 0.8s ease-in-out 2; }
 .home-search-empty-mouth {
   display: block;
-  margin-top: -0.15rem;
-  font-size: 2.5rem;
-  line-height: 0.55;
-  transform: rotate(90deg) scale(1.5);
+  width: 26px;
+  height: 9px;
+  margin-top: 3px;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0 0 50% 50%;
 }
 
 ::-webkit-scrollbar       { width: 8px; }
