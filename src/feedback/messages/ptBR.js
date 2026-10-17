@@ -153,10 +153,35 @@ export const ptBR = {
     },
     billing_subscription_suspended_with_debt: {
       title: 'Assinatura suspensa',
-      body: 'Há uma fatura em aberto nesta assinatura. Pague pelo link abaixo. O pagamento da fatura apenas quita o débito e após o pagamento o negócio poderá ser reativado.',
+      body: 'Há fatura em aberto nesta assinatura. Quite todas as faturas pelo botão do plano. O pagamento da dívida não reativa a recorrência por si só.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
+    },
+    billing_reactivation_pending: {
+      title: 'Reativação em andamento',
+      body: 'Estamos confirmando a reativação com o Asaas. Atualize o painel em instantes. A vitrine só será liberada quando houver período pago válido.',
+      variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+    },
+    billing_reactivation_invoice_conflict: {
+      title: 'Próxima cobrança precisa de conferência',
+      body: 'Já existe uma fatura futura ou a data da próxima cobrança não pôde ser confirmada com segurança. Contate o suporte para evitar cobrança duplicada.',
+      variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+    },
+    billing_reactivation_awaiting_payment: {
+      title: 'Assinatura reativada',
+      body: 'A recorrência foi reativada. A vitrine continua bloqueada até o Asaas confirmar o pagamento do novo período. Se a fatura ainda não aparecer, atualize o painel em instantes.',
+      variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+    },
+    billing_reactivation_success: {
+      title: 'Assinatura reativada',
+      body: 'A recorrência foi reativada. O acesso segue o período já pago e as próximas cobranças serão feitas pelo Asaas.',
+      variant: 'success', screen: 'dark', buttonText: 'ENTENDI',
+    },
+    billing_reactivation_error: {
+      title: 'Não foi possível reativar',
+      body: 'Não conseguimos confirmar a reativação no Asaas. Atualize o painel e tente novamente; se persistir, contate o suporte.',
+      variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
     },
     billing_new_checkout_debt_open: {
       title: 'Pagamento pendente',
@@ -267,6 +292,30 @@ export const ptBR = {
     },
     billing_canceled_expired_header: {
       body: 'PLANO CANCELADO. ESCOLHA E CONTINUE.',
+    },
+    billing_inactive_debt_header: {
+      body: 'ASSINATURA SUSPENSA. QUITE AS FATURAS EM ABERTO PARA REATIVAR.',
+    },
+    billing_inactive_paid_header: {
+      body: 'ASSINATURA SUSPENSA. ACESSO PAGO ATÉ {date}. REATIVE O PLANO PARA CONTINUAR.',
+    },
+    billing_inactive_header: {
+      body: 'ASSINATURA SUSPENSA. REATIVE O PLANO PARA VOLTAR A COBRAR.',
+    },
+    billing_expired_debt_header: {
+      body: 'ASSINATURA EXPIRADA. QUITE AS FATURAS EM ABERTO ANTES DE RENOVAR.',
+    },
+    billing_expired_paid_header: {
+      body: 'ASSINATURA EXPIRADA. ACESSO PAGO ATÉ {date}. RENOVE O PLANO PARA CONTINUAR.',
+    },
+    billing_expired_header: {
+      body: 'ASSINATURA EXPIRADA. RENOVE O PLANO PARA VOLTAR A COBRAR.',
+    },
+    billing_reactivation_pending_header: {
+      body: 'REATIVAÇÃO EM ANDAMENTO. AGUARDE A CONFIRMAÇÃO DO ASAAS.',
+    },
+    billing_reactivation_awaiting_payment_header: {
+      body: 'ASSINATURA REATIVADA. AGUARDE A COBRANÇA E A CONFIRMAÇÃO DO PAGAMENTO.',
     },
     billing_blocked_header: {
       body: 'AGENDA BLOQUEADA. REGULARIZE O PAGAMENTO.',
