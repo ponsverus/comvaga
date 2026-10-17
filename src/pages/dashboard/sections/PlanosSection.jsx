@@ -155,7 +155,7 @@ function statusButtonText(status) {
         : 'Regularizar pagamento';
   }
   if (status?.reactivation_pending) return status?.reactivation_awaiting_payment
-    ? 'Aguardando pagamento' : 'Reativação em andamento';
+    ? 'Aguardando pagamento' : 'Reativando assinatura';
   const providerStatus = String(status?.provider_status || '').toUpperCase();
   if (providerStatus === 'INACTIVE') return 'Reativar plano';
   if (providerStatus === 'EXPIRED') return 'Renovar plano';
@@ -678,7 +678,7 @@ export default function PlanosSection({
               : activeFreeAccess
                 ? 'Teste grátis'
                 : awaitingPaymentConfirmation
-                  ? 'Aguardando confirmação'
+                  ? 'Aguardando retorno'
                 : activeWithoutAction
                   ? 'Plano ativo'
                   : saving
