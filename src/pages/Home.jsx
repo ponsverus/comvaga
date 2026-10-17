@@ -159,12 +159,12 @@ function SearchBox({
           aria-label="Nenhum resultado encontrado"
           className="absolute right-0 top-full z-50 mt-3 flex w-[min(24rem,calc(100vw-2rem))] justify-center py-2 text-gray-400"
         >
-          <span className="home-search-empty-face flex flex-col items-center" aria-hidden="true">
-            <span className="flex gap-1.5">
+          <span className="home-search-empty-face flex w-[26px] flex-col items-center" aria-hidden="true">
+            <span className="flex w-[18px] justify-between">
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
             </span>
-            <span className="home-search-empty-mouth">)</span>
+            <span className="home-search-empty-mouth" />
           </span>
         </div>
       )}
