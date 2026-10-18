@@ -43,26 +43,39 @@ function BodyText({ text }) {
   ));
 }
 
-export default function FullScreenMessageView({ open, payload, onClose }) {
+export default function FullScreenMessageView({
+  open,
+  payload,
+  hasNext = false,
+  hasPrevious = false,
+  isPaged = false,
+  onClose,
+  onNext,
+  onPrevious,
+}) {
   const [promptValue, setPromptValue] = useState('');
 
   useEffect(() => {
     if (!open) return;
     setPromptValue(String(payload?.initialValue ?? ''));
-  }, [open, payload?.initialValue]);
+  }, [open, payload]);
 
   useEffect(() => {
     if (!open) return undefined;
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
+        if (payload?.type === 'message' && hasNext) {
+          onNext?.();
+          return;
+        }
         onClose?.(payload?.type === 'confirm' ? false : null);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, open, payload?.type]);
+  }, [hasNext, onClose, onNext, open, payload?.type]);
 
   if (!open || !payload) return null;
 
@@ -81,6 +94,14 @@ export default function FullScreenMessageView({ open, payload, onClose }) {
     : 'border-gray-700 text-gray-300 hover:border-primary hover:text-primary';
 
   const closeWithPrimary = () => {
+    if (isPaged) {
+      if (hasNext) {
+        onNext?.();
+        return;
+      }
+      onClose?.(true);
+      return;
+    }
     if (isConfirm) {
       onClose?.(true);
       return;
@@ -132,24 +153,45 @@ export default function FullScreenMessageView({ open, payload, onClose }) {
           />
         ) : null}
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          {(isConfirm || isPrompt) ? (
+        {isPaged ? (
+          <div className="flex gap-3">
+            {hasPrevious ? (
+              <button
+                type="button"
+                onClick={onPrevious}
+                className={`h-11 flex-1 rounded-button border px-5 text-xs font-normal uppercase opacity-70 transition-colors ${secondaryClass}`}
+              >
+                VOLTAR
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={closeWithCancel}
-              className={`h-11 rounded-button border px-5 text-xs font-normal uppercase transition-colors ${secondaryClass}`}
+              onClick={closeWithPrimary}
+              className={`h-11 flex-1 rounded-button px-5 text-xs font-normal uppercase ${tone.buttonClass}`}
             >
-              {payload.cancelText || 'CANCELAR'}
+              {hasNext ? 'PRÓXIMA' : 'OK'}
             </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={closeWithPrimary}
-            className={`h-11 rounded-button px-5 text-xs font-normal uppercase transition-colors ${isConfirm || isPrompt ? '' : 'w-full'} ${tone.buttonClass}`}
-          >
-            {payload.confirmText || payload.buttonText || 'OK'}
-          </button>
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            {(isConfirm || isPrompt) ? (
+              <button
+                type="button"
+                onClick={closeWithCancel}
+                className={`h-11 rounded-button border px-5 text-xs font-normal uppercase transition-colors ${secondaryClass}`}
+              >
+                {payload.cancelText || 'CANCELAR'}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={closeWithPrimary}
+              className={`h-11 rounded-button px-5 text-xs font-normal uppercase transition-colors ${isConfirm || isPrompt ? '' : 'w-full'} ${tone.buttonClass}`}
+            >
+              {payload.confirmText || payload.buttonText || 'OK'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
