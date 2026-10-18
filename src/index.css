@@ -98,13 +98,13 @@ body {
 .animate-fade-in  { animation: fadeIn  0.6s ease-out; }
 .animate-slide-up { animation: slideUp 0.6s ease-out; }
 
-@keyframes home-search-no {
+@keyframes search-empty-no {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
 
-.home-search-empty-face { animation: home-search-no 0.8s ease-in-out 2; }
+.search-empty-face { animation: search-empty-no 0.8s ease-in-out 2; }
 
 ::-webkit-scrollbar       { width: 8px; }
 ::-webkit-scrollbar-track { background: #111; }
@@ -151,7 +151,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .announcement-bar-wrapper,
   .animate-marquee-sync,
-  .home-search-empty-face {
+  .search-empty-face {
     animation: none;
   }
 }

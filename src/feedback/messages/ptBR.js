@@ -1230,7 +1230,6 @@ export const ptBR = {
 
   partnerBusinessCenter: {
     load_error: 'Erro ao carregar seus negócios.',
-    search_empty: 'Nenhum negócio encontrado para essa busca.',
     search_error: 'Erro ao pesquisar negócios.',
     request_pending_approval: 'Pedido enviado. Aguarde o aval do responsável pelo negócio.',
     request_active: 'Parceria ativa. Você já pode acessar o dashboard deste negócio.',

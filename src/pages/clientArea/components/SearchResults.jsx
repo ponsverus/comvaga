@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ProfessionalIcon } from '../../../components/icons';
+import SearchEmptyState from '../../../components/SearchEmptyState';
 
 function SearchResult({ row, onSelect }) {
   const tipo = String(row?.tipo || '').toLowerCase();
@@ -54,6 +55,14 @@ export default function SearchResults({
 }) {
   const hasQuery = String(searchTerm || '').trim().length >= 3;
   if (!hasQuery) return null;
+  if (!searching && searchError) return null;
+
+  if (!searching && !searchError && searchRows.length === 0) {
+    const emptyStateClass = mobile
+      ? 'mt-3'
+      : 'absolute right-0 top-full z-50 mt-3 w-[min(24rem,calc(100vw-2rem))]';
+    return <SearchEmptyState className={emptyStateClass} />;
+  }
 
   const wrapClass = mobile
     ? 'mt-3 overflow-hidden rounded-[3px] border border-white/10 bg-dark-100/95 shadow-2xl backdrop-blur-xl'
@@ -66,21 +75,11 @@ export default function SearchResults({
           BUSCANDO...
         </div>
       )}
-      {!searching && searchError && (
-        <div className="px-4 py-4 text-sm text-red-300">
-          {searchError}
-        </div>
-      )}
       {!searching && !searchError && searchRows.length > 0 && (
         <div>
           {searchRows.map((row) => (
             <SearchResult key={`${row?.tipo || 'item'}-${row?.id || row?.slug}`} row={row} onSelect={onSelectResult} />
           ))}
-        </div>
-      )}
-      {!searching && !searchError && searchRows.length === 0 && (
-        <div className="px-4 py-4 text-sm text-gray-400">
-          Nenhum resultado encontrado.
         </div>
       )}
     </div>

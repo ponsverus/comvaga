@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, LogOut, RefreshCw, Send } from 'lucide-react';
 import { ProfessionalIcon, SearchIcon, UserIcon } from '../components/icons';
+import SearchEmptyState from '../components/SearchEmptyState';
 import { ptBR } from '../feedback/messages/ptBR';
 import { useFeedback } from '../feedback/useFeedback';
 import { supabase } from '../supabase';
@@ -95,6 +96,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const [term, setTerm] = useState('');
   const [searchRows, setSearchRows] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
   const [requestingId, setRequestingId] = useState(null);
   const [nomeSolicitacao, setNomeSolicitacao] = useState('');
   const [alert, setAlert] = useState(null);
@@ -190,9 +192,11 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     setAlert(null);
     if (clean.length < 3) {
       setSearchRows([]);
+      setSearchFailed(false);
       return;
     }
 
+    setSearchFailed(false);
     setSearching(true);
     try {
       const { data, error } = await withAuthRetry(
@@ -205,19 +209,21 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       );
       if (error) throw error;
       setSearchRows(data || []);
-      if (!data?.length) setAlert({ type: 'warning', message: msgs.search_empty });
     } catch (error) {
       console.error('Partner business search error:', error);
-      setAlert({ type: 'error', message: msgs.search_error });
+      setSearchRows([]);
+      setSearchFailed(true);
+      feedback.showCustom({ title: 'Erro na busca', body: msgs.search_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
     } finally {
       setSearching(false);
     }
-  }, []);
+  }, [feedback]);
 
   useEffect(() => {
     const clean = term.trim();
     if (clean.length < 3) {
       setSearchRows([]);
+      setSearchFailed(false);
       setSearching(false);
       return;
     }
@@ -457,6 +463,10 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
           <div className="mt-4">
             <AlertBox alert={alert} />
           </div>
+
+          {term.trim().length >= 3 && !searching && !searchFailed && searchRows.length === 0 && (
+            <SearchEmptyState className="mt-3" />
+          )}
 
           {searchRows.length > 0 && (
             <div ref={searchResultsRef} className="mt-4 space-y-3">

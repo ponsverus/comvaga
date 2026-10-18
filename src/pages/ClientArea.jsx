@@ -120,10 +120,11 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       setSearchRows([]);
       console.error('Client search error:', error);
       setSearchError(ptBR.clientArea.search_error.body);
+      feedback.showMessage('clientArea.search_error');
     } finally {
       setSearching(false);
     }
-  }, []);
+  }, [feedback]);
 
   const fetchAgendamentos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
     const data = await fetchAgendamentosCliente({
