@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { supabase } from '../../../supabase';
@@ -197,21 +197,35 @@ export default function BookingsSection({
   const [preparationFailed, setPreparationFailed] = useState(false);
   const [sharingId, setSharingId] = useState(null);
   const shareLock = useRef(false);
+  const preparationAlertShownRef = useRef(false);
   const typeRequests = useRef(new Map());
   const typesKey = JSON.stringify([...new Set([...groups.concluidos, ...groups.cancelados]
     .map((booking) => booking.profissionais?.negocios?.tipo_negocio)
     .filter((type) => typeof type === 'string' && type.trim()))].sort());
+
+  const reportPreparationFailure = useCallback((context, error) => {
+    console.error(context, error);
+    setPreparationFailed(true);
+    if (preparationAlertShownRef.current) return;
+    preparationAlertShownRef.current = true;
+    feedback.showCustom({
+      title: 'Agendamentos',
+      body: 'Falha ao preparar o PDF. Recarregue a página e tente novamente.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    });
+  }, [feedback]);
 
   useEffect(() => {
     let active = true;
     loadHistoryPdfRenderer().then((value) => {
       if (active) setRenderer(value);
     }).catch((error) => {
-      console.error('Falha ao preparar PDF do cliente.', error);
-      if (active) setPreparationFailed(true);
+      if (active) reportPreparationFailure('Falha ao preparar PDF do cliente.', error);
     });
     return () => { active = false; };
-  }, []);
+  }, [reportPreparationFailure]);
 
   useEffect(() => {
     let active = true;
@@ -232,11 +246,10 @@ export default function BookingsSection({
     })).then((entries) => {
       if (active) setGroupsByType(Object.fromEntries(entries));
     }).catch((error) => {
-      console.error('Falha ao preparar termos do PDF.', error);
-      if (active) setPreparationFailed(true);
+      if (active) reportPreparationFailure('Falha ao preparar termos do PDF.', error);
     });
     return () => { active = false; };
-  }, [typesKey]);
+  }, [reportPreparationFailure, typesKey]);
 
   const ready = !!renderer && !preparationFailed && JSON.parse(typesKey).every((type) => groupsByType[type]);
   const shareState = { ready, failed: preparationFailed, sharingId };
@@ -279,9 +292,6 @@ export default function BookingsSection({
 
   return (
     <div>
-      {preparationFailed && (
-        <p role="alert" className="mb-4 text-sm text-red-300">{'Falha ao preparar o PDF. Recarregue a p\u00e1gina e tente novamente.'}</p>
-      )}
       {hasBookings ? (
         <>
           <BookingGroup
