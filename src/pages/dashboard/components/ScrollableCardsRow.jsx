@@ -16,6 +16,7 @@ export default function ScrollableCardsRow({
 
     const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
     const pageCount = isDesktop ? desktopPageCount : items.length;
+    const cardsPerPage = isDesktop ? 3 : 1;
     const maxScrollLeft = node.scrollWidth - node.clientWidth;
     const nextPage = maxScrollLeft <= 1
       ? 0
@@ -28,7 +29,7 @@ export default function ScrollableCardsRow({
             ? secondCard.offsetLeft - firstCard.offsetLeft
             : node.clientWidth;
           const cardIndex = Math.round(node.scrollLeft / Math.max(1, cardStep));
-          return Math.max(0, Math.min(pageCount - 1, Math.floor(cardIndex / 3)));
+          return Math.max(0, Math.min(pageCount - 1, Math.floor(cardIndex / cardsPerPage)));
         })();
     setActivePage(Math.max(0, Math.min(pageCount - 1, nextPage)));
   }
