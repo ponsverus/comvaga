@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { SearchIcon, ProfessionalIcon } from '../components/icons';
+import SearchEmptyState from '../components/SearchEmptyState';
 import { getSupportHref } from '../support';
 import { searchHome } from '../utils/searchHome';
 import { useStaticSeo } from '../hooks/useStaticSeo.js';
@@ -33,6 +34,7 @@ function SearchBox({
   resultadosBusca,
   setResultadosBusca,
   buscando,
+  searchFailed,
 }) {
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
@@ -153,22 +155,8 @@ function SearchBox({
         </div>
       )}
 
-      {searchOpen && !buscando && searchTerm.trim().length >= 3 && resultadosBusca.length === 0 && (
-        <div
-          role="status"
-          aria-label="Nenhum resultado encontrado"
-          className="absolute right-0 top-full z-50 mt-3 flex w-[min(24rem,calc(100vw-2rem))] justify-center py-2 text-gray-400"
-        >
-          <span className="home-search-empty-face flex w-[26px] flex-col items-center" aria-hidden="true">
-            <span className="flex w-[18px] justify-between">
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            </span>
-            <svg className="mt-[3px] h-3 w-[26px]" viewBox="0 0 26 12" aria-hidden="true">
-              <path d="M2 10 Q13 2 24 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </span>
-        </div>
+      {searchOpen && !buscando && !searchFailed && searchTerm.trim().length >= 3 && resultadosBusca.length === 0 && (
+        <SearchEmptyState className="absolute right-0 top-full z-50 mt-3 w-[min(24rem,calc(100vw-2rem))]" />
       )}
     </div>
   );
@@ -181,6 +169,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const [searchTerm, setSearchTerm] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [buscando, setBuscando] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
 
   const plansSectionRef = useRef(null);
 
@@ -205,11 +194,15 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         if (!cancelled) {
           setResultadosBusca([]);
           setBuscando(false);
+          setSearchFailed(false);
         }
         return;
       }
 
-      if (!cancelled) setBuscando(true);
+      if (!cancelled) {
+        setBuscando(true);
+        setSearchFailed(false);
+      }
 
       try {
         const rows = await searchHome(term, { limit: 10 });
@@ -220,6 +213,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         console.error('Erro na busca:', error);
         showMessage('home.search_failed_support');
         setResultadosBusca([]);
+        setSearchFailed(true);
       } finally {
         if (!cancelled) setBuscando(false);
       }
@@ -245,6 +239,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       resultadosBusca={resultadosBusca}
       setResultadosBusca={setResultadosBusca}
       buscando={buscando}
+      searchFailed={searchFailed}
       plansSectionRef={plansSectionRef}
       isLogged={isLogged}
       loggedAreaLink={loggedAreaLink}
