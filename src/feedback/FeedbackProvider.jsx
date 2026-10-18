@@ -6,7 +6,7 @@ import { useFeedback } from './useFeedback';
 
 export default function FeedbackProvider({ children }) {
   const [st, setSt] = useState(() => getFeedbackState());
-  const { close } = useFeedback();
+  const { close, next, previous } = useFeedback();
 
   useEffect(() => {
     return subscribeFeedback(setSt);
@@ -15,7 +15,16 @@ export default function FeedbackProvider({ children }) {
   return (
     <>
       {children}
-      <FullScreenMessage open={st.open} payload={st.payload} onClose={close} />
+      <FullScreenMessage
+        open={st.open}
+        payload={st.payload}
+        hasNext={st.hasNext}
+        hasPrevious={st.hasPrevious}
+        isPaged={st.isPaged}
+        onClose={close}
+        onNext={next}
+        onPrevious={previous}
+      />
     </>
   );
 }
