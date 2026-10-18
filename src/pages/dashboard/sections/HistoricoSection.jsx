@@ -40,10 +40,23 @@ export default function HistoricoSection({
       if (active) setPdfRenderer(renderer);
     }).catch((error) => {
       console.error('Falha ao preparar o PDF do historico.', { name: error?.name, message: error?.message });
-      if (active) setPdfPreparationError(true);
+      if (active) {
+        setPdfPreparationError(true);
+        feedback.showCustom({
+          title: 'Histórico',
+          body: 'Falha ao preparar o PDF. Recarregue a página e tente novamente.',
+          variant: 'danger',
+          screen: 'dark',
+          buttonText: 'OK',
+        });
+      }
     });
     return () => { active = false; };
-  }, []);
+  }, [feedback]);
+
+  useEffect(() => {
+    if (historicoError) feedback.showMessage(historicoError);
+  }, [feedback, historicoError]);
 
   const compartilharAgendamento = async (agendamento) => {
     if (shareLock.current || !pdfRenderer || !getBizLabel(businessGroup, 'item_singular')) return;
@@ -94,14 +107,6 @@ export default function HistoricoSection({
         <h2 className="text-2xl font-normal">HISTÓRICO</h2>
         <DatePicker value={historicoData} onChange={(iso) => setHistoricoData(iso)} todayISO={hoje} />
       </div>
-      {historicoErrorMsg && (
-        <div className="mb-4 border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 rounded-custom p-4 text-sm">
-          {historicoErrorMsg.body}
-        </div>
-      )}
-      {pdfPreparationError && (
-        <p role="alert" className="mb-4 text-sm text-red-300">Falha ao preparar o PDF. Recarregue a página e tente novamente.</p>
-      )}
       {historicoAgendamentos.length > 0 ? (
         <div className="space-y-3">
           {historicoAgendamentos.map(a => {

@@ -151,9 +151,23 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
+    billing_charge_reconciliation_pending: {
+      title: 'Verificando faturas',
+      body: 'Não foi possível confirmar agora todas as faturas desta assinatura no Asaas. Aguarde alguns instantes e tente novamente antes de abrir outro pagamento. Se persistir, contate o suporte.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
     billing_subscription_suspended_with_debt: {
       title: 'Assinatura suspensa',
-      body: 'Há fatura pendente nesta assinatura. Quite os débitos pelo link do plano. O pagamento regulariza apenas o saldo em aberto, sendo necessário reativar a recorrência separadamente.',
+      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga pelo botão do plano. Após quitar todas, você poderá reativar o plano. O acesso pago vigente continua válido até o fim do período.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    billing_subscription_expired_with_debt: {
+      title: 'Assinatura expirada',
+      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga pelo botão do plano. Após quitar todas, você poderá renovar o plano. O acesso pago vigente continua válido até o fim do período.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
@@ -185,7 +199,7 @@ export const ptBR = {
     },
     billing_new_checkout_debt_open: {
       title: 'Pagamento pendente',
-      body: 'Quite as faturas em aberto da assinatura atual antes de contratar outro plano.',
+      body: 'Há faturas em aberto. Pague a mais antiga pelo botão do seu plano antes de abrir outro pagamento. Todas as faturas devidas precisam ser quitadas; se a assinatura estiver suspensa ou expirada, reative ou renove o plano depois.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',

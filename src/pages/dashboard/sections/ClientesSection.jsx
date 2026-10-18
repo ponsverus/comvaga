@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useFeedback } from '../../../feedback/useFeedback';
 import { UsersIcon, CheckIcon } from '../../../components/icons';
 import { formatDateBRFromISO } from '../utils';
 import { getPublicUrl } from '../api/dashboardApi';
@@ -73,6 +74,12 @@ export default function ClientesSection({
 }) {
   const itemLabelText = String(itemLabel || 'SERV').toUpperCase();
   const [page, setPage] = useState(0);
+  const feedback = useFeedback();
+
+  useEffect(() => {
+    if (!clientesError) return;
+    feedback.showCustom({ title: 'Clientes', body: clientesError, variant: 'danger', screen: 'dark', buttonText: 'OK' });
+  }, [clientesError, feedback]);
 
   const pageCount = Math.max(1, Math.ceil(clientes.length / CLIENTES_PER_PAGE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -128,9 +135,7 @@ export default function ClientesSection({
       {clientesLoading ? (
         <div className="text-gray-500 text-center py-12">CARREGANDO CLIENTES...</div>
       ) : clientesError ? (
-        <div className="border border-red-500/30 bg-red-500/10 text-red-300 rounded-custom p-4 text-sm">
-          {clientesError}
-        </div>
+        null
       ) : clientes.length > 0 ? (
         <div>
           <div

@@ -85,7 +85,6 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
   const [editingDados, setEditingDados] = useState({});
   const [dadosBaselines, setDadosBaselines] = useState({});
 
-  const [loadError, setLoadError] = useState('');
   const [clienteId, setClienteId] = useState(null);
   const [avaliacoesPorAgendamento, setAvaliacoesPorAgendamento] = useState({});
   const [depoimentoLoading, setDepoimentoLoading] = useState(false);
@@ -198,7 +197,6 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
-    setLoadError('');
     setLoading(true);
     try {
       const [perfil, currentClienteId] = await Promise.all([
@@ -225,14 +223,11 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
       if (requestKey === 'alerts.request_timeout') {
-        setLoadError(ptBR.alerts.request_timeout.body);
         uiAlert(requestKey, 'warning');
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        setLoadError(ptBR.alerts.rate_limit_exceeded.body);
         uiAlert(requestKey, 'warning');
       } else {
         console.error('Client area load error:', error);
-        setLoadError(ptBR.clientArea.load_data_error.body);
         uiAlert('clientArea.load_data_error', 'warning');
       }
       setAgendamentos([]);
@@ -827,12 +822,6 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loadError && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/40 rounded-custom p-4 text-red-300 text-sm">
-            {loadError}
-          </div>
-        )}
-
         <div className="mb-8 md:hidden">
           <div className="mx-auto max-w-md">
             <div className="relative flex h-11 items-center overflow-hidden rounded-full border border-white/10 bg-black/40 backdrop-blur-md">
