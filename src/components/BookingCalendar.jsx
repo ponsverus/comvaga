@@ -173,16 +173,22 @@ export default function BookingCalendar({
       setHorariosAll(final);
       setHorariosHot(hot);
 
-      if (!final.length) setSlotsError(ptBR.vitrine.schedule_errors.no_slots);
+      if (!final.length) {
+        const message = ptBR.vitrine.schedule_errors.no_slots;
+        setSlotsError(message);
+        feedback.showCustom({ title: 'Horários', body: message, variant: 'warning', screen: 'dark', buttonText: 'OK' });
+      }
 
       setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     } catch {
       if (!canApply()) return;
-      setSlotsError(ptBR.vitrine.schedule_errors.slots_load_error);
+      const message = ptBR.vitrine.schedule_errors.slots_load_error;
+      setSlotsError(message);
+      feedback.showCustom({ title: 'Horários', body: message, variant: 'danger', screen: 'dark', buttonText: 'OK' });
     } finally {
       if (canApply()) setSlotsLoading(false);
     }
-  }, [profissional?.id, entrega?.duracao_minutos]);
+  }, [feedback, profissional?.id, entrega?.duracao_minutos]);
 
   const handleSelectDay = iso => {
     selectedDayRef.current = iso;
@@ -417,12 +423,6 @@ export default function BookingCalendar({
                 <div className={`flex items-center justify-center py-8 ${loadingColor}`}>
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   <span className="text-sm">BUSCANDO HORÁRIOS...</span>
-                </div>
-              )}
-
-              {!slotsLoading && slotsError && (
-                <div className={`flex items-center justify-center border rounded-button p-3 text-sm font-normal text-center ${slotsErrorClass}`}>
-                  {slotsError}
                 </div>
               )}
 
