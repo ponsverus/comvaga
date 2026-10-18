@@ -83,6 +83,7 @@ export default function AgendaUtilizacaoBlock({
 
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
     const pageCount = isDesktop ? desktopPageCount : porProfissional.length;
+    const cardsPerPage = isDesktop ? 3 : 1;
     const maxScrollLeft = node.scrollWidth - node.clientWidth;
     const nextPage = maxScrollLeft <= 1
       ? 0
@@ -95,7 +96,7 @@ export default function AgendaUtilizacaoBlock({
             ? secondCard.offsetLeft - firstCard.offsetLeft
             : node.clientWidth;
           const cardIndex = Math.round(node.scrollLeft / Math.max(1, cardStep));
-          return Math.max(0, Math.min(pageCount - 1, Math.floor(cardIndex / 3)));
+          return Math.max(0, Math.min(pageCount - 1, Math.floor(cardIndex / cardsPerPage)));
         })();
     setActivePage(Math.max(0, Math.min(pageCount - 1, nextPage)));
   }
