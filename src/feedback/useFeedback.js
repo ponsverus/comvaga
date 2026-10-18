@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from 'react';
 
 import { ptBR } from './messages/ptBR.js';
-import { getFeedbackState, setFeedbackState } from './feedbackStore';
+import {
+  dismissFeedback,
+  enqueueFeedback,
+  navigateFeedback,
+} from './feedbackStore';
 
 function getByPath(obj, path) {
   const parts = String(path || '').split('.');
@@ -43,29 +47,20 @@ export function useFeedback() {
   const showMessage = useCallback((key, params) => {
     const payload = buildPayloadFromKey(key, params);
 
-    setFeedbackState({
-      open: true,
-      payload: {
-        ...payload,
-        type: 'message',
-      },
-    });
+    enqueueFeedback({ ...payload, type: 'message' });
   }, []);
 
   const confirm = useCallback((key, { params, variant } = {}) => {
     const payload = buildPayloadFromKey(key, params);
 
     return new Promise((resolve) => {
-      setFeedbackState({
-        open: true,
-        payload: {
-          ...payload,
-          type: 'confirm',
-          variant: variant || payload.variant || 'warning',
-          confirmText: payload.confirmText || payload.buttonText || 'OK',
-          cancelText: payload.cancelText || 'CANCELAR',
-          __resolve: resolve,
-        },
+      enqueueFeedback({
+        ...payload,
+        type: 'confirm',
+        variant: variant || payload.variant || 'warning',
+        confirmText: payload.confirmText || payload.buttonText || 'OK',
+        cancelText: payload.cancelText || 'CANCELAR',
+        __resolve: resolve,
       });
     });
   }, []);
@@ -74,39 +69,32 @@ export function useFeedback() {
     const payload = buildPayloadFromKey(key, params);
 
     return new Promise((resolve) => {
-      setFeedbackState({
-        open: true,
-        payload: {
-          ...payload,
-          type: 'prompt',
-          variant: variant || payload.variant || 'warning',
-          placeholder: payload.placeholder || placeholder,
-          initialValue: payload.initialValue ?? initialValue,
-          confirmText: payload.confirmText || payload.buttonText || 'OK',
-          cancelText: payload.cancelText || 'CANCELAR',
-          __resolve: resolve,
-        },
+      enqueueFeedback({
+        ...payload,
+        type: 'prompt',
+        variant: variant || payload.variant || 'warning',
+        placeholder: payload.placeholder || placeholder,
+        initialValue: payload.initialValue ?? initialValue,
+        confirmText: payload.confirmText || payload.buttonText || 'OK',
+        cancelText: payload.cancelText || 'CANCELAR',
+        __resolve: resolve,
       });
     });
   }, []);
 
   const showCustom = useCallback((payload) => {
-    setFeedbackState({ open: true, payload: { ...payload, type: payload?.type || 'message' } });
+    enqueueFeedback({ ...payload, type: payload?.type || 'message' });
   }, []);
 
+  const next = useCallback(() => navigateFeedback('next'), []);
+  const previous = useCallback(() => navigateFeedback('previous'), []);
+
   const close = useCallback((result) => {
-    const cur = getFeedbackState();
-    const resolver = cur?.payload?.__resolve;
-    const onClose = cur?.payload?.onClose;
-
-    setFeedbackState({ open: false, payload: null });
-
-    if (typeof resolver === 'function') resolver(result);
-    if (typeof onClose === 'function') onClose();
+    dismissFeedback(result);
   }, []);
 
   return useMemo(
-    () => ({ showMessage, confirm, prompt, showCustom, close }),
-    [showMessage, confirm, prompt, showCustom, close]
+    () => ({ showMessage, confirm, prompt, showCustom, close, next, previous }),
+    [showMessage, confirm, prompt, showCustom, close, next, previous]
   );
 }
