@@ -18,10 +18,10 @@ export default function Blog() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-16 sm:px-8 sm:py-24">
-        <div className="mb-12 max-w-3xl">
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16">
+        <div className="mb-16 max-w-3xl sm:mb-20">
           <p className="mb-4 text-xs font-bold uppercase text-primary">Conteúdos Comvaga</p>
-          <h1 className="mb-5 text-4xl font-normal leading-tight sm:text-6xl">Ideias para fazer sua agenda trabalhar melhor</h1>
+          <h1 className="mb-5 text-5xl font-normal leading-tight sm:text-7xl">Ideias para fazer sua agenda trabalhar melhor</h1>
           <p className="text-lg leading-relaxed text-gray-400">Guias rápidos para organizar atendimentos, profissionais, clientes e oportunidades de negócio.</p>
         </div>
 
