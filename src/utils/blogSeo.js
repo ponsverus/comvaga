@@ -7,8 +7,8 @@ export function buildBlogMetadata(post) {
   if (!post?.slug || !post?.title) return null;
 
   return {
-    title: `${post.title} | Comvaga`,
-    description: post.description,
+    title: post.metaTitle,
+    description: post.metaDescription,
     canonical: `${PUBLIC_ORIGIN}/blog/${post.slug}`,
     image: `${PUBLIC_ORIGIN}/og-default.png`,
     imageAlt: 'Comvaga - plataforma de agendamento online',

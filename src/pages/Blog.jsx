@@ -28,7 +28,7 @@ export default function Blog() {
         <section aria-label="Posts do blog" className="grid gap-x-12 gap-y-16 md:grid-cols-2">
           {BLOG_POSTS.map((post) => (
             <article key={post.slug} className="flex flex-col">
-              {post.coverImage && (
+              {post.coverImage && post.coverImage !== '/' && (
                 <img
                   src={post.coverImage}
                   alt={post.coverAlt || ''}
