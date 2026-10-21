@@ -100,13 +100,6 @@ export default function BlogPost() {
               {section.comparison && <ComparisonTable rows={section.comparison} />}
             </section>
           ))}
-          {post.cta && (
-            <div className="mb-12 flex justify-center">
-              <Link to={post.cta.href} className="inline-flex rounded-full bg-primary px-8 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">
-                {post.cta.label}
-              </Link>
-            </div>
-          )}
         </article>
       </main>
 
@@ -116,13 +109,17 @@ export default function BlogPost() {
             {[0, 1].map((copy) => (
               <div
                 key={copy}
-                className="announcement-bar-track flex w-screen min-w-max shrink-0 items-center justify-around gap-8 whitespace-nowrap px-4"
+                className="announcement-bar-track flex min-w-max shrink-0 items-center gap-8 whitespace-nowrap px-4"
                 aria-hidden={copy === 1}
               >
-                <Link to="/" tabIndex={copy === 1 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Conhecer a Comvaga</Link>
-                <span aria-hidden="true">●</span>
-                <Link to="/v/vikings" tabIndex={copy === 1 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Ver vitrine exemplo</Link>
-                <span aria-hidden="true">●</span>
+                {Array.from({ length: 4 }, (_, repeat) => (
+                  <div key={repeat} className="flex shrink-0 items-center gap-8" aria-hidden={copy === 1 || repeat > 0}>
+                    <Link to="/" tabIndex={copy === 1 || repeat > 0 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Conhecer a Comvaga</Link>
+                    <span aria-hidden="true">●</span>
+                    <Link to="/v/vikings" tabIndex={copy === 1 || repeat > 0 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Ver vitrine exemplo</Link>
+                    <span aria-hidden="true">●</span>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
