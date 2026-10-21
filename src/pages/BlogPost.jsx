@@ -36,14 +36,11 @@ function ComparisonTimeline({ rows }) {
           >
             {index + 1}
           </span>
-          <h3 className="mb-2 text-xl font-normal leading-tight text-white">{row[0]}</h3>
-          <p className="text-sm leading-relaxed text-gray-400 md:text-base">
-            <span className="text-gray-500">{head[1]}:</span> {row[1]}
-          </p>
-          <p className="mt-2 leading-relaxed text-primary md:text-lg">
-            <span className="sr-only">{head[2]}: </span>
-            {row[2]}
-          </p>
+          <h3 className="mb-3 text-xl font-normal leading-tight text-white">{row[0]}</h3>
+          <p className="text-sm font-normal text-red-400 md:text-base">{head[1]}</p>
+          <p className="mb-3 text-sm leading-relaxed text-gray-400 md:text-base">{row[1]}</p>
+          <p className="text-sm font-normal text-primary md:text-base">Comvaga</p>
+          <p className="leading-relaxed text-primary md:text-lg">{row[2]}</p>
         </li>
       ))}
     </ol>
