@@ -9,12 +9,12 @@ const post = {
   publishedAt: '2026-10-21',
   coverImage: '/',
   coverAlt: '',
-  intro: 'O dia a dia de uma barbearia exige agilidade. Entre cortar cabelo, fazer barba e atender quem chega, responder mensagens no WhatsApp para marcar horários pode se tornar um gargalo. Uma agenda online para barbearia reúne esses pedidos em um só lugar e ajuda a evitar problemas comuns do agendamento manual, como horários duplicados, atrasos em períodos de pico e intervalos ociosos entre atendimentos.',
+  intro: 'Adotar uma agenda online para barbearia é fundamental para quem busca agilidade no dia a dia. Entre cortar cabelo, fazer barba e atender quem chega, responder mensagens no WhatsApp para marcar horários pode se tornar um gargalo. Um sistema de agendamento reúne esses pedidos em um só lugar e ajuda a evitar problemas comuns do agendamento manual, como horários duplicados, atrasos em períodos de pico e intervalos ociosos entre atendimentos.',
   sections: [
     {
       heading: 'Os desafios do agendamento manual na barbearia',
       paragraphs: [
-        'Adotar uma agenda online ajuda a organizar os atendimentos, mas o resultado depende de como o sistema considera o tempo de cada trabalho, a disponibilidade da equipe e os intervalos da agenda.',
+        'Adotar uma agenda online ajuda a organizar a rotina dos barbeiros, mas o resultado depende de como o sistema considera o tempo de cada procedimento, a disponibilidade da equipe e os horários operacionais.',
         'A rotina de uma barbearia tem particularidades que exigem cuidado ao cálculo do tempo:'
       ],
       bullets: [
@@ -26,7 +26,7 @@ const post = {
     {
       heading: 'Zonas de Calor: horários mais compactos na agenda',
       paragraphs: [
-        'Para apoiar a rotina, um sistema de agendamento precisa ir além do registro de horários e considerar as regras de cada trabalho e de cada profissional. A Comvaga organiza a demanda dos horários disponíveis considerando os agendamentos existentes. A proposta das Zonas de Calor é favorecer horários próximos aos compromissos já marcados, ajudando a reduzir intervalos ociosos na jornada.'
+        'Para apoiar a rotina, um aplicativo de agendamento para barbearia precisa ir além do registro de horários e considerar as regras de cada trabalho e de cada profissional. A Comvaga organiza a demanda dos horários disponíveis considerando os agendamentos existentes. A proposta das Zonas de Calor é favorecer horários próximos aos compromissos já marcados, ajudando a reduzir intervalos ociosos na jornada.'
       ]
     },
     {
@@ -59,7 +59,7 @@ const post = {
     {
       heading: 'Teste a Comvaga na sua barbearia',
       paragraphs: [
-        'A Comvaga reúne recursos de agenda, equipe e vitrine pública para ajudar a organizar os atendimentos da barbearia. Consulte as termos atuais do cadastro e dos planos na plataforma.'
+        'A Comvaga é a plataforma de agendamento feita para simplificar a rotina da sua barbearia, organizar sua equipe e acabar com os horários vagos. Crie sua vitrine online e teste a Comvaga gratuitamente no seu negócio.'
       ]
     }
   ]
