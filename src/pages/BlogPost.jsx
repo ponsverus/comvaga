@@ -23,26 +23,30 @@ function useBlogPostSeo(post) {
   }, [post]);
 }
 
-function ComparisonTable({ rows }) {
+function ComparisonTimeline({ rows }) {
   const [head, ...body] = rows;
 
   return (
-    <div className="my-8 overflow-x-auto">
-      <table className="min-w-full border-collapse text-left text-sm">
-        <thead className="bg-primary text-black">
-          <tr>{head.map((cell) => <th key={cell} className="px-4 py-3 font-black">{cell}</th>)}</tr>
-        </thead>
-        <tbody>
-          {body.map((row) => (
-            <tr key={row[0]} className="border-t border-white/10 bg-dark-100 even:bg-dark-200">
-              <th className="px-4 py-3 font-normal text-white">{row[0]}</th>
-              <td className="px-4 py-3 text-gray-400">{row[1]}</td>
-              <td className="px-4 py-3 font-normal text-primary">{row[2]}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ol className="relative my-8 space-y-8 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-primary/40">
+      {body.map((row, index) => (
+        <li key={row[0]} className="relative pl-12">
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-normal text-black"
+          >
+            {index + 1}
+          </span>
+          <h3 className="mb-2 text-xl font-normal leading-tight text-white">{row[0]}</h3>
+          <p className="text-sm leading-relaxed text-gray-400 md:text-base">
+            <span className="text-gray-500">{head[1]}:</span> {row[1]}
+          </p>
+          <p className="mt-2 leading-relaxed text-primary md:text-lg">
+            <span className="sr-only">{head[2]}: </span>
+            {row[2]}
+          </p>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -97,7 +101,7 @@ export default function BlogPost() {
               <h2 className="mb-4 text-2xl font-normal leading-tight text-white sm:text-3xl">{section.heading}</h2>
               {section.paragraphs?.map((paragraph) => <p key={paragraph} className="mb-4 leading-relaxed text-gray-400">{paragraph}</p>)}
               {section.bullets && <ul className="my-6 space-y-3 text-gray-300">{section.bullets.map((item) => <li key={item} className="flex gap-3"><CheckIcon className="mt-1 h-4 w-4 shrink-0 text-primary" /><span>{item}</span></li>)}</ul>}
-              {section.comparison && <ComparisonTable rows={section.comparison} />}
+              {section.comparison && <ComparisonTimeline rows={section.comparison} />}
             </section>
           ))}
         </article>
