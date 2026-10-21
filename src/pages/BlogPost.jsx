@@ -84,7 +84,7 @@ export default function BlogPost() {
             <div>
               <p className="mb-4 text-xs font-bold uppercase text-primary">{post.category} · {post.readTime}</p>
               <h1 className="mb-3 text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
-              <p className="text-sm uppercase text-gray-400">
+              <p className="text-sm uppercase italic text-gray-400">
                 Por {COMVAGA_ORGANIZATION.name}
               </p>
             </div>
