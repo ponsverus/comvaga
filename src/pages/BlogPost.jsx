@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Pause, Play } from 'lucide-react';
 import AppFooter from '../components/AppFooter';
+import { CheckIcon } from '../components/icons';
 import { getBlogPost } from '../data/blogPosts/index.js';
 import { COMVAGA_ORGANIZATION } from '../utils/comvagaOrganization.js';
 import { applyMetadata } from '../utils/seoMetadata.js';
@@ -26,7 +27,7 @@ function ComparisonTable({ rows }) {
   const [head, ...body] = rows;
 
   return (
-    <div className="my-8 overflow-x-auto rounded-xl border border-white/10">
+    <div className="my-8 overflow-x-auto">
       <table className="min-w-full border-collapse text-left text-sm">
         <thead className="bg-primary text-black">
           <tr>{head.map((cell) => <th key={cell} className="px-4 py-3 font-black">{cell}</th>)}</tr>
@@ -34,9 +35,9 @@ function ComparisonTable({ rows }) {
         <tbody>
           {body.map((row) => (
             <tr key={row[0]} className="border-t border-white/10 bg-dark-100 even:bg-dark-200">
-              <th className="px-4 py-3 font-bold text-white">{row[0]}</th>
+              <th className="px-4 py-3 font-normal text-white">{row[0]}</th>
               <td className="px-4 py-3 text-gray-400">{row[1]}</td>
-              <td className="px-4 py-3 font-bold text-primary">{row[2]}</td>
+              <td className="px-4 py-3 font-normal text-primary">{row[2]}</td>
             </tr>
           ))}
         </tbody>
@@ -82,7 +83,7 @@ export default function BlogPost() {
               />
             )}
             <div>
-              <p className="mb-4 text-xs font-bold uppercase text-primary">{post.category} · {post.readTime}</p>
+              <p className="mb-4 text-xs font-normal uppercase text-primary">{post.category} · {post.readTime}</p>
               <h1 className="mb-3 text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
               <p className="text-sm uppercase italic text-gray-400">
                 Por {COMVAGA_ORGANIZATION.name}
@@ -95,7 +96,7 @@ export default function BlogPost() {
             <section key={section.heading} className="mb-12">
               <h2 className="mb-4 text-2xl font-normal leading-tight text-white sm:text-3xl">{section.heading}</h2>
               {section.paragraphs?.map((paragraph) => <p key={paragraph} className="mb-4 leading-relaxed text-gray-400">{paragraph}</p>)}
-              {section.bullets && <ul className="my-6 space-y-3 text-gray-300">{section.bullets.map((item) => <li key={item} className="flex gap-3"><span className="text-primary">✓</span><span>{item}</span></li>)}</ul>}
+              {section.bullets && <ul className="my-6 space-y-3 text-gray-300">{section.bullets.map((item) => <li key={item} className="flex gap-3"><CheckIcon className="mt-1 h-4 w-4 shrink-0 text-primary" /><span>{item}</span></li>)}</ul>}
               {section.comparison && <ComparisonTable rows={section.comparison} />}
             </section>
           ))}
