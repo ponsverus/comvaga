@@ -78,11 +78,7 @@ const post = {
         'A Comvaga reúne recursos de agenda, equipe e vitrine pública para ajudar a organizar os atendimentos da barbearia. Consulte as condições atuais do cadastro e dos planos na plataforma.'
       ]
     }
-  ],
-  cta: {
-    label: 'Conhecer a Comvaga',
-    href: '/cadastro'
-  }
+  ]
 };
 
 export default post;
