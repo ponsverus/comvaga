@@ -48,6 +48,7 @@ function ComparisonTable({ rows }) {
 export default function BlogPost() {
   const { slug } = useParams();
   const post = getBlogPost(slug);
+  const hasCoverImage = Boolean(post?.coverImage && post.coverImage !== '/');
   const [announcementPaused, setAnnouncementPaused] = useState(false);
   useBlogPostSeo(post);
 
@@ -71,8 +72,8 @@ export default function BlogPost() {
           <span className="text-sm font-normal">VOLTAR</span>
         </Link>
         <article className="mt-8">
-          <div className={post.coverImage ? 'mb-12 grid items-center gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : 'mb-8'}>
-            {post.coverImage && (
+          <div className={hasCoverImage ? 'mb-12 grid items-center gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : 'mb-8'}>
+            {hasCoverImage && (
               <img
                 src={post.coverImage}
                 alt={post.coverAlt || ''}
@@ -98,6 +99,13 @@ export default function BlogPost() {
               {section.comparison && <ComparisonTable rows={section.comparison} />}
             </section>
           ))}
+          {post.cta && (
+            <div className="mb-12 flex justify-center">
+              <Link to={post.cta.href} className="inline-flex rounded-full bg-primary px-8 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">
+                {post.cta.label}
+              </Link>
+            </div>
+          )}
         </article>
       </main>
 
