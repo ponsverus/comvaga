@@ -34,7 +34,7 @@ export default function Blog() {
                   alt={post.coverAlt || ''}
                   loading="lazy"
                   decoding="async"
-                  className="mx-auto mb-6 h-44 w-44 rounded-[3px] object-cover sm:h-52 sm:w-52"
+                  className="mx-auto mb-6 block h-auto w-full rounded-[3px]"
                 />
               )}
               <p className="mb-3 text-xs font-bold uppercase text-primary">{post.category}</p>
