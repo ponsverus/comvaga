@@ -10,7 +10,6 @@ import { useStaticSeo } from '../hooks/useStaticSeo.js';
 import HomePublicContent from '../components/HomePublicContent.jsx';
 import { applyStructuredData } from '../utils/structuredData.js';
 import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../utils/homeSeo.js';
-import { STATIC_SEO } from '../utils/staticSeo.js';
 
 function getBusinessLogoUrl(path) {
   if (!path) return null;
@@ -164,7 +163,7 @@ function SearchBox({
 
 export default function Home({ user, userType, professionalRole = null, onLogout }) {
   useStaticSeo('/');
-  useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData(STATIC_SEO['/'])), []);
+  useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData()), []);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
