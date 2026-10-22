@@ -7,7 +7,7 @@ const sections = [
     title: 'O que é a Comvaga',
     body: [
       'A Comvaga é uma plataforma para negócios de atendimento por horário que precisam vender seus trabalhos, organizar a agenda e apresentar uma vitrine profissional sem depender de conversas manuais para cada agendamento.',
-      'A proposta é unir vitrine, agendamento, controle de profissionais, atendimentos, horários, avisos e relacionamento com clientes em um fluxo só. O cliente escolhe o atendimento, o profissional e o horário disponível; o negócio acompanha tudo pelo painel.',
+      'A proposta é unir vitrine, agendamento, gerenciamento de profissionais, atendimentos, horários, avisos e relacionamento com clientes em um fluxo só. O cliente escolhe o atendimento, o profissional e o horário disponível; o negócio acompanha tudo pelo painel.',
     ],
   },
   {
@@ -20,8 +20,8 @@ const sections = [
   {
     title: 'Como funciona na prática',
     body: [
-      'O responsável pelo negócio cadastra a vitrine, atendimentos, valores, fotos, profissionais, horários e regras operacionais. A vitrine pública mostra os dados necessários para o cliente decidir e agendar.',
-      'O painel administrativo concentra o funcionamento: agenda, profissionais, clientes, histórico, entregas, plano, detalhes do negócio e dados de conta. A ideia é reduzir trabalho repetitivo e dar mais clareza sobre a rotina do negócio.',
+      'O responsável pelo negócio cadastra a vitrine, trabalhos, valores, fotos, profissionais, horários e regras operacionais. A vitrine pública mostra os dados necessários para o cliente decidir e agendar.',
+      'O painel administrativo concentra o funcionamento: agenda, profissionais, clientes, histórico, entregas, plano, dados do negócio e da conta de quem o administra. A ideia é reduzir trabalho repetitivo e dar mais clareza sobre a rotina do negócio.',
     ],
   },
   {
