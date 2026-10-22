@@ -20,8 +20,8 @@ const pages = {
     description: 'Saiba como a Comvaga coleta, utiliza e protege dados pessoais. Veja como funcionam o compartilhamento, o armazenamento e os seus direitos.',
   },
   '/blog': {
-    title: 'Blog Comvaga | Agendamento online e controle de negócios',
-    description: 'Guias rápidos sobre agendamento online, gerenciamento de profissionais, clientes e rotina de horários.',
+    title: 'Blog Comvaga | Agendamento online para organizar sua agenda',
+    description: 'Guias rápidos da Comvaga para quem vive de agenda. Veja como organizar horários, equipe e clientes, escolher o sistema certo e aproveitar melhor cada atendimento.',
   },
 };
 
