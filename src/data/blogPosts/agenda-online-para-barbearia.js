@@ -7,8 +7,8 @@ const post = {
   category: 'Agendamento online',
   readTime: '5 min de leitura',
   publishedAt: '2026-10-21',
-  coverImage: '/',
-  coverAlt: '',
+  coverImage: '/agenda-online-para-barbearia.png',
+  coverAlt: 'Agenda de barbearia com horários ocupados em círculos amarelos e horários livres em cinza',
   intro: 'Adotar uma agenda online para barbearia é fundamental para quem busca agilidade no dia a dia. Entre cortar cabelo, fazer barba e atender quem chega, responder mensagens no WhatsApp para marcar horários pode se tornar um gargalo. Um sistema de agendamento reúne esses pedidos em um só lugar e ajuda a evitar problemas comuns do agendamento manual, como horários duplicados, atrasos em períodos de pico e intervalos ociosos entre atendimentos.',
   sections: [
     {
