@@ -7,8 +7,8 @@ const post = {
   category: 'Agendamento online',
   readTime: '4 min de leitura',
   publishedAt: '2026-10-12',
-  coverImage: '/images/blog/sistema-de-agendamento-online.jpg',
-  coverAlt: 'Empresário organizando agendamentos online da equipe pelo computador e celular',
+  coverImage: '',
+  coverAlt: '',
   intro: 'Escolher o melhor sistema de agendamento online vai além de encontrar uma agenda digital. A plataforma precisa ajudar sua empresa a atender melhor, ocupar horários vagos e manter a rotina sob controle.',
   sections: [
     {
