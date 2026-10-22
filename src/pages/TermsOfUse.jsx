@@ -126,7 +126,7 @@ export default function TermsOfUsePage() {
         </Link>
 
         <div className="mb-10">
-          <p className="mb-3 text-xs uppercase text-primary">Legal</p>
+          <p className="mb-3 inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-normal uppercase tracking-wider text-black">Legal</p>
           <h1 className="text-4xl font-normal uppercase">Termos de Uso</h1>
         </div>
 
