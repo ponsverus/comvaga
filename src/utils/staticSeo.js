@@ -2,28 +2,35 @@ import { PUBLIC_ORIGIN } from './seoMetadata.js';
 import { BLOG_POSTS } from '../data/blogPosts/index.js';
 import { buildBlogMetadata } from './blogSeo.js';
 
-const pages = {
+const staticPages = {
   '/': {
-    title: 'Comvaga | Agenda inteligente e agendamento online',
-    description: 'Organize agendas, profissionais e clientes com a Comvaga. Apresente seu negócio em uma vitrine pública e receba agendamentos online.',
+    metaTitle: 'Comvaga | Agenda inteligente e agendamento online',
+    metaDescription: 'Organize agendas, profissionais e clientes com a Comvaga. Apresente seu negócio em uma vitrine pública e receba agendamentos online.',
   },
   '/sobre': {
-    title: 'Sobre a Comvaga | Plataforma de agendamento online',
-    description: 'Apresentamos a Comvaga, uma plataforma que reúne vitrine pública, agendamento online e controle de profissionais para negócios de atendimento por horário.',
+    metaTitle: 'Sobre a Comvaga | Plataforma de agendamento online',
+    metaDescription: 'Apresentamos a Comvaga, uma plataforma que reúne vitrine pública, agendamento online e controle de profissionais para negócios de atendimento por horário.',
   },
   '/termos': {
-    title: 'Termos de Uso | Comvaga',
-    description: 'Consulte os Termos de Uso da Comvaga: responsabilidades de clientes, negócios e profissionais, agendamentos, planos e uso da plataforma.',
+    metaTitle: 'Termos de Uso | Comvaga',
+    metaDescription: 'Consulte os Termos de Uso da Comvaga: responsabilidades de clientes, negócios e profissionais, agendamentos, planos e uso da plataforma.',
   },
   '/privacidade': {
-    title: 'Política de Privacidade | Comvaga',
-    description: 'Saiba como a Comvaga coleta, utiliza e protege dados pessoais. Veja como funcionam o compartilhamento, o armazenamento e os seus direitos.',
+    metaTitle: 'Política de Privacidade | Comvaga',
+    metaDescription: 'Saiba como a Comvaga coleta, utiliza e protege dados pessoais. Veja como funcionam o compartilhamento, o armazenamento e os seus direitos.',
   },
   '/blog': {
-    title: 'Blog Comvaga | Agendamento online para organizar sua agenda',
-    description: 'Guias rápidos da Comvaga para quem vive de agenda. Veja como organizar horários, equipe e clientes, escolher o sistema certo e aproveitar melhor cada atendimento.',
+    metaTitle: 'Blog Comvaga | Agendamento online para organizar sua agenda',
+    metaDescription: 'Guias rápidos da Comvaga para quem vive de agenda. Veja como organizar horários, equipe e clientes, escolher o sistema certo e aproveitar melhor cada atendimento.',
   },
 };
+
+const pages = Object.fromEntries(
+  Object.entries(staticPages).map(([path, metadata]) => [path, {
+    title: metadata.metaTitle,
+    description: metadata.metaDescription,
+  }]),
+);
 
 for (const post of BLOG_POSTS) {
   pages[`/blog/${post.slug}`] = buildBlogMetadata(post);
