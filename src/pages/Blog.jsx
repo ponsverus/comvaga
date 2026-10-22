@@ -22,7 +22,7 @@ export default function Blog() {
         <div className="mb-24 max-w-3xl sm:mb-32">
           <p className="mb-4 text-xs font-normal uppercase text-primary">Conteúdos Comvaga</p>
           <h1 className="mb-5 text-5xl font-normal leading-tight sm:text-7xl">Ideias para fazer sua agenda trabalhar melhor</h1>
-          <p className="text-lg leading-relaxed text-gray-400">Guias rápidos para organizar atendimentos, profissionais, clientes e oportunidades de negócio.</p>
+          <p className="text-lg leading-relaxed text-gray-400">Guias rápidos da Comvaga para quem vive de agenda. Veja como organizar horários, equipe e clientes, escolher o sistema certo e aproveitar melhor cada atendimento.</p>
         </div>
 
         <section aria-label="Posts do blog" className="grid items-start gap-x-12 gap-y-16 md:grid-cols-2">
