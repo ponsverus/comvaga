@@ -1,10 +1,14 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AppFooter from '../components/AppFooter';
 import { BLOG_POSTS } from '../data/blogPosts/index.js';
 import { useStaticSeo } from '../hooks/useStaticSeo.js';
+import { applyStructuredData } from '../utils/structuredData.js';
+import { BLOG_INDEX_SCHEMA_ID, buildBlogIndexStructuredData } from '../utils/blogSeo.js';
 
 export default function Blog() {
   useStaticSeo('/blog');
+  useEffect(() => applyStructuredData(BLOG_INDEX_SCHEMA_ID, buildBlogIndexStructuredData(BLOG_POSTS)), []);
 
   return (
     <div data-public-blog-preview className="min-h-screen bg-black text-white">
@@ -12,9 +16,9 @@ export default function Blog() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
             <img src="/Comvaga Logo.png" alt="Comvaga" className="h-12 w-auto" />
-            <span className="hidden text-xl font-normal sm:inline">COMVAGA</span>
+            <span className="hidden text-xl font-black sm:inline">COMVAGA</span>
           </Link>
-          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-normal uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
+          <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
         </div>
       </header>
 
@@ -40,7 +44,7 @@ export default function Blog() {
               <p className="mb-3 text-xs font-normal uppercase text-primary">{post.category}</p>
               <h2 className="mb-4 text-2xl font-normal leading-tight">{post.title}</h2>
               <p className="mb-7 leading-relaxed text-gray-400">{post.description}</p>
-              <Link to={`/blog/${post.slug}`} className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-normal uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Ler artigo</Link>
+              <Link to={`/blog/${post.slug}`} className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Ler artigo</Link>
             </article>
           ))}
         </section>
