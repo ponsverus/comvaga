@@ -95,7 +95,22 @@ export default function BlogPost() {
           {post.sections.map((section) => (
             <section key={section.heading} className="mb-12">
               <h2 className="mb-4 text-2xl font-normal leading-tight text-white sm:text-3xl">{section.heading}</h2>
-              {section.paragraphs?.map((paragraph) => <p key={paragraph} className="mb-4 leading-relaxed text-gray-400">{paragraph}</p>)}
+              {section.paragraphs?.map((paragraph, index) => {
+                const link = paragraph?.link;
+                return (
+                  <p key={typeof paragraph === 'string' ? `${index}-${paragraph}` : `${index}-${link?.to}`} className="mb-4 leading-relaxed text-gray-400">
+                    {typeof paragraph === 'string' ? paragraph : (
+                      <>
+                        {paragraph.before}
+                        <Link to={link.to} className="font-normal italic text-primary underline decoration-primary underline-offset-4 hover:text-yellow-300">
+                          {link.text}
+                        </Link>
+                        {paragraph.after}
+                      </>
+                    )}
+                  </p>
+                );
+              })}
               {section.bullets && <ul className="my-6 space-y-3 text-gray-300">{section.bullets.map((item) => <li key={item} className="flex gap-3"><CheckIcon className="mt-1 h-4 w-4 shrink-0 text-primary" /><span>{item}</span></li>)}</ul>}
               {section.comparison && <ComparisonTimeline rows={section.comparison} />}
             </section>
