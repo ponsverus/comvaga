@@ -15,6 +15,14 @@ const post = {
       heading: 'Os desafios do agendamento manual na barbearia',
       paragraphs: [
         'Adotar uma agenda online ajuda a organizar a rotina dos barbeiros, mas o resultado depende de como o sistema considera o tempo de cada procedimento, a disponibilidade da equipe e os horários operacionais.',
+        {
+          before: 'Se você também está comparando plataformas para além da barbearia, veja ',
+          link: {
+            to: '/blog/sistema-de-agendamento-online',
+            text: 'o que avaliar ao escolher um sistema de agendamento online',
+          },
+          after: '.'
+        },
         'A rotina de uma barbearia tem particularidades que exigem cuidado ao cálculo do tempo:'
       ],
       bullets: [
