@@ -36,7 +36,15 @@ const post = {
       paragraphs: [
         'A Comvaga reúne agenda, vitrine, equipe e clientes na mesma plataforma. O sistema considera o tempo dos trabalhos, a rotina de cada profissional e os intervalos da agenda.',
         'Quando o cliente escolhe vários procedimentos, a plataforma calcula o bloco completo de tempo antes de confirmar. Quando ocorre um cancelamento, o horário pode voltar para a vitrine como uma nova oportunidade.',
-        'O fluxo também inclui avisos: o profissional recebe alerta por e-mail a cada novo agendamento ou cancelamento, enquanto o cliente recebe um lembrete automático 30 minutos antes e pode reagendar pela área exclusiva.'
+        'O fluxo também inclui avisos: o profissional recebe alerta por e-mail a cada novo agendamento ou cancelamento, enquanto o cliente recebe um lembrete automático 30 minutos antes e pode reagendar pela área exclusiva.',
+        {
+          before: 'Para ver como esses recursos se aplicam a uma rotina específica, leia nosso ',
+          link: {
+            to: '/blog/agenda-online-para-barbearia',
+            text: 'guia sobre agenda online para barbearia',
+          },
+          after: '.'
+        }
       ]
     },
     {
