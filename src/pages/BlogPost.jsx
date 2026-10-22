@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pause, Play } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import AppFooter from '../components/AppFooter';
 import { CheckIcon } from '../components/icons';
 import { getBlogPost } from '../data/blogPosts/index.js';
@@ -51,7 +51,6 @@ export default function BlogPost() {
   const { slug } = useParams();
   const post = getBlogPost(slug);
   const hasCoverImage = Boolean(post?.coverImage && post.coverImage !== '/');
-  const [announcementPaused, setAnnouncementPaused] = useState(false);
   useBlogPostSeo(post);
 
   if (!post) return <Navigate to="/blog" replace />;
@@ -102,38 +101,22 @@ export default function BlogPost() {
             </section>
           ))}
         </article>
-      </main>
 
-      <nav aria-label="Conheça a Comvaga" className="blog-announcement flex h-12 w-full items-center bg-yellow-400 text-black">
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className={`announcement-bar-wrapper flex ${announcementPaused ? 'is-paused' : ''}`}>
-            {[0, 1].map((copy) => (
-              <div
-                key={copy}
-                className="announcement-bar-track flex min-w-max shrink-0 items-center gap-8 whitespace-nowrap px-4"
-                aria-hidden={copy === 1}
-              >
-                {Array.from({ length: 4 }, (_, repeat) => (
-                  <div key={repeat} className="flex shrink-0 items-center gap-8" aria-hidden={copy === 1 || repeat > 0}>
-                    <Link to="/" tabIndex={copy === 1 || repeat > 0 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Conhecer a Comvaga</Link>
-                    <span aria-hidden="true">●</span>
-                    <Link to="/v/vikings" tabIndex={copy === 1 || repeat > 0 ? -1 : undefined} className="py-3 text-sm font-normal uppercase hover:underline focus-visible:underline">Ver vitrine exemplo</Link>
-                    <span aria-hidden="true">●</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <Link
+            to="/cadastro"
+            className="inline-flex items-center justify-center rounded-button bg-primary px-6 py-3 text-sm font-normal uppercase text-black transition-colors hover:bg-primary/90"
+          >
+            TESTAR AGORA
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-button border border-white/15 px-6 py-3 text-sm font-normal uppercase text-white transition-colors hover:border-primary hover:text-primary"
+          >
+            Voltar para home
+          </Link>
         </div>
-        <button
-          type="button"
-          onClick={() => setAnnouncementPaused((paused) => !paused)}
-          aria-label={announcementPaused ? 'Retomar animação da faixa' : 'Pausar animação da faixa'}
-          className="flex h-12 w-12 shrink-0 items-center justify-center text-black/70 transition-colors hover:text-black focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-black motion-reduce:hidden"
-        >
-          {announcementPaused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
-        </button>
-      </nav>
+      </main>
 
       <AppFooter />
     </div>
