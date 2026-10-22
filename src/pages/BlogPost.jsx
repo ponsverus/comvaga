@@ -107,7 +107,7 @@ export default function BlogPost() {
             to="/cadastro"
             className="inline-flex items-center justify-center rounded-button bg-primary px-6 py-3 text-sm font-normal uppercase text-black transition-colors hover:bg-primary/90"
           >
-            TESTAR AGORA
+            Testar agora
           </Link>
           <Link
             to="/"
