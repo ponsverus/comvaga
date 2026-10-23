@@ -101,30 +101,6 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     return fetchCurrentClienteId();
   }, []);
 
-  const runSearchHome = useCallback(async (cleanTerm) => {
-    const clean = String(cleanTerm || '').trim();
-    setSearchError('');
-
-    if (clean.length < 3) {
-      setSearchRows([]);
-      setSearching(false);
-      return;
-    }
-
-    setSearching(true);
-    try {
-      const rows = await searchHome(clean, { limit: 10 });
-      setSearchRows(rows);
-    } catch (error) {
-      setSearchRows([]);
-      console.error('Client search error:', error);
-      setSearchError(ptBR.clientArea.search_error.body);
-      feedback.showMessage('clientArea.search_error');
-    } finally {
-      setSearching(false);
-    }
-  }, [feedback]);
-
   const fetchAgendamentos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
     const data = await fetchAgendamentosCliente({
       clienteId: clienteIdParam,
@@ -268,19 +244,39 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
 
   useEffect(() => {
     const clean = String(searchTerm || '').trim();
+    let cancelled = false;
+    setSearchRows([]);
+    setSearchError('');
+
     if (clean.length < 3) {
-      setSearchRows([]);
-      setSearchError('');
       setSearching(false);
       return undefined;
     }
 
+    setSearching(true);
     const timeout = window.setTimeout(() => {
-      runSearchHome(clean);
+      const search = async () => {
+        try {
+          const rows = await searchHome(clean, { limit: 10 });
+          if (cancelled) return;
+          setSearchRows(rows);
+        } catch (error) {
+          if (cancelled) return;
+          console.error('Client search error:', error);
+          setSearchError(ptBR.clientArea.search_error.body);
+          feedback.showMessage('clientArea.search_error');
+        } finally {
+          if (!cancelled) setSearching(false);
+        }
+      };
+      search();
     }, 300);
 
-    return () => window.clearTimeout(timeout);
-  }, [runSearchHome, searchTerm]);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [feedback, searchTerm]);
 
   const fetchAgendamentosRef = useRef(fetchAgendamentos);
   useEffect(() => { fetchAgendamentosRef.current = fetchAgendamentos; }, [fetchAgendamentos]);
@@ -729,6 +725,14 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
     setSearchError('');
   }, []);
 
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+    setSearchRows([]);
+    setSearchError('');
+    setSearching(value.trim().length >= 3);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -784,7 +788,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
                     ref={desktopSearchInputRef}
                     type="search"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={handleSearchChange}
                     placeholder="PESQUISAR NEGÓCIO OU PROFISSIONAL"
                     className={[
                       'min-w-0 flex-1 bg-transparent pr-4 text-sm uppercase text-white placeholder:text-gray-500 focus:outline-none transition-opacity duration-200',
@@ -831,7 +835,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
               <input
                 type="search"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="PESQUISAR NEGÓCIO OU PROFISSIONAL"
                 className="min-w-0 flex-1 bg-transparent pr-4 text-sm uppercase text-white placeholder:text-gray-500 focus:outline-none"
               />
