@@ -54,9 +54,9 @@ export default function HomePublicContent({
             >
               {[...Array(14)].map((_, index) => (
                 <div key={index} className="flex items-center">
-                  <span className="text-black font-normal text-sm uppercase mx-4">TESTE 30 DIAS GRÁTIS</span>
+                  <span className="text-black font-normal text-sm uppercase mx-4">Teste 30 dias grátis</span>
                   <span className="text-black mx-4">●</span>
-                  <span className="text-black font-normal text-sm uppercase mx-4">TESTE 30 DIAS GRÁTIS</span>
+                  <span className="text-black font-normal text-sm uppercase mx-4">Teste 30 dias grátis</span>
                   <span className="text-black mx-4">●</span>
                 </div>
               ))}
@@ -245,7 +245,7 @@ export default function HomePublicContent({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                <span className="text-[10px] font-normal text-gray-400 uppercase tracking-widest">VEJA AO VIVO</span>
+                <span className="text-[10px] font-normal text-gray-400 uppercase tracking-widest">Veja ao vivo</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
