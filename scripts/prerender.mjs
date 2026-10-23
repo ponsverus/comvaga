@@ -5,7 +5,12 @@ import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { STATIC_SEO } from '../src/utils/staticSeo.js';
 import { getBlogPost } from '../src/data/blogPosts/index.js';
-import { BLOG_SCHEMA_ID, buildBlogStructuredData } from '../src/utils/blogSeo.js';
+import {
+  BLOG_INDEX_SCHEMA_ID,
+  BLOG_SCHEMA_ID,
+  buildBlogIndexStructuredData,
+  buildBlogStructuredData,
+} from '../src/utils/blogSeo.js';
 import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../src/utils/homeSeo.js';
 import { renderSeoHtml } from '../server/publicSeo.js';
 
@@ -46,7 +51,11 @@ await writeFile(indexPath, html);
 for (const path of Object.keys(STATIC_SEO).filter((entry) => entry === '/blog' || entry.startsWith('/blog/'))) {
   const post = path.startsWith('/blog/') ? getBlogPost(path.slice('/blog/'.length)) : null;
   const content = renderer.renderBlog(path);
-  const jsonLd = post ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) } : undefined;
+  const jsonLd = post
+    ? { id: BLOG_SCHEMA_ID, data: buildBlogStructuredData(post) }
+    : path === '/blog'
+      ? { id: BLOG_INDEX_SCHEMA_ID, data: buildBlogIndexStructuredData() }
+      : undefined;
   const pageTemplate = renderSeoHtml(template, STATIC_SEO[path], null, null, { jsonLd });
   const pageHtml = pageTemplate.replace(rootMarkup, `<div id="root">${content}</div>`);
   const outputPath = resolve(root, 'dist', `${path.slice(1)}.html`);
