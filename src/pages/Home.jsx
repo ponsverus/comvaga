@@ -30,6 +30,7 @@ function SearchBox({
   setSearchOpen,
   searchTerm,
   setSearchTerm,
+  onSearchTermChange,
   resultadosBusca,
   setResultadosBusca,
   buscando,
@@ -85,7 +86,7 @@ function SearchBox({
           ref={inputRef}
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => onSearchTermChange(e.target.value)}
           placeholder="BUSQUE UM PROFISSIONAL OU NEGÓCIO :)"
           className={[
             'bg-transparent pr-4 text-sm text-white uppercase placeholder:text-gray-500 focus:outline-none transition-all duration-300',
@@ -170,6 +171,13 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const [buscando, setBuscando] = useState(false);
   const [searchFailed, setSearchFailed] = useState(false);
 
+  const handleSearchTermChange = (value) => {
+    setSearchTerm(value);
+    setResultadosBusca([]);
+    setBuscando(value.trim().length >= 3);
+    setSearchFailed(false);
+  };
+
   const plansSectionRef = useRef(null);
 
   const { showMessage } = useFeedback();
@@ -185,24 +193,18 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
   useEffect(() => {
     let cancelled = false;
+    const term = String(searchTerm || '').trim();
+    setResultadosBusca([]);
+    setSearchFailed(false);
+
+    if (term.length < 3) {
+      setBuscando(false);
+      return undefined;
+    }
+
+    setBuscando(true);
 
     const buscar = async () => {
-      const term = String(searchTerm || '').trim();
-
-      if (term.length < 3) {
-        if (!cancelled) {
-          setResultadosBusca([]);
-          setBuscando(false);
-          setSearchFailed(false);
-        }
-        return;
-      }
-
-      if (!cancelled) {
-        setBuscando(true);
-        setSearchFailed(false);
-      }
-
       try {
         const rows = await searchHome(term, { limit: 10 });
         if (cancelled) return;
@@ -222,7 +224,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      setBuscando(false);
     };
   }, [searchTerm, showMessage]);
 
@@ -235,6 +236,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       setSearchOpen={setSearchOpen}
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
+      onSearchTermChange={handleSearchTermChange}
       resultadosBusca={resultadosBusca}
       setResultadosBusca={setResultadosBusca}
       buscando={buscando}
