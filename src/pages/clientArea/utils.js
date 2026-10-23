@@ -23,8 +23,11 @@ export const getPrecoFinalEntrega = (e) => {
 };
 
 export const getValorAgendamento = (a) => {
-  const frozen = Number(a?.preco_final);
-  if (Number.isFinite(frozen) && frozen > 0) return frozen;
+  const raw = a?.preco_final;
+  if (raw != null && raw !== '') {
+    const frozen = Number(raw);
+    if (Number.isFinite(frozen) && frozen >= 0) return frozen;
+  }
   return getPrecoFinalEntrega(a?.entregas);
 };
 
