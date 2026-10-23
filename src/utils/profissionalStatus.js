@@ -6,7 +6,7 @@ export const PROFISSIONAL_STATUS_DOT_CLASS = {
   INATIVO: 'bg-gray-600',
 };
 
-export function normalizeProfissionalStatusKey(value) {
+function normalizeProfissionalStatusKey(value) {
   return String(value || '')
     .trim()
     .toUpperCase()
