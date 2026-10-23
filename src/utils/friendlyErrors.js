@@ -2,19 +2,19 @@ import { getErrorText, isRateLimitError } from './errorUtils';
 
 export { getErrorText, isRateLimitError } from './errorUtils';
 
-export function isInvalidCredentialsError(error) {
+function isInvalidCredentialsError(error) {
   const raw = getErrorText(error);
   return raw.includes('invalid login credentials')
     || raw.includes('invalid credentials');
 }
 
-export function isEmailNotConfirmedError(error) {
+function isEmailNotConfirmedError(error) {
   const raw = getErrorText(error);
   return raw.includes('email not confirmed')
     || raw.includes('email_not_confirmed');
 }
 
-export function isSessionInvalidOrExpiredError(error) {
+function isSessionInvalidOrExpiredError(error) {
   const raw = getErrorText(error);
   return raw.includes('session')
     || raw.includes('token')
@@ -24,7 +24,7 @@ export function isSessionInvalidOrExpiredError(error) {
     || raw.includes('auth session missing');
 }
 
-export function isProfileAccessError(error) {
+function isProfileAccessError(error) {
   const raw = getErrorText(error);
   return raw.includes('user_access_profile_unavailable')
     || raw.includes('invalid_user_access_profile_contract');

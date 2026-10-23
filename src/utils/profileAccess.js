@@ -2,9 +2,9 @@ import { supabase } from '../supabase';
 import { sleep } from './async';
 
 export const isValidType = (t) => t === 'client' || t === 'professional';
-export const isValidOnboardingStatus = (s) => s === 'pending' || s === 'completed';
+const isValidOnboardingStatus = (s) => s === 'pending' || s === 'completed';
 export const isValidProfessionalRole = (s) => s === 'owner' || s === 'partner';
-export const isValidAccessState = (s) => s === 'active' || s === 'owner_resume' || s === 'partner_pending';
+const isValidAccessState = (s) => s === 'active' || s === 'owner_resume' || s === 'partner_pending';
 
 export async function fetchProfileTypeWithRetry(userId, delays = [200, 300, 400, 500, 600]) {
   for (const delay of delays) {
