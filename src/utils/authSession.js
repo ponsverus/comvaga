@@ -3,7 +3,7 @@ import { withTimeout } from './withTimeout';
 
 let refreshPromise = null;
 
-export function errorChainText(error, depth = 0) {
+function errorChainText(error, depth = 0) {
   if (!error || depth > 3) return '';
   const current = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''} ${error?.code || ''} ${error?.status || ''}`;
   return `${current} ${errorChainText(error?.cause, depth + 1)}`;
