@@ -928,7 +928,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         <h1 className="text-2xl font-normal text-white mb-2">{dashboardError?.title || 'Erro ao carregar'}</h1>
         <p className="text-gray-400 mb-6">{dashboardError?.body || 'Erro inesperado.'}</p>
         <button onClick={handleDashboardErrorPrimaryAction} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button mb-3 font-normal uppercase">{dashboardError?.primaryLabel || 'TENTAR NOVAMENTE'}</button>
-        <button onClick={handleDashboardLogout} className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-button font-normal uppercase">SAIR</button>
+        <button onClick={handleDashboardLogout} className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-button font-normal uppercase">Sair</button>
       </div>
     </div>
   );
@@ -981,7 +981,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                     ? ownerBusinessCount > 1
                       ? <button type="button" onClick={() => navigate('/selecionar-negocio')} className="text-xs text-gray-500 hover:text-primary transition-colors -mt-0.5 block">SELECIONAR NEGÓCIO</button>
                       : <span className="text-xs text-gray-500 -mt-0.5 block">DASHBOARD</span>
-                    : <button type="button" onClick={() => navigate('/selecionar-negocio-parceiro')} className="text-xs text-primary hover:text-yellow-500 -mt-0.5 block uppercase transition-colors">SELECIONAR NEGÓCIO</button>}
+                    : <button type="button" onClick={() => navigate('/selecionar-negocio-parceiro')} className="text-xs text-primary hover:text-yellow-500 -mt-0.5 block uppercase transition-colors">Selecionar negócio</button>}
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
@@ -1056,11 +1056,11 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
               <div key={i} className="announcement-bar-track flex items-center shrink-0 whitespace-nowrap" aria-hidden={i === 2}>
                 {[...Array(12)].map((_, index) => (
                   <div key={index} className="flex items-center">
-                    <span className="text-black font-bold text-sm uppercase mx-4">CLIQUE PARA IR</span>
+                    <span className="text-black font-bold text-sm uppercase mx-4">Clique para ir</span>
                     <span className="text-black mx-4">●</span>
-                    <Link to={`/v/${negocio.slug}`} target="_blank" className="text-black font-normal text-sm uppercase hover:underline underline-offset-4 transition-all mx-4">VER VITRINE</Link>
+                    <Link to={`/v/${negocio.slug}`} target="_blank" className="text-black font-normal text-sm uppercase hover:underline underline-offset-4 transition-all mx-4">Ver vitrine</Link>
                     <span className="text-black mx-4">●</span>
-                    <a href={SUPORTE_HREF} target="_blank" rel="noreferrer" className="text-black font-normal text-sm uppercase hover:underline underline-offset-4 transition-all mx-4">SUPORTE</a>
+                    <a href={SUPORTE_HREF} target="_blank" rel="noreferrer" className="text-black font-normal text-sm uppercase hover:underline underline-offset-4 transition-all mx-4">Suporte</a>
                     <span className="text-black mx-4">●</span>
                   </div>
                 ))}
