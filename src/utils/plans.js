@@ -1,6 +1,6 @@
-export const PLAN_CODES = ['essencial', 'profissional', 'premium'];
+const PLAN_CODES = ['essencial', 'profissional', 'premium'];
 export const DEFAULT_PLAN_CODE = 'profissional';
-export const SELECTED_PLAN_STORAGE_KEY = 'comvaga:selected-plan';
+const SELECTED_PLAN_STORAGE_KEY = 'comvaga:selected-plan';
 
 export function normalizePlanCode(value) {
   const code = String(value || '').trim().toLowerCase();
