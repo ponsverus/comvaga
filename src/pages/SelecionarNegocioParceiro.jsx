@@ -73,20 +73,6 @@ function BusinessInfo({ negocio }) {
   );
 }
 
-function AlertBox({ alert }) {
-  if (!alert?.message) return null;
-  const styles = {
-    success: 'border-green-500/30 bg-green-500/10 text-green-300',
-    warning: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300',
-    error: 'border-red-500/30 bg-red-500/10 text-red-300',
-  };
-  return (
-    <div className={`rounded-custom border px-4 py-3 text-sm ${styles[alert.type] || styles.error}`}>
-      {alert.message}
-    </div>
-  );
-}
-
 export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const navigate = useNavigate();
   const feedback = useFeedback();
@@ -97,9 +83,9 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const [searchRows, setSearchRows] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searchFailed, setSearchFailed] = useState(false);
+  const [searchRefreshKey, setSearchRefreshKey] = useState(0);
   const [requestingId, setRequestingId] = useState(null);
   const [nomeSolicitacao, setNomeSolicitacao] = useState('');
-  const [alert, setAlert] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const desktopSearchRef = useRef(null);
   const desktopSearchInputRef = useRef(null);
@@ -127,9 +113,8 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitacao(nome);
   }, [user?.id, user?.user_metadata?.nome]);
 
-  const loadCenter = useCallback(async ({ silent = false, notifyOnError = false } = {}) => {
+  const loadCenter = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
-    setAlert(null);
     try {
       const { data, error } = await withAuthRetry(
         () => supabase.rpc('get_partner_business_center'),
@@ -140,11 +125,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       setLinks(data || []);
     } catch (error) {
       console.error('Partner business center load error:', error);
-      if (notifyOnError) {
-        feedback.showCustom({ title: 'Central de negócios', body: msgs.load_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
-      } else {
-        setAlert({ type: 'error', message: msgs.load_error });
-      }
+      feedback.showCustom({ title: 'Central de negócios', body: msgs.load_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -170,7 +151,6 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       setSearchOpen(false);
       setTerm('');
       setSearchRows([]);
-      setAlert(null);
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
@@ -187,53 +167,48 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     navigate('/dashboard', { state: { negocioId: row.negocio_id } });
   };
 
-  const searchBusinesses = useCallback(async (cleanTerm) => {
-    const clean = String(cleanTerm || '').trim();
-    setAlert(null);
-    if (clean.length < 3) {
-      setSearchRows([]);
-      setSearchFailed(false);
-      return;
-    }
-
-    setSearchFailed(false);
-    setSearching(true);
-    try {
-      const { data, error } = await withAuthRetry(
-        () => supabase.rpc('search_partner_businesses', {
-          p_term: clean,
-          p_limit: 10,
-        }),
-        7000,
-        'partner-business-search'
-      );
-      if (error) throw error;
-      setSearchRows(data || []);
-    } catch (error) {
-      console.error('Partner business search error:', error);
-      setSearchRows([]);
-      setSearchFailed(true);
-      feedback.showCustom({ title: 'Erro na busca', body: msgs.search_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
-    } finally {
-      setSearching(false);
-    }
-  }, [feedback]);
-
   useEffect(() => {
     const clean = term.trim();
+    let cancelled = false;
+    setSearchRows([]);
+    setSearchFailed(false);
     if (clean.length < 3) {
-      setSearchRows([]);
-      setSearchFailed(false);
       setSearching(false);
-      return;
+      return undefined;
     }
 
+    setSearching(true);
     const timeout = window.setTimeout(() => {
-      searchBusinesses(clean);
+      const search = async () => {
+        try {
+          const { data, error } = await withAuthRetry(
+            () => supabase.rpc('search_partner_businesses', {
+              p_term: clean,
+              p_limit: 10,
+            }),
+            7000,
+            'partner-business-search'
+          );
+          if (cancelled) return;
+          if (error) throw error;
+          setSearchRows(data || []);
+        } catch (error) {
+          if (cancelled) return;
+          console.error('Partner business search error:', error);
+          setSearchFailed(true);
+          feedback.showCustom({ title: 'Erro na busca', body: msgs.search_error, variant: 'danger', screen: 'dark', buttonText: 'OK' });
+        } finally {
+          if (!cancelled) setSearching(false);
+        }
+      };
+      search();
     }, 300);
 
-    return () => window.clearTimeout(timeout);
-  }, [searchBusinesses, term]);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [feedback, searchRefreshKey, term]);
 
   const requestAccess = async (row) => {
     const nome = (
@@ -244,7 +219,6 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     ).trim().replace(/\s+/g, ' ');
 
     setRequestingId(row.negocio_id);
-    setAlert(null);
     try {
       const { data, error } = await withAuthRetry(
         () => supabase.rpc('solicitar_acesso_parceiro', {
@@ -264,17 +238,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       }
 
       await loadCenter({ silent: true });
-      if (term.trim().length >= 3) {
-        const { data: refreshedRows } = await withAuthRetry(
-          () => supabase.rpc('search_partner_businesses', {
-            p_term: term.trim(),
-            p_limit: 10,
-          }),
-          7000,
-          'partner-business-search-refresh'
-        );
-        setSearchRows(refreshedRows || []);
-      }
+      setSearchRefreshKey((key) => key + 1);
     } catch (error) {
       const raw = String(error?.message || '').toLowerCase();
       if (raw.includes('access_inactive')) {
@@ -298,7 +262,15 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
   const refresh = () => {
     setRefreshing(true);
-    loadCenter({ silent: true, notifyOnError: true });
+    loadCenter({ silent: true });
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setTerm(value);
+    setSearchRows([]);
+    setSearchFailed(false);
+    setSearching(value.trim().length >= 3);
   };
 
   const renderBusinessRow = (row, { searchResult = false } = {}) => {
@@ -389,7 +361,6 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
                       if (open) {
                         setTerm('');
                         setSearchRows([]);
-                        setAlert(null);
                       }
                       return !open;
                     });
@@ -403,7 +374,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
                   ref={desktopSearchInputRef}
                   type="search"
                   value={term}
-                  onChange={(e) => setTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder="PESQUISAR NEGÓCIO"
                   className={[
                     'min-w-0 flex-1 bg-transparent pr-4 text-sm uppercase text-white placeholder:text-gray-500 focus:outline-none transition-opacity duration-200',
@@ -448,7 +419,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
               <input
                 type="search"
                 value={term}
-                onChange={(e) => setTerm(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="PESQUISAR NEGÓCIO"
                 className="min-w-0 flex-1 bg-transparent pr-4 text-sm uppercase text-white placeholder:text-gray-500 focus:outline-none"
               />
@@ -460,15 +431,11 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
             </div>
           </div>
 
-          <div className="mt-4">
-            <AlertBox alert={alert} />
-          </div>
-
           {term.trim().length >= 3 && !searching && !searchFailed && searchRows.length === 0 && (
             <SearchEmptyState className="mt-3" />
           )}
 
-          {searchRows.length > 0 && (
+          {term.trim().length >= 3 && searchRows.length > 0 && (
             <div ref={searchResultsRef} className="mt-4 space-y-3">
               {searchRows.map((row) => renderBusinessRow(row, { searchResult: true }))}
             </div>
