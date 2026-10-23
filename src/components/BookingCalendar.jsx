@@ -443,7 +443,7 @@ export default function BookingCalendar({
                           onClick={() => setShowAll(v => !v)}
                           className={`w-full py-2.5 rounded-full border text-sm font-normal uppercase transition-colors ${showMoreBtn}`}
                         >
-                          {showAll ? 'OCULTAR HORÁRIOS' : 'VER MAIS HORÁRIOS'}
+                          {showAll ? 'Ocultar horários' : 'Ver mais horários'}
                         </button>
                         {showAll && horariosExtra.length > 0 && (
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
@@ -478,8 +478,8 @@ export default function BookingCalendar({
                 className={`w-full py-3 rounded-button font-normal uppercase disabled:opacity-60 flex items-center justify-center gap-2 transition-colors ${confirmBtnClass}`}
               >
                 {confirming
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> CONFIRMANDO...</>
-                  : <><CheckIcon className="w-4 h-4" /> CONFIRMAR AGENDAMENTO</>
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirmando...</>
+                  : <><CheckIcon className="w-4 h-4" /> Confirmar agendamento</>
                 }
               </button>
             </div>
