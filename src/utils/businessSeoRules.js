@@ -41,7 +41,7 @@ export function buildBusinessSeo(negocio, entregas = []) {
     if (Array.from(serviceDescription).length <= SEO_DESCRIPTION_LIMIT) automaticDescription = serviceDescription;
   }
   return {
-    title: shorten(normalizeSeoText(negocio?.seo_title) || automaticTitle, SEO_TITLE_LIMIT),
-    description: shorten(normalizeSeoText(negocio?.seo_description) || normalizeSeoText(negocio?.descricao) || automaticDescription, SEO_DESCRIPTION_LIMIT),
+    title: shorten(normalizeSeoText(negocio?.meta_title) || automaticTitle, SEO_TITLE_LIMIT),
+    description: shorten(normalizeSeoText(negocio?.meta_description) || normalizeSeoText(negocio?.descricao) || automaticDescription, SEO_DESCRIPTION_LIMIT),
   };
 }
