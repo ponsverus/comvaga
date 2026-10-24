@@ -40,6 +40,6 @@ export function clearSelectedPlanIntent() {
   try {
     window.localStorage.removeItem(SELECTED_PLAN_STORAGE_KEY);
   } catch {
-    
+    return;
   }
 }
