@@ -58,7 +58,6 @@ export default function DepoimentosPaginados({
       if (didLoad !== false) setPagina(safeTarget);
     } catch (error) {
       if (typeof onLoadMoreError === 'function') onLoadMoreError(error);
-      // Keep the current page if the next batch fails.
     }
   };
   const goNext = () => {
