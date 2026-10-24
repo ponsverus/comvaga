@@ -93,7 +93,7 @@ export default function InfoNegocioSection({
   }, [galeriaHasMore, galeriaLoadingMore, loadMoreGaleria]);
 
   const getBusinessFieldValue = (field) => {
-    if (field === 'google') return JSON.stringify(['seo_title', 'seo_description'].map((key) => normalizedFieldValue(formInfo[key])));
+    if (field === 'google') return JSON.stringify(['meta_title', 'meta_description'].map((key) => normalizedFieldValue(formInfo[key])));
     if (field === 'sobre') {
       return JSON.stringify(aboutFields.map((key) => normalizedFieldValue(formInfo[key])));
     }
@@ -280,8 +280,8 @@ export default function InfoNegocioSection({
         {googleExpanded ? (
           <div id="business-google-fields" className="mt-3">
             {[
-              { key: 'seo_title', label: 'Título para o Google', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Escreva o título para o Google com nome do negócio, especialidade e cidade; até 50 caracteres.' },
-              { key: 'seo_description', label: 'Meta description', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Escreva a meta description para o Google sobre o negócio, trabalhos e cidade; até 130 caracteres.' },
+              { key: 'meta_title', label: 'Título para o Google', limit: SEO_TITLE_LIMIT, rows: 2, placeholder: 'Escreva o título para o Google com nome do negócio, especialidade e cidade; até 50 caracteres.' },
+              { key: 'meta_description', label: 'Meta description', limit: SEO_DESCRIPTION_LIMIT, rows: 4, placeholder: 'Escreva a meta description para o Google sobre o negócio, trabalhos e cidade; até 130 caracteres.' },
             ].map(({ key, label, limit, rows, placeholder }, index) => (
               <div key={key}>
                 {index > 0 ? <div className="-mx-4 my-3 border-t border-gray-800 sm:-mx-6" /> : null}

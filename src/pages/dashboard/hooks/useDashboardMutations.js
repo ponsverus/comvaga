@@ -189,16 +189,16 @@ export function useDashboardMutations({
         await uiAlert('dashboard.business_description_too_long', 'error');
         return false;
       }
-      const seoTitle = normalizeSeoText(formInfo.seo_title);
-      const seoDescription = normalizeSeoText(formInfo.seo_description);
+      const seoTitle = normalizeSeoText(formInfo.meta_title);
+      const seoDescription = normalizeSeoText(formInfo.meta_description);
       if (Array.from(seoTitle).length > SEO_TITLE_LIMIT || Array.from(seoDescription).length > SEO_DESCRIPTION_LIMIT) {
         await uiAlert('dashboard.business_seo_too_long', 'error');
         return false;
       }
       const payload = {
         nome: toUpperClean(formInfo.nome),
-        seo_title: seoTitle || null,
-        seo_description: seoDescription || null,
+        meta_title: seoTitle || null,
+        meta_description: seoDescription || null,
         descricao,
         telefone: telefone || null,
         endereco_cep: onlyDigits(formInfo.endereco_cep) || null,
