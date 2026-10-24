@@ -34,7 +34,7 @@ export async function resolveBusinessSeoImage(candidate, { signal, fetcher = fet
     const response = await fetcher(candidate, { method: 'HEAD', redirect: 'error', signal: controller.signal });
     if (response.ok && /^image\/(png|jpeg|webp)(;|$)/i.test(response.headers.get('content-type') || '')) return candidate;
   } catch {
-
+    return DEFAULT_SEO_IMAGE;
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener('abort', abort);
