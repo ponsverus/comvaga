@@ -5,6 +5,7 @@ import AppFooter from '../components/AppFooter';
 import { Eye, LogOut, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { formatPhoneForDisplay } from '../utils/phone';
+import { NOW_RPC_SEQUENCE } from '../utils/officialDate';
 import { useFeedback } from '../feedback/useFeedback';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import { useBusinessGroup } from '../businessTerms';
@@ -20,7 +21,6 @@ import ProfissionaisSection from './dashboard/sections/ProfissionaisSection';
 import InfoNegocioSection from './dashboard/sections/InfoNegocioSection';
 import PlanosSection from './dashboard/sections/PlanosSection';
 import {
-  NOW_RPC_SEQUENCE,
   DEFAULT_PROFISSIONAL_HORARIOS,
   SUPORTE_HREF,
   WEEKDAYS,

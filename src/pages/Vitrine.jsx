@@ -9,6 +9,7 @@ import { ptBR } from '../feedback/messages/ptBR';
 import { useBusinessGroup } from '../businessTerms';
 import { getPublicUrl } from './vitrine/api/vitrineApi';
 import { isRateLimitError } from '../utils/errorUtils';
+import { NOW_RPC_SEQUENCE } from '../utils/officialDate';
 import { useVitrineBootstrap } from './vitrine/hooks/useVitrineBootstrap';
 import { useVitrineBooking } from './vitrine/hooks/useVitrineBooking';
 import { useVitrineInteractions } from './vitrine/hooks/useVitrineInteractions';
@@ -23,8 +24,6 @@ import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, b
 import { applyBusinessStructuredData } from '../utils/businessSeo.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
-
-const NOW_RPC_SEQUENCE = ['now_sp', 'now_sp_fallback'];
 
 function formatDateBR(ymd) {
   if (!ymd) return '';
@@ -359,11 +358,6 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     depoimentoTexto,
     refreshDepoimentos,
   });
-
-  useEffect(() => {
-    if (!user) return;
-    fetchNowFromDb().catch(() => {});
-  }, [user, fetchNowFromDb]);
 
   useEffect(() => {
     if (user && negocio?.id) checkFavorito();

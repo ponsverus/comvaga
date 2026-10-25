@@ -2,41 +2,23 @@ import { supabase } from '../../../supabase';
 import { withTimeout } from '../../../utils/withTimeout';
 import { withAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
+import { fetchOfficialDatePayload } from '../../../utils/officialDate';
 
 export { getPublicUrl } from '../../../utils/storage';
 
 export async function fetchOfficialDate(rpcSequence) {
-  let lastErr = null;
+  const { payload, rpcName } = await fetchOfficialDatePayload(
+    rpcSequence,
+    (name) => withTimeout(supabase.rpc(name), 6000, `data-oficial:${name}`)
+  );
 
-  for (const rpcName of rpcSequence) {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const { data, error } = await withTimeout(
-        supabase.rpc(rpcName),
-        6000,
-        `data-oficial:${rpcName}`
-      );
-      if (error) {
-        lastErr = error;
-        continue;
-      }
-
-      const payload = data?.[0] ?? data;
-      if (!payload?.date) {
-        lastErr = new Error(`${rpcName} vazio`);
-        continue;
-      }
-
-      return {
-        ts: payload?.ts ?? null,
-        dow: Number(payload?.dow ?? 0),
-        date: String(payload.date),
-        source: payload?.source || rpcName,
-        minutes: Number(payload?.minutes ?? 0),
-      };
-    }
-  }
-
-  throw lastErr || new Error('Falha ao obter horario oficial');
+  return {
+    ts: payload?.ts ?? null,
+    dow: Number(payload?.dow ?? 0),
+    date: String(payload.date),
+    source: payload?.source || rpcName,
+    minutes: Number(payload?.minutes ?? 0),
+  };
 }
 
 export async function fetchVitrineNegocioBySlug(slug) {

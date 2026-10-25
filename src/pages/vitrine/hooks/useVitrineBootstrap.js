@@ -242,8 +242,6 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
     }, 12000);
 
     try {
-      fetchNowFromDb().catch(() => null);
-
       // Reuse only the first matching public snapshot; retries and other routes fetch fresh data.
       const initial = initialBusinessRef.current;
       initialBusinessRef.current = null;
@@ -318,13 +316,14 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
         setLoading(false);
       }
     }
-  }, [applyDepoimentosPage, applyEntregaFirstPages, applyGaleriaPage, authUserId, fetchNowFromDb, getMsg, slug]);
+  }, [applyDepoimentosPage, applyEntregaFirstPages, applyGaleriaPage, authUserId, getMsg, slug]);
 
   useEffect(() => {
     loadVitrine();
   }, [loadVitrine]);
 
   useEffect(() => {
+    fetchNowFromDb().catch(() => {});
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchNowFromDb().catch(() => {});
