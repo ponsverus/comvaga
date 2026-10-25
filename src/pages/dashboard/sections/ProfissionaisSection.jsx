@@ -103,9 +103,11 @@ export default function ProfissionaisSection({
               {!isPendente && (
                 <>
                   <div className="text-sm text-gray-400 mb-3">{entregasCount} {counterPlural}</div>
-                  <div className="text-xs text-gray-500 mb-3">
-                    <Clock className="w-4 h-4 inline mr-1" />{pausaTexto}
-                  </div>
+                  {todayDow != null && (
+                    <div className="text-xs text-gray-500 mb-3">
+                      <Clock className="w-4 h-4 inline mr-1" />{pausaTexto}
+                    </div>
+                  )}
                   <div className="text-xs text-gray-500 mb-1">
                     {getSemanaResumo(horarios, todayDow).map((dia, idx, arr) => {
                       const item = dia.item;
