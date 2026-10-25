@@ -62,6 +62,7 @@ export function normalizeProfissionalHorarios(profissional = {}) {
 }
 
 export function getHorarioPorDia(horarios, diaSemana) {
+  if (diaSemana == null || diaSemana === '') return null;
   const dia = Number(diaSemana);
   if (!Number.isInteger(dia) || dia < 0 || dia > 6) return null;
   return (Array.isArray(horarios) ? horarios : []).find((h) => Number(h?.dia_semana) === dia) || null;
@@ -102,7 +103,7 @@ export function getSemanaResumo(horarios, diaDestaque = null) {
   return WEEKDAYS.map((dia) => {
     const item = (Array.isArray(horarios) ? horarios : []).find((h) => Number(h?.dia_semana) === dia.value);
     const ativo = item?.ativo !== false;
-    const destaque = Number(diaDestaque) === dia.value;
+    const destaque = diaDestaque != null && diaDestaque !== '' && Number(diaDestaque) === dia.value;
     return {
       ...dia,
       ativo,
