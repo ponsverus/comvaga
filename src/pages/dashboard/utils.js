@@ -14,8 +14,6 @@ export const IMAGE_EXT_BY_MIME = {
   'image/png': 'png',
   'image/webp': 'webp',
 };
-export const NOW_RPC_SEQUENCE = ['now_sp', 'now_sp_fallback'];
-
 export const WEEKDAYS = [
   { value: 0, label: 'DOM' },
   { value: 1, label: 'SEG' },
