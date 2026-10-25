@@ -53,6 +53,8 @@ export const ptBR = {
       clients_load_more_timeout: 'O carregamento de mais clientes demorou demais. Tente novamente em instantes.',
       clients_load_more_error: 'Erro ao carregar mais clientes.',
     },
+    official_time_unavailable: 'Horário indisponível. Dados de hoje incompletos.',
+    official_time_retry_action: 'TENTAR NOVAMENTE',
     business_delete_confirm: {
       title: 'Excluir negócio?',
       body:
@@ -153,21 +155,21 @@ export const ptBR = {
     },
     billing_charge_reconciliation_pending: {
       title: 'Verificando faturas',
-      body: 'Não foi possível confirmar agora todas as faturas desta assinatura no Asaas. Aguarde alguns instantes e tente novamente antes de abrir outro pagamento. Se persistir, contate o suporte.',
+      body: 'Houve um erro ao confirmar todas as faturas desta assinatura no gateway. Aguarde alguns instantes e tente novamente. Se o problema persistir, entre em contato com o suporte.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
     billing_subscription_suspended_with_debt: {
       title: 'Assinatura suspensa',
-      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga pelo botão do plano. Após quitar todas, você poderá reativar o plano. O acesso pago vigente continua válido até o fim do período.',
+      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga no card do plano. Após quitar todas, você poderá reativar o plano. O acesso pago vigente continua válido até o fim do período.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
     billing_subscription_expired_with_debt: {
       title: 'Assinatura expirada',
-      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga pelo botão do plano. Após quitar todas, você poderá renovar o plano. O acesso pago vigente continua válido até o fim do período.',
+      body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga no card do plano. Após quitar todas, você poderá renovar o plano. O acesso pago vigente continua válido até o fim do período.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
@@ -199,7 +201,7 @@ export const ptBR = {
     },
     billing_new_checkout_debt_open: {
       title: 'Pagamento pendente',
-      body: 'Há faturas em aberto. Pague a mais antiga pelo botão do seu plano antes de abrir outro pagamento. Todas as faturas devidas precisam ser quitadas; se a assinatura estiver suspensa ou expirada, reative ou renove o plano depois.',
+      body: 'Há faturas em aberto. Pague a mais antiga no card do seu plano antes de abrir outro pagamento. Todas as faturas devidas precisam ser quitadas; se a assinatura estiver suspensa ou expirada, reative ou renove o plano depois.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
@@ -213,7 +215,7 @@ export const ptBR = {
     },
     billing_checkout_cancel_wait: {
       title: 'Checkout sendo preparado',
-      body: 'A abertura do checkout ainda está sendo confirmada pelo gateway. Aguarde alguns instantes e tente cancelar novamente',
+      body: 'A abertura do checkout ainda está sendo confirmada pelo Asaas. Aguarde alguns instantes e tente cancelar novamente',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
