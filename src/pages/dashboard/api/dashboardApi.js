@@ -1,6 +1,7 @@
 import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
+import { fetchOfficialDatePayload } from '../../../utils/officialDate';
 export { getPublicUrl } from '../../../utils/storage';
 
 function isAdminExcludedProfessional(row) {
@@ -99,30 +100,15 @@ export function normalizeAgRow(a) {
 }
 
 export async function fetchOfficialDate(rpcNames) {
-  let lastErr = null;
+  const { payload, rpcName } = await fetchOfficialDatePayload(
+    rpcNames,
+    (name) => withAuthRetry(() => supabase.rpc(name), 6000, `data-oficial:${name}`)
+  );
 
-  for (const rpcName of rpcNames) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const { data, error } = await withAuthRetry(() => supabase.rpc(rpcName), 6000, `data-oficial:${rpcName}`);
-      if (error) {
-        lastErr = error;
-        continue;
-      }
-
-      const payload = data?.[0] ?? data;
-      if (!payload || !payload.date) {
-        lastErr = new Error(`${rpcName} vazio`);
-        continue;
-      }
-
-      return {
-        ...payload,
-        source: payload?.source || rpcName,
-      };
-    }
-  }
-
-  throw lastErr || new Error('Falha ao obter data oficial do banco');
+  return {
+    ...payload,
+    source: payload?.source || rpcName,
+  };
 }
 
 export async function fetchOwnerBusinessCount(userId) {
