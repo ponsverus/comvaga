@@ -117,6 +117,7 @@ export function useDashboardBootstrap({
   const [bootstrapState, setBootstrapState] = useState('loading');
   const [error, setError] = useState(null);
   const [serverNow, setServerNow] = useState(() => ({ ts: null, dow: 0, date: '', source: 'db', minutes: 0 }));
+  const [clockUnavailable, setClockUnavailable] = useState(false);
   const [hoje, setHoje] = useState('');
 
   const hojeRef = useRef('');
@@ -131,7 +132,14 @@ export function useDashboardBootstrap({
 
   const fetchNowFromDb = useCallback(async () => {
     await refreshCurrentSession();
-    const payload = await fetchOfficialDate(rpcSequence);
+    let payload;
+    try {
+      payload = await fetchOfficialDate(rpcSequence);
+    } catch (error) {
+      if (!isAuthSessionError(error)) setClockUnavailable(true);
+      throw error;
+    }
+    setClockUnavailable(false);
     const date = String(payload.date || '');
     hojeRef.current = date;
     setServerNow(payload);
@@ -583,6 +591,7 @@ export function useDashboardBootstrap({
     bootstrapState,
     error,
     serverNow,
+    clockUnavailable,
     setServerNow,
     hoje,
     setHoje,
