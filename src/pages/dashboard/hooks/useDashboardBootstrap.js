@@ -13,7 +13,7 @@ import {
   fetchProfissionaisEquipe,
 } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
-import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../../../utils/authSession';
+import { isAuthSessionError, signOutLocalSession } from '../../../utils/authSession';
 import { flattenEntregaPages } from '../../../utils/entregas';
 import { ptBR } from '../../../feedback/messages/ptBR';
 
@@ -131,7 +131,6 @@ export function useDashboardBootstrap({
   }, [navigate]);
 
   const fetchNowFromDb = useCallback(async () => {
-    await refreshCurrentSession();
     let payload;
     try {
       payload = await fetchOfficialDate(rpcSequence);
