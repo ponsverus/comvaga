@@ -145,13 +145,15 @@ function hasPaymentHistory(status) {
   );
 }
 
-function getBillingAnnouncement(status) {
-  if (!status) return null;
+function getBillingAnnouncements(status) {
+  if (!status) return [];
+  const announcements = [];
   const providerSyncStatus = String(status.provider_sync_status || '').toLowerCase();
   if (status.provider_sync_pending && (providerSyncStatus === 'failed' || !isScheduledDowngradeSync(status))) {
     const syncFailed = providerSyncStatus === 'failed';
     const syncRetrying = providerSyncStatus === 'retryable';
-    return {
+    announcements.push({
+      id: 'billing-sync',
       tone: syncFailed ? 'danger' : 'warning',
       text: dashboardBillingMessage(syncFailed
         ? 'billing_provider_sync_failed_header'
@@ -159,8 +161,15 @@ function getBillingAnnouncement(status) {
           ? 'billing_provider_sync_retry_header'
           : 'billing_provider_sync_pending_header'),
       hideAction: true,
-    };
+    });
   }
+
+  const statusAnnouncement = getBillingStatusAnnouncement(status);
+  if (statusAnnouncement) announcements.push({ ...statusAnnouncement, id: 'billing-status' });
+  return announcements;
+}
+
+function getBillingStatusAnnouncement(status) {
   const current = String(status.status || '').toLowerCase();
   const paymentStatus = String(status.payment_method_status || '').toLowerCase();
   const providerStatus = String(status.provider_status || '').toUpperCase();
@@ -289,27 +298,51 @@ function getBillingAnnouncement(status) {
   return null;
 }
 
-function BillingAnnouncementBar({ announcement, onAction, actionLoading = false }) {
+function DashboardAnnouncementBar({ announcements }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = announcements.length;
+
+  useEffect(() => {
+    if (count < 2 || paused) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveIndex((index) => (index + 1) % count);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [count, paused]);
+
+  const announcement = announcements[activeIndex % count];
   if (!announcement) return null;
   const toneClass = announcement.tone === 'danger'
     ? 'border-red-500/30 bg-[#1a0b0b] text-red-100'
-    : 'border-primary/25 bg-[#151106] text-primary';
+    : announcement.id === 'clock'
+      ? 'border-primary/25 bg-[#151106] text-white'
+      : 'border-primary/25 bg-[#151106] text-primary';
   const actionLabel = announcement.actionLabel || 'VER PLANOS';
-  const canAct = typeof onAction === 'function' && !announcement.hideAction;
+  const canAct = typeof announcement.onAction === 'function' && !announcement.hideAction;
 
   return (
-    <div className={`border-b ${toneClass}`}>
+    <div
+      role={count === 1 && announcement.id === 'clock' ? 'alert' : undefined}
+      className={`border-b ${toneClass}`}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs sm:text-sm font-normal">
         <div className="flex flex-row flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
           <span>{announcement.text}</span>
           {canAct ? (
             <button
               type="button"
-              onClick={onAction}
-              disabled={actionLoading}
+              onClick={announcement.onAction}
+              disabled={announcement.actionLoading}
               className="inline-flex items-center justify-center font-normal uppercase text-primary transition-colors hover:text-primary/80 disabled:cursor-wait disabled:opacity-60"
             >
-              {actionLoading ? 'VERIFICANDO...' : actionLabel}
+              {announcement.actionLoading ? 'VERIFICANDO...' : actionLabel}
             </button>
           ) : null}
         </div>
@@ -376,6 +409,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     bootstrapState,
     error,
     serverNow,
+    clockUnavailable,
     hoje,
     reloadNegocio,
     reloadProfissionais,
@@ -942,29 +976,40 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     </div>
   );
 
-  const billingAnnouncement = souDono
+  const billingAnnouncements = souDono
     ? billingStatusLoadError
-      ? {
+      ? [{
+        id: 'billing-load-error',
         tone: 'warning',
         text: dashboardBillingMessage('billing_status_load_error_inline'),
         actionLabel: dashboardBillingMessage('billing_status_retry_action'),
-      }
-      : getBillingAnnouncement(billingStatus)
-    : null;
+      }]
+      : getBillingAnnouncements(billingStatus)
+    : [];
+  const announcements = [
+    ...billingAnnouncements.map((announcement) => ({
+      ...announcement,
+      onAction: billingStatusLoadError
+        ? reloadBillingStatus
+        : activeTab !== 'planos'
+          ? () => setActiveTab('planos')
+          : undefined,
+      actionLoading: billingStatusLoadError && billingLoading,
+    })),
+    ...(clockUnavailable ? [{
+      id: 'clock',
+      tone: 'warning',
+      text: ptBR.dashboard.official_time_unavailable,
+      actionLabel: ptBR.dashboard.official_time_retry_action,
+      onAction: reloadFull,
+    }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-black text-white">
 
       <div className="sticky top-0 z-50">
-        <BillingAnnouncementBar
-          announcement={billingAnnouncement}
-          onAction={billingStatusLoadError
-            ? reloadBillingStatus
-            : billingAnnouncement && activeTab !== 'planos'
-              ? () => setActiveTab('planos')
-              : undefined}
-          actionLoading={billingStatusLoadError && billingLoading}
-        />
+        <DashboardAnnouncementBar announcements={announcements} />
 
         <header className="bg-dark-100 border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1120,7 +1165,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 agendamentosAgrupadosPorProfissional={agendamentosAgrupadosPorProfissional}
                 hoje={hoje}
                 nowMinutes={serverNow?.minutes}
-                canSendReminder={souDono}
+                canSendReminder={souDono && !clockUnavailable}
                 negocioNome={negocio?.nome || ''}
                 confirmarAtendimento={confirmarAtendimento}
                 cancelarAgendamento={cancelarAgendamento}
@@ -1187,7 +1232,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 cadastrarAdminComoProfissional={cadastrarAdminComoProfissional}
                 submittingAdminProf={submittingAdminProf}
               profissionais={souDono ? profissionais : profissionaisEquipe}
-              todayDow={serverNow?.dow ?? null}
+              todayDow={clockUnavailable || !serverNow?.date ? null : serverNow.dow}
               parceiroProfissional={parceiroProfissional}
               entregas={entregas}
               entregasCountByProf={entregasCountByProf}
