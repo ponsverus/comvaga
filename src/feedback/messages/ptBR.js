@@ -44,6 +44,7 @@ export const ptBR = {
     inline_errors: {
       session_expired: 'Login expirado. Entre novamente na sua conta.',
       session_invalid: 'Acesso inválido. Entre novamente.',
+      business_selection_load_error: 'Houve um erro ao carregar seus negócios.',
       no_businesses: 'Nenhum negócio cadastrado.',
       business_access_denied: 'Seu acesso a este negócio foi negado.',
       bootstrap_load_timeout: 'O carregamento do dashboard demorou demais. Tente novamente em instantes.',
@@ -1954,8 +1955,10 @@ export const ptBR = {
     },
     schedule_time_unavailable: {
       title: 'Horário oficial indisponível',
-      body: 'Ainda estamos sincronizando o horário oficial. Tente novamente em instantes.',
+      body: 'Houve um erro ao confirmar o horário. Tente novamente.',
       buttonText: 'ENTENDI',
+      retryButtonText: 'TENTAR NOVAMENTE',
+      retryingButtonText: 'VERIFICANDO...',
     },
     schedule_errors: {
       no_slots: 'SEM VAGAS PRA HOJE :(',
