@@ -71,13 +71,27 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
   const [billingStatus, setBillingStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [serverNow, setServerNow] = useState(EMPTY_NOW);
+  const [officialTime, setOfficialTime] = useState(() => ({ serverNow: EMPTY_NOW, unavailable: false }));
+  const clockRequestRef = useRef(null);
   const loadRunRef = useRef(0);
 
-  const fetchNowFromDb = useCallback(async () => {
-    const payload = await fetchOfficialDate(rpcSequence);
-    setServerNow(payload);
-    return payload;
+  const fetchNowFromDb = useCallback(() => {
+    if (clockRequestRef.current) return clockRequestRef.current;
+
+    const request = fetchOfficialDate(rpcSequence)
+      .then((payload) => {
+        setOfficialTime({ serverNow: payload, unavailable: false });
+        return payload;
+      })
+      .catch((error) => {
+        setOfficialTime({ serverNow: EMPTY_NOW, unavailable: true });
+        throw error;
+      })
+      .finally(() => {
+        if (clockRequestRef.current === request) clockRequestRef.current = null;
+      });
+    clockRequestRef.current = request;
+    return request;
   }, [rpcSequence]);
 
   const loadEntregasPage = useCallback(async (profissionalId, page = 0, { force = false } = {}) => {
@@ -346,7 +360,8 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
     billingStatus,
     loading,
     error,
-    serverNow,
+    serverNow: officialTime.serverNow,
+    clockUnavailable: officialTime.unavailable,
     fetchNowFromDb,
     refreshDepoimentos,
     loadMoreDepoimentos,
