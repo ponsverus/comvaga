@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalIcon, UserIcon } from '../components/icons';
 import { LogOut, Plus } from 'lucide-react';
-import { supabase } from '../supabase';
-import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../utils/authSession';
 import { getPublicUrl } from '../utils/storage';
 
 function formatBusinessAddress(negocio) {
@@ -20,76 +17,12 @@ function formatBusinessAddress(negocio) {
   ].filter(Boolean).join(' - ');
 }
 
-export default function SelecionarNegocio({ user, onLogout, professionalRole = null }) {
+export default function SelecionarNegocio({ onLogout, professionalRole = null, negocios }) {
   const navigate = useNavigate();
-  const [negocios, setNegocios] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-
-    if (!user?.id) {
-      setLoading(false);
-      return () => { active = false; };
-    }
-
-    (async () => {
-      try {
-        await refreshCurrentSession();
-        const { data, error } = await supabase
-          .from('negocios')
-          .select('id, nome, slug, logo_path, tipo_negocio, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado')
-          .eq('owner_id', user.id)
-          .order('created_at', { ascending: true });
-
-        if (!active) return;
-        if (error) throw error;
-        setNegocios(data || []);
-        setLoading(false);
-      } catch (error) {
-        if (!active) return;
-        if (isAuthSessionError(error)) {
-          await signOutLocalSession();
-          navigate('/login', { replace: true });
-          return;
-        }
-        setNegocios([]);
-        setLoading(false);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [navigate, user?.id]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (negocios.length === 1) {
-      navigate('/dashboard', { state: { negocioId: negocios[0].id }, replace: true });
-      return;
-    }
-
-    if (negocios.length === 0) {
-      navigate('/conta-profissional', { replace: true });
-    }
-  }, [loading, negocios, navigate]);
 
   const handleSelecionar = (negocioId) => {
     navigate('/dashboard', { state: { negocioId }, replace: true });
   };
-
-  if (loading || negocios.length === 0) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <div className="text-primary text-xl">CARREGANDO...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-10 relative overflow-hidden">
