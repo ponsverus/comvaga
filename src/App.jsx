@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { supabase } from './supabase';
 import { isPasswordRecoveryUrl } from './utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from './utils/profileAccess';
-import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from './utils/authSession';
+import { isAuthSessionError, refreshCurrentSession, signOutLocalSession, withAuthRetry } from './utils/authSession';
 import { ptBR } from './feedback/messages/ptBR.js';
 import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 import PublicBusinessPreview from './components/PublicBusinessPreview.js';
@@ -195,50 +195,66 @@ function LogoutRedirectResetter({ redirectPath, onClear }) {
 }
 
 function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, professionalRole }) {
-  const [loading, setLoading] = useState(true);
-  const [ownerBusinessCount, setOwnerBusinessCount] = useState(0);
+  const [businessLoad, setBusinessLoad] = useState({ status: 'loading', negocios: [] });
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let active = true;
 
+    if (professionalRole === 'partner') return () => { active = false; };
     if (!user?.id) {
-      setOwnerBusinessCount(0);
-      setLoading(false);
+      void onSessionExpired?.('/login');
       return () => { active = false; };
     }
 
+    setBusinessLoad({ status: 'loading', negocios: [] });
     (async () => {
       try {
-        await refreshCurrentSession();
-        const { count, error } = await supabase
-          .from('negocios')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', user.id);
+        const { data, error } = await withAuthRetry(
+          () => supabase
+            .from('negocios')
+            .select('id, nome, slug, logo_path, tipo_negocio, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado')
+            .eq('owner_id', user.id)
+            .order('created_at', { ascending: true }),
+          7000,
+          'owner-business-list'
+        );
 
         if (!active) return;
         if (error) throw error;
-        setOwnerBusinessCount(Number(count || 0));
-        setLoading(false);
+        if (!Array.isArray(data)) throw new Error('business_list_invalid_response');
+        setBusinessLoad({ status: 'ready', negocios: data });
       } catch (error) {
         if (!active) return;
         if (isAuthSessionError(error)) {
           await onSessionExpired?.('/login');
           return;
         }
-        setOwnerBusinessCount(0);
-        setLoading(false);
+        setBusinessLoad({ status: 'error', negocios: [] });
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [onSessionExpired, user?.id]);
+  }, [onSessionExpired, professionalRole, retryKey, user?.id]);
 
-  if (loading) return <FullScreenLoading text="CARREGANDO..." />;
   if (professionalRole === 'partner') return <Navigate to="/selecionar-negocio-parceiro" replace />;
-  if (ownerBusinessCount > 1) return <SelecionarNegocio user={user} onLogout={onLogout} professionalRole={professionalRole} />;
-  if (ownerBusinessCount === 0) return <Navigate to="/conta-profissional" replace />;
+  if (businessLoad.status === 'loading') return <FullScreenLoading text="CARREGANDO..." />;
+  if (businessLoad.status === 'error') return (
+    <FullScreenError
+      message={ptBR.dashboard.inline_errors.business_selection_load_error}
+      onRetry={() => setRetryKey((current) => current + 1)}
+    />
+  );
+  if (businessLoad.negocios.length > 1) return (
+    <SelecionarNegocio
+      onLogout={onLogout}
+      professionalRole={professionalRole}
+      negocios={businessLoad.negocios}
+    />
+  );
+  if (businessLoad.negocios.length === 0) return <Navigate to="/conta-profissional" replace />;
   return <Navigate to="/dashboard" replace />;
 }
 
