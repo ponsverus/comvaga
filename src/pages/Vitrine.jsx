@@ -250,6 +250,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     loading,
     error,
     serverNow,
+    clockUnavailable,
     fetchNowFromDb,
     refreshDepoimentos,
     loadMoreDepoimentos,
@@ -624,6 +625,8 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
           profissional={flow.profissional}
           entrega={entregaVirtual}
           todayISO={serverNow.date}
+          officialTimeUnavailable={clockUnavailable}
+          onRetryOfficialTime={fetchNowFromDb}
           negocioId={negocio.id}
           actorUserId={user?.id}
           assistedClienteId={bookingSectionState.isAssistedBooking ? bookingSectionState.assistedClienteId : null}

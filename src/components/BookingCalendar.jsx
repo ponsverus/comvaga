@@ -58,6 +58,8 @@ export default function BookingCalendar({
   profissional,
   entrega,
   todayISO,
+  officialTimeUnavailable = false,
+  onRetryOfficialTime,
   onConfirm,
   onClose,
   negocioId,
@@ -87,6 +89,7 @@ export default function BookingCalendar({
   const [slotsError,   setSlotsError]   = useState(null);
 
   const [confirming,   setConfirming]   = useState(false);
+  const [retryingOfficialTime, setRetryingOfficialTime] = useState(false);
 
   const containerRef = useRef(null);
   const slotsRef     = useRef(null);
@@ -199,6 +202,18 @@ export default function BookingCalendar({
   const handleSelectSlot = slot => {
     setSelectedSlot(slot);
     setTimeout(() => resumeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  };
+
+  const handleRetryOfficialTime = async () => {
+    if (!onRetryOfficialTime || retryingOfficialTime) return;
+    setRetryingOfficialTime(true);
+    try {
+      await onRetryOfficialTime();
+    } catch {
+      // O aviso permanece visível para permitir outra tentativa.
+    } finally {
+      setRetryingOfficialTime(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -348,8 +363,20 @@ export default function BookingCalendar({
 
         <div className="px-6 py-5 space-y-6">
           {!todayISO && (
-            <div className={`flex items-center justify-center border rounded-button p-3 text-sm font-normal text-center ${slotsErrorClass}`}>
-              Sincronizando horário oficial...
+            <div className={`flex flex-col items-center justify-center gap-2 border rounded-button p-3 text-sm font-normal text-center ${slotsErrorClass}`}>
+              <span>{officialTimeUnavailable ? ptBR.vitrine.schedule_time_unavailable.body : 'Sincronizando horário oficial...'}</span>
+              {officialTimeUnavailable && onRetryOfficialTime && (
+                <button
+                  type="button"
+                  onClick={handleRetryOfficialTime}
+                  disabled={retryingOfficialTime}
+                  className="font-normal uppercase text-primary hover:opacity-80 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {retryingOfficialTime
+                    ? ptBR.vitrine.schedule_time_unavailable.retryingButtonText
+                    : ptBR.vitrine.schedule_time_unavailable.retryButtonText}
+                </button>
+              )}
             </div>
           )}
 
