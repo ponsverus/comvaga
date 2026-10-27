@@ -110,12 +110,7 @@ export function useVitrineBooking({
       try {
         await fetchNowFromDb();
       } catch {
-        alertKey(
-          'schedule_time_unavailable',
-          'Horário oficial indisponível',
-          'Ainda estamos sincronizando o horário oficial. Tente novamente em instantes.',
-          'ENTENDI'
-        );
+        alertKey('schedule_time_unavailable');
         return false;
       }
     }
