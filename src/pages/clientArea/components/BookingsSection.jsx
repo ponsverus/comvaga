@@ -40,6 +40,8 @@ function BookingGroup({
     if (commentOpenFor) commentInputRef.current?.focus();
   }, [commentOpenFor]);
 
+  const sendDisabled = reviewLoading || !Number.isInteger(reviewRating) || reviewRating < 1 || reviewRating > 5;
+
   if (!items.length) return null;
 
   return (
@@ -165,7 +167,7 @@ function BookingGroup({
                       <button
                         type="button"
                         onClick={onSubmitReview}
-                        disabled={reviewLoading}
+                        disabled={sendDisabled}
                         className="w-full shrink-0 rounded-button border border-primary/50 bg-primary/20 px-4 py-2 text-sm font-normal uppercase text-primary transition-colors hover:border-primary hover:bg-primary/30 disabled:opacity-60 sm:w-auto sm:bg-transparent"
                       >
                         {reviewLoading
