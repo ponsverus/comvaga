@@ -280,7 +280,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   const [nativeConfirmData, setNativeConfirmData] = useState({ title: '', body: '', confirmText: 'CONFIRMAR', cancelText: 'CANCELAR' });
   const confirmResolverRef = useRef(null);
 
-  const [depoimentoNota, setDepoimentoNota] = useState(5);
+  const [depoimentoNota, setDepoimentoNota] = useState(0);
   const [depoimentoTexto, setDepoimentoTexto] = useState('');
   const reviewFormRef = useRef(null);
 
@@ -400,7 +400,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
       alertKey('depoimento_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode deixar depoimentos.', 'ENTENDI');
       return;
     }
-    setDepoimentoNota(5);
+    setDepoimentoNota(0);
     setDepoimentoTexto('');
     reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -425,10 +425,11 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
       alertKey('depoimento_invalid_business', 'Negócio inválido', 'Negócio inválido.', 'ENTENDI');
       return;
     }
+    if (!Number.isInteger(depoimentoNota) || depoimentoNota < 1 || depoimentoNota > 5) return;
     try {
       const ok = await enviarDepoimentoState();
       if (!ok) return;
-      setDepoimentoNota(5);
+      setDepoimentoNota(0);
       setDepoimentoTexto('');
       alertKey('depoimento_sent', 'Depoimento registrado', 'Seu depoimento foi entregue com sucesso!', 'OK');
     } catch (e) {
