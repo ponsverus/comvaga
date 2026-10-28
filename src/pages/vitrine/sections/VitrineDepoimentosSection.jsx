@@ -1,6 +1,21 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import DepoimentosPaginados from '../components/DepoimentosPaginados';
 
+function AverageStars({ value }) {
+  return (
+    <span className="relative inline-block whitespace-nowrap text-lg leading-none" role="img" aria-label={`Nota média: ${value.toFixed(1)} de 5`}>
+      <span className="text-vmuted" aria-hidden="true">★★★★★</span>
+      <span
+        className="absolute left-0 top-0 overflow-hidden whitespace-nowrap text-primary"
+        style={{ width: `${Math.max(0, Math.min(100, value * 20))}%` }}
+        aria-hidden="true"
+      >
+        ★★★★★
+      </span>
+    </span>
+  );
+}
+
 function ReviewStar({ active, onClick, label, disabled }) {
   return (
     <button
@@ -12,7 +27,7 @@ function ReviewStar({ active, onClick, label, disabled }) {
     >
       <span
         aria-hidden="true"
-        className={`text-[26px] leading-none transition-opacity ${active ? 'text-primary opacity-100' : 'text-primary opacity-25'}`}
+        className={`text-[26px] leading-none transition-colors ${active ? 'text-primary' : 'text-vmuted'}`}
       >
         {'\u2605'}
       </span>
@@ -50,6 +65,8 @@ export default function VitrineDepoimentosSection({
     ? 'border-yellow-600/60 text-yellow-800 hover:bg-yellow-500/10'
     : 'border-primary/50 text-primary hover:border-primary hover:bg-primary/10';
   const disabled = !!isProfessional || !!reviewState?.loading;
+  const selectedNote = Number(reviewState?.nota);
+  const sendDisabled = disabled || !Number.isInteger(selectedNote) || selectedNote < 1 || selectedNote > 5;
   const nomeDestino = String(nomeNegocioLabel || '').trim();
   const sendLabel = `ENVIAR${nomeDestino ? ` PARA ${nomeDestino}` : ''}`;
 
@@ -58,11 +75,7 @@ export default function VitrineDepoimentosSection({
       <div className="max-w-7xl mx-auto">
         {rating && (
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-lg leading-none text-primary" aria-hidden="true">★</span>
-            <span className={`text-xl font-normal ${isLight ? 'text-vtext' : 'text-primary'}`}>
-              <span className="sr-only">Nota média da Comvaga: </span>{rating.value.toFixed(1)}
-              <span className="sr-only"> de 5</span>
-            </span>
+            <AverageStars value={rating.value} />
             <span className="text-sm text-vsub">
               ({rating.count} {rating.count === 1 ? 'depoimento' : 'depoimentos'})
             </span>
@@ -99,7 +112,7 @@ export default function VitrineDepoimentosSection({
               <button
                 type="button"
                 onClick={reviewActions?.onEnviar}
-                disabled={disabled}
+                disabled={sendDisabled}
                 className={`min-w-0 flex-1 rounded-button border px-4 py-2 text-sm font-normal uppercase transition-colors disabled:opacity-60 sm:flex-none sm:bg-transparent ${buttonClass}`}
               >
                 {reviewState?.loading ? 'ENVIANDO...' : sendLabel}
