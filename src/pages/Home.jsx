@@ -216,7 +216,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const [appReviewsHasMore, setAppReviewsHasMore] = useState(false);
   const [appReviewsLoadingMore, setAppReviewsLoadingMore] = useState(false);
   const [appReviewSending, setAppReviewSending] = useState(false);
-  const [appReviewNota, setAppReviewNota] = useState(5);
+  const [appReviewNota, setAppReviewNota] = useState(0);
   const [appReviewTexto, setAppReviewTexto] = useState('');
   const appReviewLoadLock = useRef(false);
   const appReviewSendLock = useRef(false);
@@ -288,6 +288,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       if (await confirm('home.app_review_need_login')) navigate('/login');
       return;
     }
+    if (!Number.isInteger(appReviewNota) || appReviewNota < 1 || appReviewNota > 5) return;
     const comentario = appReviewTexto.trim();
     if (comentario.length > 1000) {
       showMessage('home.app_review_invalid_comment');
@@ -309,7 +310,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         'enviar-depoimento-app'
       );
       if (error) throw error;
-      setAppReviewNota(5);
+      setAppReviewNota(0);
       setAppReviewTexto('');
       showMessage('home.app_review_sent');
       const requestId = ++appReviewRequestId.current;
