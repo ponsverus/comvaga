@@ -1519,12 +1519,13 @@ export const ptBR = {
       screen: 'dark',
       buttonText: 'ENTENDI',
     },
-    app_review_consent_required: {
-      title: 'Precisamos do seu aceite',
-      body: 'Para mostrar seu depoimento na home, confirme que podemos divulgar seu nome, nota e comentário.',
+    app_review_publish_confirm: {
+      title: 'Publicar seu depoimento?',
+      body: 'Ao confirmar, você concorda em exibir seu nome, nota e comentário na página inicial da Comvaga.',
       variant: 'warning',
       screen: 'dark',
-      buttonText: 'ENTENDI',
+      confirmText: 'AUTORIZAR E PUBLICAR',
+      cancelText: 'CANCELAR',
     },
     app_review_sent: {
       title: 'Depoimento publicado',
