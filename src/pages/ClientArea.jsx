@@ -89,7 +89,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
   const [avaliacoesPorAgendamento, setAvaliacoesPorAgendamento] = useState({});
   const [depoimentoLoading, setDepoimentoLoading] = useState(false);
   const [depoimentoAlvo, setDepoimentoAlvo] = useState(null);
-  const [depoimentoNota, setDepoimentoNota] = useState(5);
+  const [depoimentoNota, setDepoimentoNota] = useState(0);
   const [depoimentoTexto, setDepoimentoTexto] = useState('');
 
   const getVisiblePageRows = useCallback((rows, limit = PAGE_SIZE) => (rows || []).slice(0, limit), []);
@@ -585,12 +585,13 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
   const abrirDepoimento = (agendamento) => {
     const jaAberto = depoimentoAlvo?.id === agendamento?.id;
     setDepoimentoAlvo(jaAberto ? null : agendamento);
-    setDepoimentoNota(5);
+    setDepoimentoNota(0);
     setDepoimentoTexto('');
   };
 
   const enviarDepoimentoAgendamento = async () => {
     if (!depoimentoAlvo?.id) return;
+    if (!Number.isInteger(depoimentoNota) || depoimentoNota < 1 || depoimentoNota > 5) return;
     try {
       setDepoimentoLoading(true);
       await createBookingReview({
@@ -604,7 +605,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       }));
       setDepoimentoAlvo(null);
       setDepoimentoTexto('');
-      setDepoimentoNota(5);
+      setDepoimentoNota(0);
       feedback.showMessage('vitrine.depoimento_sent', { variant: 'success' });
     } catch (e) {
       const requestKey = getRequestErrorKey(e);
