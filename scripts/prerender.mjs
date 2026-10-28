@@ -43,7 +43,7 @@ if (!template.includes(rootMarkup)) {
 }
 
 const homeTemplate = renderSeoHtml(template, STATIC_SEO['/'], null, null, {
-  jsonLd: { id: HOME_SCHEMA_ID, data: buildHomeStructuredData(STATIC_SEO['/']) },
+  jsonLd: { id: HOME_SCHEMA_ID, data: buildHomeStructuredData() },
 });
 const html = homeTemplate.replace(rootMarkup, `<div id="root">${renderer.renderHome()}</div>`);
 await writeFile(indexPath, html);
