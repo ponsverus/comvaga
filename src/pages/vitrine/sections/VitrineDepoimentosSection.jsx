@@ -22,6 +22,7 @@ function ReviewStar({ active, onClick, label, disabled }) {
 export default function VitrineDepoimentosSection({
   isProfessional,
   depoimentos,
+  rating,
   nomeNegocioLabel,
   isLight,
   reviewRef,
@@ -43,6 +44,12 @@ export default function VitrineDepoimentosSection({
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8 bg-vcard2">
       <div className="max-w-7xl mx-auto">
+        {rating && (
+          <p className="text-sm text-vsub">
+            Avaliação da Comvaga: <strong className="text-vtext">{rating.value.toFixed(1).replace('.', ',')} de 5</strong>
+            {' '}com base em {rating.count} {rating.count === 1 ? 'avaliação' : 'avaliações'}.
+          </p>
+        )}
         <div ref={reviewRef} className="mb-6 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <div className="flex shrink-0 items-center gap-1">
