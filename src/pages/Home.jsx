@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
@@ -27,6 +27,25 @@ async function fetchAppReviews(cursor = null) {
   );
   if (error) throw error;
   return data || [];
+}
+
+async function fetchAppReviewsHome() {
+  const { data, error } = await withTimeout(
+    supabase.rpc('get_depoimentos_app_home'),
+    7000,
+    'depoimentos-app-home'
+  );
+  if (error) throw error;
+  if (!data || !Array.isArray(data.items)) throw new Error('Resposta inválida de depoimentos da Comvaga');
+
+  const count = Number(data.rating_count);
+  const value = data.rating_value == null ? null : Number(data.rating_value);
+  if (!Number.isSafeInteger(count) || count < 0 || count < data.items.length
+    || (count > 0 && (!Number.isFinite(value) || value < 1 || value > 5))
+    || (count === 0 && data.items.length > 0)) {
+    throw new Error('Resumo inválido de depoimentos da Comvaga');
+  }
+  return { items: data.items, rating: count > 0 ? { count, value } : null };
 }
 
 function getBusinessLogoUrl(path) {
@@ -182,7 +201,8 @@ function SearchBox({
 export default function Home({ user, userType, professionalRole = null, onLogout }) {
   const navigate = useNavigate();
   useStaticSeo('/');
-  useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData()), []);
+  const [appReviewRating, setAppReviewRating] = useState(null);
+  useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData(appReviewRating)), [appReviewRating]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
@@ -200,6 +220,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const [appReviewTexto, setAppReviewTexto] = useState('');
   const appReviewLoadLock = useRef(false);
   const appReviewSendLock = useRef(false);
+  const appReviewRequestId = useRef(0);
   const isLogged = !!user && !!userType;
   const isPartner = userType === 'professional' && professionalRole === 'partner';
   const loggedAreaLink = userType === 'professional'
@@ -210,31 +231,42 @@ export default function Home({ user, userType, professionalRole = null, onLogout
     : 'MINHA ÁREA';
   const supportHref = getSupportHref(userType);
 
+  const applyAppReviewsHome = useCallback(({ items, rating }) => {
+    setAppReviewItems(items.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
+      ...row,
+      users: { nome: row.nome_publico },
+    })));
+    setAppReviewsHasMore(items.length > APP_REVIEWS_PAGE_SIZE);
+    setAppReviewRating(rating);
+  }, []);
+
   useEffect(() => {
     let active = true;
-    fetchAppReviews()
-      .then((rows) => {
-        if (!active) return;
-        setAppReviewItems(rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
-          ...row,
-          users: { nome: row.nome_publico },
-        })));
-        setAppReviewsHasMore(rows.length > APP_REVIEWS_PAGE_SIZE);
+    const requestId = ++appReviewRequestId.current;
+    fetchAppReviewsHome()
+      .then((snapshot) => {
+        if (!active || requestId !== appReviewRequestId.current) return;
+        applyAppReviewsHome(snapshot);
       })
       .catch((error) => {
-        if (!active) return;
+        if (!active || requestId !== appReviewRequestId.current) return;
         console.error('Falha ao carregar depoimentos da Comvaga:', error);
+        setAppReviewItems([]);
+        setAppReviewsHasMore(false);
+        setAppReviewRating(null);
         showMessage('home.app_reviews_load_error');
       });
     return () => { active = false; };
-  }, [showMessage]);
+  }, [applyAppReviewsHome, showMessage]);
 
   const loadMoreAppReviews = async () => {
     if (appReviewLoadLock.current || !appReviewsHasMore || appReviewItems.length === 0) return false;
     appReviewLoadLock.current = true;
     setAppReviewsLoadingMore(true);
+    const requestId = appReviewRequestId.current;
     try {
       const rows = await fetchAppReviews(appReviewItems[appReviewItems.length - 1]);
+      if (requestId !== appReviewRequestId.current) return false;
       const next = rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
         ...row,
         users: { nome: row.nome_publico },
@@ -280,15 +312,16 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       setAppReviewNota(5);
       setAppReviewTexto('');
       showMessage('home.app_review_sent');
+      const requestId = ++appReviewRequestId.current;
       try {
-        const rows = await fetchAppReviews();
-        setAppReviewItems(rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
-          ...row,
-          users: { nome: row.nome_publico },
-        })));
-        setAppReviewsHasMore(rows.length > APP_REVIEWS_PAGE_SIZE);
+        const snapshot = await fetchAppReviewsHome();
+        if (requestId === appReviewRequestId.current) applyAppReviewsHome(snapshot);
       } catch (reloadError) {
+        if (requestId !== appReviewRequestId.current) return;
         console.error('Falha ao atualizar depoimentos da Comvaga:', reloadError);
+        setAppReviewItems([]);
+        setAppReviewsHasMore(false);
+        setAppReviewRating(null);
         showMessage('home.app_reviews_load_error');
       }
     } catch (error) {
@@ -364,6 +397,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       handleLogoutClick={handleLogoutClick}
       appReviews={{
         items: appReviewItems,
+        rating: appReviewRating,
         form: {
           nota: appReviewNota,
           texto: appReviewTexto,
