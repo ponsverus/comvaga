@@ -461,6 +461,7 @@ export default function HomePublicContent({
       <VitrineDepoimentosSection
         isProfessional={false}
         depoimentos={appReviews?.items || []}
+        rating={appReviews?.rating}
         nomeNegocioLabel="COMVAGA"
         isLight={false}
         reviewState={appReviews?.form}
