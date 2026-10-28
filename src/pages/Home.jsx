@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { SearchIcon, ProfessionalIcon } from '../components/icons';
@@ -10,6 +10,24 @@ import { useStaticSeo } from '../hooks/useStaticSeo.js';
 import HomePublicContent from '../components/HomePublicContent.jsx';
 import { applyStructuredData } from '../utils/structuredData.js';
 import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../utils/homeSeo.js';
+import { withTimeout } from '../utils/withTimeout.js';
+import { withAuthRetry } from '../utils/authSession.js';
+
+const APP_REVIEWS_PAGE_SIZE = 12;
+
+async function fetchAppReviews(cursor = null) {
+  const { data, error } = await withTimeout(
+    supabase.rpc('get_depoimentos_app', {
+      p_limit: APP_REVIEWS_PAGE_SIZE + 1,
+      p_cursor_created_at: cursor?.created_at ?? null,
+      p_cursor_id: cursor?.id ?? null,
+    }),
+    7000,
+    'depoimentos-app'
+  );
+  if (error) throw error;
+  return data || [];
+}
 
 function getBusinessLogoUrl(path) {
   if (!path) return null;
@@ -162,6 +180,7 @@ function SearchBox({
 }
 
 export default function Home({ user, userType, professionalRole = null, onLogout }) {
+  const navigate = useNavigate();
   useStaticSeo('/');
   useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData()), []);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -172,7 +191,16 @@ export default function Home({ user, userType, professionalRole = null, onLogout
 
   const plansSectionRef = useRef(null);
 
-  const { showMessage } = useFeedback();
+  const { showMessage, confirm } = useFeedback();
+  const [appReviewItems, setAppReviewItems] = useState([]);
+  const [appReviewsHasMore, setAppReviewsHasMore] = useState(false);
+  const [appReviewsLoadingMore, setAppReviewsLoadingMore] = useState(false);
+  const [appReviewSending, setAppReviewSending] = useState(false);
+  const [appReviewNota, setAppReviewNota] = useState(5);
+  const [appReviewTexto, setAppReviewTexto] = useState('');
+  const [appReviewConsent, setAppReviewConsent] = useState(false);
+  const appReviewLoadLock = useRef(false);
+  const appReviewSendLock = useRef(false);
   const isLogged = !!user && !!userType;
   const isPartner = userType === 'professional' && professionalRole === 'partner';
   const loggedAreaLink = userType === 'professional'
@@ -182,6 +210,99 @@ export default function Home({ user, userType, professionalRole = null, onLogout
     ? isPartner ? 'SELECIONAR NEGÓCIO' : 'DASHBOARD'
     : 'MINHA ÁREA';
   const supportHref = getSupportHref(userType);
+
+  useEffect(() => {
+    let active = true;
+    fetchAppReviews()
+      .then((rows) => {
+        if (!active) return;
+        setAppReviewItems(rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
+          ...row,
+          users: { nome: row.nome_publico },
+        })));
+        setAppReviewsHasMore(rows.length > APP_REVIEWS_PAGE_SIZE);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error('Falha ao carregar depoimentos da Comvaga:', error);
+        showMessage('home.app_reviews_load_error');
+      });
+    return () => { active = false; };
+  }, [showMessage]);
+
+  const loadMoreAppReviews = async () => {
+    if (appReviewLoadLock.current || !appReviewsHasMore || appReviewItems.length === 0) return false;
+    appReviewLoadLock.current = true;
+    setAppReviewsLoadingMore(true);
+    try {
+      const rows = await fetchAppReviews(appReviewItems[appReviewItems.length - 1]);
+      const next = rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
+        ...row,
+        users: { nome: row.nome_publico },
+      }));
+      setAppReviewItems((current) => {
+        const ids = new Set(current.map((item) => item.id));
+        return [...current, ...next.filter((item) => !ids.has(item.id))];
+      });
+      setAppReviewsHasMore(rows.length > APP_REVIEWS_PAGE_SIZE);
+      return next.length > 0;
+    } finally {
+      appReviewLoadLock.current = false;
+      setAppReviewsLoadingMore(false);
+    }
+  };
+
+  const sendAppReview = async () => {
+    if (!user?.id) {
+      if (await confirm('home.app_review_need_login')) navigate('/login');
+      return;
+    }
+    const comentario = appReviewTexto.trim();
+    if (comentario.length < 10 || comentario.length > 1000) {
+      showMessage('home.app_review_invalid_comment');
+      return;
+    }
+    if (!appReviewConsent) {
+      showMessage('home.app_review_consent_required');
+      return;
+    }
+    if (appReviewSendLock.current) return;
+    appReviewSendLock.current = true;
+    setAppReviewSending(true);
+    try {
+      const { error } = await withAuthRetry(
+        () => supabase.rpc('create_depoimento_app', {
+          p_nota: appReviewNota,
+          p_comentario: comentario,
+          p_consentimento: true,
+        }),
+        7000,
+        'enviar-depoimento-app'
+      );
+      if (error) throw error;
+      setAppReviewNota(5);
+      setAppReviewTexto('');
+      setAppReviewConsent(false);
+      showMessage('home.app_review_sent');
+      try {
+        const rows = await fetchAppReviews();
+        setAppReviewItems(rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
+          ...row,
+          users: { nome: row.nome_publico },
+        })));
+        setAppReviewsHasMore(rows.length > APP_REVIEWS_PAGE_SIZE);
+      } catch (reloadError) {
+        console.error('Falha ao atualizar depoimentos da Comvaga:', reloadError);
+        showMessage('home.app_reviews_load_error');
+      }
+    } catch (error) {
+      console.error('Falha ao enviar depoimento da Comvaga:', error);
+      showMessage(error?.code === '23505' ? 'home.app_review_already_sent' : 'home.app_review_send_error');
+    } finally {
+      appReviewSendLock.current = false;
+      setAppReviewSending(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -245,6 +366,27 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       loggedAreaLabel={loggedAreaLabel}
       supportHref={supportHref}
       handleLogoutClick={handleLogoutClick}
+      appReviews={{
+        items: appReviewItems,
+        form: {
+          nota: appReviewNota,
+          texto: appReviewTexto,
+          consentChecked: appReviewConsent,
+          loading: appReviewSending,
+        },
+        actions: {
+          setNota: setAppReviewNota,
+          setTexto: setAppReviewTexto,
+          setConsentChecked: setAppReviewConsent,
+          onEnviar: sendAppReview,
+        },
+        pagination: {
+          hasMore: appReviewsHasMore,
+          loadingMore: appReviewsLoadingMore,
+          onLoadMore: loadMoreAppReviews,
+          onLoadMoreError: () => showMessage('home.app_reviews_load_more_error'),
+        },
+      }}
     />
   );
 }
