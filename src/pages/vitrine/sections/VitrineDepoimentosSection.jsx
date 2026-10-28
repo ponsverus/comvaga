@@ -60,6 +60,7 @@ export default function VitrineDepoimentosSection({
       <div className="max-w-7xl mx-auto">
         {rating && (
           <div className="mb-3 flex items-center gap-2">
+            <span className="text-sm font-normal text-vsub">COMVAGA:</span>
             <span className="text-lg leading-none text-primary" aria-hidden="true">★</span>
             <span className={`text-xl font-normal ${isLight ? 'text-vtext' : 'text-primary'}`}>
               <span className="sr-only">Nota média da Comvaga: </span>{rating.value.toFixed(1)}
