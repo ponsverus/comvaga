@@ -1,21 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import DepoimentosPaginados from '../components/DepoimentosPaginados';
 
-function AverageStars({ value }) {
-  return (
-    <span className="relative inline-block whitespace-nowrap text-lg leading-none" role="img" aria-label={`Nota média: ${value.toFixed(1)} de 5`}>
-      <span className="text-vmuted" aria-hidden="true">★★★★★</span>
-      <span
-        className="absolute left-0 top-0 overflow-hidden whitespace-nowrap text-primary"
-        style={{ width: `${Math.max(0, Math.min(100, value * 20))}%` }}
-        aria-hidden="true"
-      >
-        ★★★★★
-      </span>
-    </span>
-  );
-}
-
 function ReviewStar({ active, onClick, label, disabled }) {
   return (
     <button
@@ -75,9 +60,10 @@ export default function VitrineDepoimentosSection({
       <div className="max-w-7xl mx-auto">
         {rating && (
           <div className="mb-3 flex items-center gap-2">
-            <AverageStars value={rating.value} />
-            <span className="text-sm text-vsub">
-              ({rating.count} {rating.count === 1 ? 'depoimento' : 'depoimentos'})
+            <span className="text-lg leading-none text-primary" aria-hidden="true">★</span>
+            <span className={`text-xl font-normal ${isLight ? 'text-vtext' : 'text-primary'}`}>
+              <span className="sr-only">Nota média da Comvaga: </span>{rating.value.toFixed(1)}
+              <span className="sr-only"> de 5</span>
             </span>
           </div>
         )}
