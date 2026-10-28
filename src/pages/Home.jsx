@@ -198,7 +198,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const [appReviewSending, setAppReviewSending] = useState(false);
   const [appReviewNota, setAppReviewNota] = useState(5);
   const [appReviewTexto, setAppReviewTexto] = useState('');
-  const [appReviewConsent, setAppReviewConsent] = useState(false);
   const appReviewLoadLock = useRef(false);
   const appReviewSendLock = useRef(false);
   const isLogged = !!user && !!userType;
@@ -262,14 +261,12 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       showMessage('home.app_review_invalid_comment');
       return;
     }
-    if (!appReviewConsent) {
-      showMessage('home.app_review_consent_required');
-      return;
-    }
     if (appReviewSendLock.current) return;
     appReviewSendLock.current = true;
-    setAppReviewSending(true);
     try {
+      const consentGranted = await confirm('home.app_review_publish_confirm');
+      if (!consentGranted) return;
+      setAppReviewSending(true);
       const { error } = await withAuthRetry(
         () => supabase.rpc('create_depoimento_app', {
           p_nota: appReviewNota,
@@ -282,7 +279,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       if (error) throw error;
       setAppReviewNota(5);
       setAppReviewTexto('');
-      setAppReviewConsent(false);
       showMessage('home.app_review_sent');
       try {
         const rows = await fetchAppReviews();
@@ -371,13 +367,11 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         form: {
           nota: appReviewNota,
           texto: appReviewTexto,
-          consentChecked: appReviewConsent,
           loading: appReviewSending,
         },
         actions: {
           setNota: setAppReviewNota,
           setTexto: setAppReviewTexto,
-          setConsentChecked: setAppReviewConsent,
           onEnviar: sendAppReview,
         },
         pagination: {

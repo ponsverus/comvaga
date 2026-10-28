@@ -29,7 +29,6 @@ export default function VitrineDepoimentosSection({
   reviewActions,
   pagination,
   requireComment = false,
-  requireConsent = false,
 }) {
   const labelClass = isLight ? 'text-vmuted' : 'text-gray-500';
   const inputClass = isLight
@@ -67,7 +66,7 @@ export default function VitrineDepoimentosSection({
                 onChange={(event) => reviewActions?.setTexto?.(event.target.value)}
                 disabled={disabled}
                 maxLength={requireComment ? 1000 : undefined}
-                className={`min-w-0 flex-1 bg-transparent px-0 py-2 text-sm uppercase outline-none disabled:cursor-not-allowed disabled:opacity-60 ${inputClass}`}
+                className={`min-w-0 flex-1 bg-transparent px-0 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60 ${inputClass}`}
                 placeholder={requireComment ? 'ESCREVA SEU DEPOIMENTO' : 'OPCIONAL'}
               />
             </div>
@@ -81,18 +80,6 @@ export default function VitrineDepoimentosSection({
               {reviewState?.loading ? 'ENVIANDO...' : sendLabel}
             </button>
           </div>
-          {requireConsent && (
-            <label className={`mt-3 flex items-start gap-2 text-sm ${labelClass}`}>
-              <input
-                type="checkbox"
-                checked={!!reviewState?.consentChecked}
-                onChange={(event) => reviewActions?.setConsentChecked?.(event.target.checked)}
-                disabled={disabled}
-                className="mt-0.5 accent-primary"
-              />
-              <span>Autorizo a publicação do meu nome, nota e comentário na home da Comvaga.</span>
-            </label>
-          )}
         </div>
 
         <DepoimentosPaginados

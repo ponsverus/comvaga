@@ -467,7 +467,6 @@ export default function HomePublicContent({
         reviewActions={appReviews?.actions}
         pagination={appReviews?.pagination}
         requireComment
-        requireConsent
       />
 
       <footer className="bg-black py-12 px-4">
