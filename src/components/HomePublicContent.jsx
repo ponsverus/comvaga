@@ -3,6 +3,7 @@ import { CheckDoubleIcon, ZapIcon, CheckIcon } from './icons';
 import { getCustomPlanHref, getSupportHref } from '../support';
 import { saveSelectedPlanIntent } from '../utils/plans';
 import { HOME_PLANS, formatHomePlanPrice } from '../data/homePlans';
+import VitrineDepoimentosSection from '../pages/vitrine/sections/VitrineDepoimentosSection.jsx';
 
 const planSignupTo = (planCode) => `/cadastro/profissional?plano=${planCode}`;
 
@@ -41,6 +42,7 @@ export default function HomePublicContent({
   loggedAreaLabel,
   supportHref = getSupportHref(),
   handleLogoutClick,
+  appReviews,
 }) {
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -455,6 +457,18 @@ export default function HomePublicContent({
           <p className="text-black/60 text-sm mt-6">Eficiência comprovada em barbearias, estúdios e clínicas.</p>
         </div>
       </section>
+
+      <VitrineDepoimentosSection
+        isProfessional={false}
+        depoimentos={appReviews?.items || []}
+        nomeNegocioLabel="COMVAGA"
+        isLight={false}
+        reviewState={appReviews?.form}
+        reviewActions={appReviews?.actions}
+        pagination={appReviews?.pagination}
+        requireComment
+        requireConsent
+      />
 
       <footer className="bg-black py-12 px-4">
         <div className="max-w-7xl mx-auto">

@@ -1504,6 +1504,63 @@ export const ptBR = {
   },
 
   home: {
+    app_review_need_login: {
+      title: 'Login necessário',
+      body: 'Você precisa ter uma conta e fazer login para deixar seu depoimento sobre a Comvaga. Deseja entrar agora?',
+      variant: 'warning',
+      screen: 'dark',
+      confirmText: 'IR PARA LOGIN',
+      cancelText: 'MAIS TARDE',
+    },
+    app_review_invalid_comment: {
+      title: 'Escreva seu depoimento',
+      body: 'Conte sua experiência com a Comvaga em pelo menos 10 caracteres e no máximo 1.000.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    app_review_consent_required: {
+      title: 'Precisamos do seu aceite',
+      body: 'Para mostrar seu depoimento na home, confirme que podemos divulgar seu nome, nota e comentário.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    app_review_sent: {
+      title: 'Depoimento publicado',
+      body: 'Obrigado por compartilhar sua experiência com a Comvaga.',
+      variant: 'success',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    app_review_already_sent: {
+      title: 'Depoimento já enviado',
+      body: 'Esta conta já enviou um depoimento sobre a Comvaga.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'ENTENDI',
+    },
+    app_review_send_error: {
+      title: 'Erro ao enviar depoimento',
+      body: 'Houve um erro ao publicar seu depoimento agora. Tente novamente em instantes.',
+      variant: 'danger',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    app_reviews_load_error: {
+      title: 'Erro ao carregar depoimentos',
+      body: 'Houve um erro ao carregar os depoimentos agora. Atualize a página e tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
+    app_reviews_load_more_error: {
+      title: 'Erro ao carregar',
+      body: 'Houve um erro ao carregar mais depoimentos. Tente novamente.',
+      variant: 'warning',
+      screen: 'dark',
+      buttonText: 'OK',
+    },
     search_failed_support: {
       title: 'Houve uma falha ao concluir a busca agora',
       body:
