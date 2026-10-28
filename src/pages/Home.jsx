@@ -257,7 +257,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       return;
     }
     const comentario = appReviewTexto.trim();
-    if (comentario.length < 10 || comentario.length > 1000) {
+    if (comentario.length > 1000) {
       showMessage('home.app_review_invalid_comment');
       return;
     }
@@ -270,7 +270,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       const { error } = await withAuthRetry(
         () => supabase.rpc('create_depoimento_app', {
           p_nota: appReviewNota,
-          p_comentario: comentario,
+          p_comentario: comentario || null,
           p_consentimento: true,
         }),
         7000,
