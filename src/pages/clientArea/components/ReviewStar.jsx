@@ -8,7 +8,7 @@ export default function ReviewStar({ active, onClick, label }) {
     >
       <span
         aria-hidden="true"
-        className={`text-[26px] leading-none transition-opacity ${active ? 'text-primary opacity-100' : 'text-primary opacity-25'}`}
+        className={`text-[26px] leading-none transition-colors ${active ? 'text-primary' : 'text-vmuted'}`}
       >
         {'\u2605'}
       </span>
