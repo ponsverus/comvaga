@@ -1531,7 +1531,7 @@ export const ptBR = {
       title: 'Depoimento publicado',
       body: 'Obrigado por compartilhar sua experiência com a Comvaga.',
       variant: 'success',
-      screen: 'dark',
+      screen: 'light',
       buttonText: 'OK',
     },
     app_review_already_sent: {
