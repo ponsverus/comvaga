@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { supabase } from '../../../supabase';
@@ -32,6 +32,14 @@ function BookingGroup({
   shareState,
   onShare,
 }) {
+  const [commentOpenFor, setCommentOpenFor] = useState(null);
+  const commentInputRef = useRef(null);
+  const commentInputId = useId();
+
+  useEffect(() => {
+    if (commentOpenFor) commentInputRef.current?.focus();
+  }, [commentOpenFor]);
+
   if (!items.length) return null;
 
   return (
@@ -52,6 +60,7 @@ function BookingGroup({
             String(booking.status || '') === 'concluido' &&
             !reviewsByBooking[booking.id];
           const depoimentoAberto = podeAvaliar && reviewTarget?.id === booking.id;
+          const commentOpen = commentOpenFor === booking.id;
           const podeCompartilhar = booking.status === 'concluido' || String(booking.status || '').includes('cancelado');
           const actionCount = Number(podeAvaliar) + Number(podeCompartilhar) + Number(podeMarcarNovamente) + Number(booking.status === 'agendado');
           const actionColumns = actionCount === 3 ? 'grid-cols-2 sm:grid-cols-3' : actionCount === 2 ? 'grid-cols-2' : 'grid-cols-1';
@@ -87,7 +96,10 @@ function BookingGroup({
                   {podeAvaliar && (
                     <button
                       type="button"
-                      onClick={() => onOpenReview(booking)}
+                      onClick={() => {
+                        setCommentOpenFor(null);
+                        onOpenReview(booking);
+                      }}
                       className="min-w-0 w-full px-2 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words"
                     >
                       DAR DEPOIMENTO
@@ -124,7 +136,7 @@ function BookingGroup({
               </div>
               {depoimentoAberto && (
                 <div className="border-t border-gray-800 px-3 py-3 sm:px-5">
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
                     <div className="flex shrink-0 items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((nota) => (
                         <ReviewStar
@@ -136,32 +148,48 @@ function BookingGroup({
                       ))}
                     </div>
 
-                    <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <label className="shrink-0 whitespace-nowrap text-sm font-normal uppercase text-gray-500 sm:text-sm sm:tracking-wide">
-                          {'Coment\u00e1rio:'}
-                        </label>
-
-                        <input
-                          type="text"
-                          value={reviewText}
-                          onChange={(event) => setReviewText(event.target.value)}
-                          placeholder="OPCIONAL"
-                          className="min-w-[42px] flex-1 bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white"
-                        />
-                      </div>
-
+                    <div className="order-3 flex w-full flex-col gap-2 sm:order-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-stretch">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCommentOpenFor(booking.id);
+                          commentInputRef.current?.focus();
+                        }}
+                        disabled={reviewLoading}
+                        aria-controls={commentOpen ? commentInputId : undefined}
+                        aria-expanded={commentOpen}
+                        className="w-full rounded-button border border-primary/50 bg-transparent px-4 py-2 text-sm font-normal uppercase text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-60 sm:w-auto"
+                      >
+                        COMENTAR
+                      </button>
                       <button
                         type="button"
                         onClick={onSubmitReview}
                         disabled={reviewLoading}
-                        className="w-full shrink-0 rounded-button border border-primary/50 bg-primary/20 px-4 py-2 text-sm font-normal uppercase text-primary transition-colors hover:bg-primary/30 hover:border-primary disabled:opacity-60 sm:w-auto sm:bg-transparent sm:px-4 sm:text-xs"
+                        className="w-full shrink-0 rounded-button border border-primary/50 bg-primary/20 px-4 py-2 text-sm font-normal uppercase text-primary transition-colors hover:border-primary hover:bg-primary/30 disabled:opacity-60 sm:w-auto sm:bg-transparent"
                       >
                         {reviewLoading
                           ? 'ENVIANDO...'
                           : `ENVIAR${nomeProfissionalDepoimento ? ` PARA ${nomeProfissionalDepoimento}` : ''}`}
                       </button>
                     </div>
+                    {commentOpen && (
+                      <div className="order-2 flex min-w-0 items-center gap-2 sm:order-3 sm:w-full">
+                        <label htmlFor={commentInputId} className="shrink-0 whitespace-nowrap text-sm font-normal uppercase text-gray-500 sm:tracking-wide">
+                          {'Coment\u00e1rio:'}
+                        </label>
+                        <input
+                          id={commentInputId}
+                          ref={commentInputRef}
+                          type="text"
+                          value={reviewText}
+                          onChange={(event) => setReviewText(event.target.value)}
+                          disabled={reviewLoading}
+                          placeholder="ESCREVA AQUI"
+                          className="min-w-0 flex-1 bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white disabled:opacity-60"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
