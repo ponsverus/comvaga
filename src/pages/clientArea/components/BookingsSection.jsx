@@ -104,7 +104,7 @@ function BookingGroup({
                       }}
                       className="min-w-0 w-full px-2 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words"
                     >
-                      DAR DEPOIMENTO
+                      DEPOIMENTO
                     </button>
                   )}
                   {podeCompartilhar && (
@@ -187,7 +187,7 @@ function BookingGroup({
                           value={reviewText}
                           onChange={(event) => setReviewText(event.target.value)}
                           disabled={reviewLoading}
-                          placeholder="ESCREVA AQUI"
+                          placeholder="DIGITE"
                           className="min-w-0 flex-1 bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white disabled:opacity-60"
                         />
                       </div>
