@@ -466,7 +466,6 @@ export default function HomePublicContent({
         reviewState={appReviews?.form}
         reviewActions={appReviews?.actions}
         pagination={appReviews?.pagination}
-        requireComment
       />
 
       <footer className="bg-black py-12 px-4">
