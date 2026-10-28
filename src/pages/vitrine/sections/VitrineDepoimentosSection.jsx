@@ -28,7 +28,6 @@ export default function VitrineDepoimentosSection({
   reviewState,
   reviewActions,
   pagination,
-  requireComment = false,
 }) {
   const labelClass = isLight ? 'text-vmuted' : 'text-gray-500';
   const inputClass = isLight
@@ -65,9 +64,8 @@ export default function VitrineDepoimentosSection({
                 value={reviewState?.texto || ''}
                 onChange={(event) => reviewActions?.setTexto?.(event.target.value)}
                 disabled={disabled}
-                maxLength={requireComment ? 1000 : undefined}
                 className={`min-w-0 flex-1 bg-transparent px-0 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60 ${inputClass}`}
-                placeholder={requireComment ? 'ESCREVA SEU DEPOIMENTO' : 'OPCIONAL'}
+                placeholder="OPCIONAL"
               />
             </div>
 
