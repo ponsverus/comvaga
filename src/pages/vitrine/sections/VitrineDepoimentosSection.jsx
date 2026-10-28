@@ -57,10 +57,16 @@ export default function VitrineDepoimentosSection({
     <section className="py-12 px-4 sm:px-6 lg:px-8 bg-vcard2">
       <div className="max-w-7xl mx-auto">
         {rating && (
-          <p className="text-sm text-vsub">
-            Nota da Comvaga: <strong className="text-vtext">{rating.value.toFixed(1).replace('.', ',')} de 5</strong>
-            {' '}com base em {rating.count} {rating.count === 1 ? 'depoimento' : 'depoimentos'}.
-          </p>
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-lg leading-none text-primary" aria-hidden="true">★</span>
+            <span className={`text-xl font-normal ${isLight ? 'text-vtext' : 'text-primary'}`}>
+              <span className="sr-only">Nota média da Comvaga: </span>{rating.value.toFixed(1)}
+              <span className="sr-only"> de 5</span>
+            </span>
+            <span className="text-sm text-vsub">
+              ({rating.count} {rating.count === 1 ? 'depoimento' : 'depoimentos'})
+            </span>
+          </div>
         )}
         <div ref={reviewRef} className="mb-6 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5">
