@@ -6,7 +6,20 @@ export const HOME_SCHEMA_ID = 'comvaga-home-schema';
 const HOME_APPLICATION_NAME = 'Comvaga';
 const HOME_APPLICATION_DESCRIPTION = 'Plataforma web de agendamento para negócios de atendimento por horário, com recursos para organizar profissionais, trabalhos, clientes e disponibilidade.';
 
-export function buildHomeStructuredData() {
+export function buildHomeStructuredData(rating = null) {
+  const ratingCount = Number(rating?.count);
+  const ratingValue = Number(rating?.value);
+  const aggregateRating = Number.isSafeInteger(ratingCount) && ratingCount > 0
+    && Number.isFinite(ratingValue) && ratingValue >= 1 && ratingValue <= 5
+    ? {
+      '@type': 'AggregateRating',
+      ratingValue,
+      ratingCount,
+      bestRating: 5,
+      worstRating: 1,
+    }
+    : null;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -24,5 +37,6 @@ export function buildHomeStructuredData() {
       url: `${PUBLIC_ORIGIN}/cadastro/profissional?plano=${plan.code}`,
     })),
     publisher: COMVAGA_ORGANIZATION,
+    ...(aggregateRating ? { aggregateRating } : {}),
   };
 }
