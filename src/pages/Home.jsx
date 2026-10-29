@@ -12,8 +12,19 @@ import { applyStructuredData } from '../utils/structuredData.js';
 import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../utils/homeSeo.js';
 import { withTimeout } from '../utils/withTimeout.js';
 import { withAuthRetry } from '../utils/authSession.js';
+import { getPublicUrl } from '../utils/storage.js';
 
 const APP_REVIEWS_PAGE_SIZE = 12;
+
+// Converte uma linha de depoimento do app no formato esperado pelo cartão.
+// avatar_path só chega quando o autor autorizou a foto (regra aplicada no banco).
+function toAppReviewItem(row) {
+  return {
+    ...row,
+    users: { nome: row.nome_publico },
+    avatarClienteUrl: getPublicUrl('avatars', row.avatar_path),
+  };
+}
 
 async function fetchAppReviews(cursor = null) {
   const { data, error } = await withTimeout(
@@ -232,10 +243,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const supportHref = getSupportHref(userType);
 
   const applyAppReviewsHome = useCallback(({ items, rating }) => {
-    setAppReviewItems(items.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
-      ...row,
-      users: { nome: row.nome_publico },
-    })));
+    setAppReviewItems(items.slice(0, APP_REVIEWS_PAGE_SIZE).map(toAppReviewItem));
     setAppReviewsHasMore(items.length > APP_REVIEWS_PAGE_SIZE);
     setAppReviewRating(rating);
   }, []);
@@ -267,10 +275,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
     try {
       const rows = await fetchAppReviews(appReviewItems[appReviewItems.length - 1]);
       if (requestId !== appReviewRequestId.current) return false;
-      const next = rows.slice(0, APP_REVIEWS_PAGE_SIZE).map((row) => ({
-        ...row,
-        users: { nome: row.nome_publico },
-      }));
+      const next = rows.slice(0, APP_REVIEWS_PAGE_SIZE).map(toAppReviewItem);
       setAppReviewItems((current) => {
         const ids = new Set(current.map((item) => item.id));
         return [...current, ...next.filter((item) => !ids.has(item.id))];
@@ -305,6 +310,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           p_nota: appReviewNota,
           p_comentario: comentario || null,
           p_consentimento: true,
+          p_consentimento_foto: true,
         }),
         7000,
         'enviar-depoimento-app'
