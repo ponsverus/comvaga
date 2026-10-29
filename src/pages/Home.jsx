@@ -13,6 +13,7 @@ import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../utils/homeSeo.js';
 import { withTimeout } from '../utils/withTimeout.js';
 import { withAuthRetry } from '../utils/authSession.js';
 import { getPublicUrl } from '../utils/storage.js';
+import { isRateLimitError } from '../utils/errorUtils.js';
 
 const APP_REVIEWS_PAGE_SIZE = 12;
 
@@ -260,7 +261,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
         setAppReviewItems([]);
         setAppReviewsHasMore(false);
         setAppReviewRating(null);
-        showMessage('home.app_reviews_load_error');
+        showMessage(isRateLimitError(error) ? 'alerts.rate_limit_exceeded' : 'home.app_reviews_load_error');
       });
     return () => { active = false; };
   }, [applyAppReviewsHome, showMessage]);
@@ -416,7 +417,9 @@ export default function Home({ user, userType, professionalRole = null, onLogout
           hasMore: appReviewsHasMore,
           loadingMore: appReviewsLoadingMore,
           onLoadMore: loadMoreAppReviews,
-          onLoadMoreError: () => showMessage('home.app_reviews_load_more_error'),
+          onLoadMoreError: (error) => showMessage(
+            isRateLimitError(error) ? 'alerts.rate_limit_exceeded' : 'home.app_reviews_load_more_error'
+          ),
         },
       }}
     />
