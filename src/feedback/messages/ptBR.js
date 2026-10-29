@@ -1521,7 +1521,7 @@ export const ptBR = {
     },
     app_review_publish_confirm: {
       title: 'Publicar depoimento?',
-      body: 'Ao prosseguir, você autoriza a Comvaga a exibir seu nome, sua nota e seu comentário (se houver) publicamente no site, inclusive para leitura por buscadores.',
+      body: 'Ao prosseguir, você autoriza a Comvaga a exibir seu nome, sua foto de perfil (se houver), sua nota e seu comentário (se houver) publicamente no site, inclusive para leitura por buscadores.',
       variant: 'warning',
       screen: 'dark',
       confirmText: 'AUTORIZAR E PUBLICAR',
