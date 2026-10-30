@@ -460,6 +460,7 @@ export default function HomePublicContent({
 
       <VitrineDepoimentosSection
         isProfessional={false}
+        title="Depoimentos sobre a Comvaga"
         depoimentos={appReviews?.items || []}
         rating={appReviews?.rating}
         nomeNegocioLabel="COMVAGA"

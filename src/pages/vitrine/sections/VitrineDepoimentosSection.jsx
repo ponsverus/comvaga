@@ -30,6 +30,7 @@ export default function VitrineDepoimentosSection({
   reviewState,
   reviewActions,
   pagination,
+  title,
 }) {
   const [commentOpen, setCommentOpen] = useState(() => Boolean(reviewState?.texto));
   const commentInputRef = useRef(null);
@@ -58,6 +59,7 @@ export default function VitrineDepoimentosSection({
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8 bg-vcard2">
       <div className="max-w-7xl mx-auto">
+        {title && <h2 className="mb-6 text-3xl font-black uppercase text-white">{title}</h2>}
         {rating && (
           <div className="mb-3 flex items-center gap-2">
             <span className="text-lg leading-none text-primary" aria-hidden="true">★</span>
@@ -117,7 +119,7 @@ export default function VitrineDepoimentosSection({
                   onChange={(event) => reviewActions?.setTexto?.(event.target.value)}
                   disabled={disabled}
                   className={`min-w-0 flex-1 bg-transparent px-0 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60 ${inputClass}`}
-                  placeholder="DIGITE"
+                  placeholder="ESCREVA AQUI"
                 />
               </div>
             )}

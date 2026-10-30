@@ -1,6 +1,7 @@
 import { SearchIcon } from './icons';
 import { getSupportHref } from '../support';
 import HomePublicContent from './HomePublicContent.jsx';
+import { readPublicHomeReviewsSnapshot } from '../utils/publicHomeReviews.js';
 
 function StaticSearchBox() {
   return (
@@ -23,7 +24,7 @@ function StaticSearchBox() {
   );
 }
 
-export default function HomePublicPreview() {
+export default function HomePublicPreview({ appReviews = readPublicHomeReviewsSnapshot() }) {
   return (
     <div data-public-home-preview>
       <HomePublicContent
@@ -41,6 +42,7 @@ export default function HomePublicPreview() {
         loggedAreaLabel="LOGIN"
         supportHref={getSupportHref()}
         handleLogoutClick={() => {}}
+        appReviews={appReviews}
       />
     </div>
   );

@@ -36,6 +36,21 @@ function messageBody(key, params) {
   return interpolateMessage(entry?.body || '', params);
 }
 
+function billingRateLimitMessage(error) {
+  const seconds = Number(error?.payload?.retry_after_seconds);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return 'Houve muitas tentativas. Aguarde antes de tentar novamente.';
+  }
+  if (seconds <= 60) return messageBody('alerts.rate_limit_exceeded');
+  const minutes = Math.ceil(seconds / 60);
+  if (minutes < 60) return `Muitas tentativas. Tente novamente em cerca de ${minutes} minutos.`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  const duration = `${hours} ${hours === 1 ? 'hora' : 'horas'}`
+    + (remainingMinutes ? ` e ${remainingMinutes} ${remainingMinutes === 1 ? 'minuto' : 'minutos'}` : '');
+  return `Muitas tentativas. Tente novamente em cerca de ${duration}.`;
+}
+
 function formatCurrencyFromCents(value) {
   return `R$ ${(Number(value || 0) / 100).toFixed(2).replace('.', ',')}`;
 }
@@ -488,7 +503,7 @@ export default function PlanosSection({
       if (requestKey === 'alerts.request_timeout') {
         showPlanAlert(freeAccessOpen ? messageBody('dashboard.billing_plan_change_error') : messageBody('dashboard.billing_checkout_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
+        showPlanAlert(billingRateLimitMessage(err), 'warning');
       } else {
         showPlanAlert(getPlanChangeErrorMessage(err));
       }
@@ -520,7 +535,7 @@ export default function PlanosSection({
       if (requestKey === 'alerts.request_timeout') {
         showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
+        showPlanAlert(billingRateLimitMessage(err), 'warning');
       } else {
         showPlanAlert(getPlanCancelErrorMessage(err));
       }
@@ -548,7 +563,7 @@ export default function PlanosSection({
       if (requestKey === 'alerts.request_timeout') {
         showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
+        showPlanAlert(billingRateLimitMessage(err), 'warning');
       } else {
         showPlanAlert(getDowngradeCancelErrorMessage(err));
       }
@@ -577,7 +592,7 @@ export default function PlanosSection({
       if (requestKey === 'alerts.request_timeout') {
         showPlanAlert(messageBody('dashboard.billing_cancel_timeout'));
       } else if (requestKey === 'alerts.rate_limit_exceeded') {
-        showPlanAlert(messageBody('alerts.rate_limit_exceeded'), 'warning');
+        showPlanAlert(billingRateLimitMessage(err), 'warning');
       } else {
         showPlanAlert(getCheckoutCancelErrorMessage(err));
       }

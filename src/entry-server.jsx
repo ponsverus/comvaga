@@ -3,10 +3,10 @@ import { MemoryRouter } from 'react-router-dom';
 import HomePublicPreview from './components/HomePublicPreview.jsx';
 import BlogPublicPreview from './components/BlogPublicPreview.jsx';
 
-export function renderHome() {
+export function renderHome(appReviews) {
   return renderToString(
     <MemoryRouter initialEntries={['/']}>
-      <HomePublicPreview />
+      <HomePublicPreview appReviews={appReviews} />
     </MemoryRouter>
   );
 }

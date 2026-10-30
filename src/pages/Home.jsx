@@ -14,6 +14,7 @@ import { withTimeout } from '../utils/withTimeout.js';
 import { withAuthRetry } from '../utils/authSession.js';
 import { getPublicUrl } from '../utils/storage.js';
 import { isRateLimitError } from '../utils/errorUtils.js';
+import { readPublicHomeReviewsSnapshot } from '../utils/publicHomeReviews.js';
 
 const APP_REVIEWS_PAGE_SIZE = 12;
 
@@ -211,7 +212,8 @@ function SearchBox({
 export default function Home({ user, userType, professionalRole = null, onLogout }) {
   const navigate = useNavigate();
   useStaticSeo('/');
-  const [appReviewRating, setAppReviewRating] = useState(null);
+  const [initialAppReviews] = useState(() => readPublicHomeReviewsSnapshot());
+  const [appReviewRating, setAppReviewRating] = useState(initialAppReviews?.rating || null);
   useEffect(() => applyStructuredData(HOME_SCHEMA_ID, buildHomeStructuredData(appReviewRating)), [appReviewRating]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -222,8 +224,8 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const plansSectionRef = useRef(null);
 
   const { showMessage, confirm } = useFeedback();
-  const [appReviewItems, setAppReviewItems] = useState([]);
-  const [appReviewsHasMore, setAppReviewsHasMore] = useState(false);
+  const [appReviewItems, setAppReviewItems] = useState(initialAppReviews?.items || []);
+  const [appReviewsHasMore, setAppReviewsHasMore] = useState(initialAppReviews?.hasMore || false);
   const [appReviewsLoadingMore, setAppReviewsLoadingMore] = useState(false);
   const [appReviewSending, setAppReviewSending] = useState(false);
   const [appReviewNota, setAppReviewNota] = useState(0);
