@@ -327,11 +327,12 @@ export function useDashboardMutations({
           failedCount += 1;
           if (!uploaded) continue;
           try {
-            await withAuthRetry(
+            const { error: removeError } = await withAuthRetry(
               () => supabase.storage.from('galerias').remove([filePath]),
               6000,
               'galeria-remove-orphan'
             );
+            if (removeError) throw removeError;
           } catch (removeError) {
             try {
               await enqueueGaleriaOrphanDelete(negocio.id, filePath);
