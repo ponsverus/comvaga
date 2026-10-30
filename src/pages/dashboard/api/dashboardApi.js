@@ -601,12 +601,13 @@ export async function insertProfissional(payload) {
 }
 
 export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
-  const { error } = await withAuthRetry(
-    () => supabase.from('negocios').update(logoPatch).eq('id', negocioId).eq('owner_id', ownerId),
+  const { data, error } = await withAuthRetry(
+    () => supabase.from('negocios').update(logoPatch).eq('id', negocioId).eq('owner_id', ownerId).select('id').maybeSingle(),
     6000,
     'negocio-logo-update'
   );
   if (error) throw error;
+  if (!data?.id) throw new Error('logo_path_update_missing_business');
 }
 
 export async function updateNegocioInfo(negocioId, ownerId, payload) {

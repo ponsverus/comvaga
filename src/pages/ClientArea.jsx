@@ -347,29 +347,36 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       );
       if (upErr) throw upErr;
       uploadedPath = path;
-      const { error: updErr } = await withAuthRetry(
+      const { data: updatedClient, error: updErr } = await withAuthRetry(
         () => supabase
           .from('clientes')
           .update({ avatar_path: path })
           .eq('user_id', user.id)
-          .eq('status', 'ativo'),
+          .eq('status', 'ativo')
+          .select('id')
+          .maybeSingle(),
         6000,
         'avatar-path-update'
       );
       if (updErr) throw updErr;
+      if (!updatedClient?.id) throw new Error('avatar_path_update_missing_client');
       uploadedPath = null;
       setAvatarPath(path);
       uiAlert('clientArea.avatar_updated', 'success');
     } catch {
       if (uploadedPath) {
         try {
-          await withAuthRetry(
-            () => supabase.storage.from('avatars').remove([uploadedPath]),
+          const { error: queueError } = await withAuthRetry(
+            () => supabase.rpc('enqueue_owned_orphan_storage_delete', {
+              p_bucket: 'avatars',
+              p_path: uploadedPath,
+            }),
             6000,
-            'avatar-remove-failed-upload'
+            'avatar-enqueue-orphan-delete'
           );
-        } catch (removeError) {
-          console.warn('Remove apenas upload novo pendente de salvamento no perfil.', removeError);
+          if (queueError) throw queueError;
+        } catch (queueError) {
+          console.warn('Falha ao enfileirar limpeza de avatar sem vinculo.', queueError);
         }
       }
       uiAlert('clientArea.avatar_update_error', 'error');

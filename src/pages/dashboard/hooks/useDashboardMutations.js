@@ -135,6 +135,7 @@ export function useDashboardMutations({
   const uploadLogoNegocio = async (file) => {
     if (!file || !userId || logoUploading) return;
     if (!(await ensureOwnerAction())) return false;
+    let uploadedLogoPath = null;
     try {
       setLogoUploading(true);
       if (!isImageFile(file)) throw new Error('Formato invalido.');
@@ -151,7 +152,9 @@ export function useDashboardMutations({
         'logo-upload'
       );
       if (upErr) throw upErr;
+      uploadedLogoPath = filePath;
       await updateNegocioLogo(negocio.id, userId, { logo_path: filePath });
+      uploadedLogoPath = null;
       if (oldPath && String(oldPath).replace(/^logos\//, '') !== filePath) {
         const normalizedOldPath = String(oldPath).replace(/^logos\//, '');
         try {
@@ -168,6 +171,21 @@ export function useDashboardMutations({
       await reloadNegocio();
       return true;
     } catch {
+      if (uploadedLogoPath) {
+        try {
+          const { error: queueError } = await withAuthRetry(
+            () => supabase.rpc('enqueue_owned_orphan_storage_delete', {
+              p_bucket: 'logos',
+              p_path: uploadedLogoPath,
+            }),
+            6000,
+            'logo-enqueue-orphan-delete'
+          );
+          if (queueError) throw queueError;
+        } catch (queueError) {
+          console.warn('Falha ao enfileirar limpeza de logo sem vinculo.', queueError);
+        }
+      }
       await uiAlert('dashboard.logo_update_error', 'error');
     } finally {
       setLogoUploading(false);
