@@ -260,9 +260,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       .catch((error) => {
         if (!active || requestId !== appReviewRequestId.current) return;
         console.error('Falha ao carregar depoimentos da Comvaga:', error);
-        setAppReviewItems([]);
-        setAppReviewsHasMore(false);
-        setAppReviewRating(null);
         showMessage(isRateLimitError(error) ? 'alerts.rate_limit_exceeded' : 'home.app_reviews_load_error');
       });
     return () => { active = false; };
@@ -326,9 +323,6 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       } catch (reloadError) {
         if (requestId !== appReviewRequestId.current) return;
         console.error('Falha ao atualizar depoimentos da Comvaga:', reloadError);
-        setAppReviewItems([]);
-        setAppReviewsHasMore(false);
-        setAppReviewRating(null);
         showMessage('home.app_reviews_load_error');
       }
     } catch (error) {
