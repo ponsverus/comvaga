@@ -13,7 +13,7 @@ import {
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
-import { isCancellationScheduled, isScheduledDowngradeSync } from '../utils';
+import { hasPaymentHistory, isCancellationScheduled, isScheduledDowngradeSync } from '../utils';
 function getByPath(obj, path) {
   const parts = String(path || '').split('.');
   let cur = obj;
@@ -79,15 +79,6 @@ function isCanceledOrCancellationScheduled(status) {
 
 const REMOVED_SUBSCRIPTION_STATUSES = new Set(['CANCELED', 'CANCELLED', 'DELETED']);
 const SUSPENDED_SUBSCRIPTION_STATUSES = new Set(['INACTIVE', 'EXPIRED']);
-
-function hasPaymentHistory(status) {
-  return Boolean(
-    status?.provider_subscription_id
-    || status?.current_period_start
-    || status?.current_period_end
-    || Number(status?.current_period_price_cents || 0) > 0
-  );
-}
 
 function canRequestSubscriptionInvoice(status) {
   const current = String(status?.status || '').toLowerCase();

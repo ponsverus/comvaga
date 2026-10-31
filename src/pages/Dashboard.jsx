@@ -26,6 +26,7 @@ import {
   WEEKDAYS,
   compareAgendamentoDateTimeDesc,
   getBizLabel,
+  hasPaymentHistory,
   isCancellationScheduled,
   isScheduledDowngradeSync,
   normalizeStatus,
@@ -134,15 +135,6 @@ function getPendingPlanChangeSuffix(status) {
     plan: pendingPlanLabel,
     date: pendingPlanDate,
   });
-}
-
-function hasPaymentHistory(status) {
-  return Boolean(
-    status?.provider_subscription_id
-    || status?.current_period_start
-    || status?.current_period_end
-    || Number(status?.current_period_price_cents || 0) > 0
-  );
 }
 
 function getBillingAnnouncements(status) {
