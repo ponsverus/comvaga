@@ -232,7 +232,7 @@ export async function cancelAsaasSubscription(negocioId) {
         negocio_id: negocioId,
       },
     }),
-    8000,
+    40000,
     'asaas-cancel-subscription'
   );
 
