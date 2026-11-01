@@ -197,8 +197,7 @@ function getPlanCancelErrorMessage(error) {
   if (raw.includes('subscription_not_cancelable')) {
     return messageBody('dashboard.billing_cancel_not_cancelable');
   }
-  if (raw.includes('cancel_reconciliation_pending') || raw.includes('cancel_retry_available')
-    || raw.includes('subscription_cancel_in_progress') || raw.includes('cancel_request_changed')) {
+  if (raw.includes('cancel_result_unknown')) {
     return messageBody('dashboard.billing_subscription_reconciliation_pending');
   }
   if (raw.includes('checkout_in_progress') || raw.includes('plan_downgrade_pending') || raw.includes('provider_sync_in_progress')) {
@@ -420,7 +419,6 @@ export default function PlanosSection({
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
-  const cancellationPending = Boolean(billingStatus?.cancel_pending);
   const providerSyncFailed = String(billingStatus?.provider_sync_status || '').toLowerCase() === 'failed';
   const replaceableScheduledDowngrade = isScheduledDowngradeSync(billingStatus);
   const accessEndDate = getAccessEndDate(billingStatus);
@@ -436,10 +434,6 @@ export default function PlanosSection({
 
   const handleSelectPlan = async (planCode) => {
     if (!negocioId || savingPlan || cancelingCheckout) return;
-    if (cancellationPending) {
-      showPlanAlert(messageBody('dashboard.billing_subscription_reconciliation_pending'), 'warning');
-      return;
-    }
     const targetPlan = plans.find((plan) => plan.code === planCode);
     const replacingDowngrade = replaceableScheduledDowngrade
       && selectedPlan
@@ -518,7 +512,7 @@ export default function PlanosSection({
       showPlanAlert(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'), 'warning');
       return;
     }
-    const confirmed = cancellationPending || await feedback.confirm('dashboard.billing_cancel_confirm');
+    const confirmed = await feedback.confirm('dashboard.billing_cancel_confirm');
     if (!confirmed) return;
 
     setCancelingPlan(planCode);
@@ -638,8 +632,7 @@ export default function PlanosSection({
             && !pendingForPlan
             && Number(plan.sort_order) < Number(selectedPlan.sort_order);
           const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
-          const movementBlocked = cancellationPending
-            || (providerSyncPending && !replacementDowngradeAllowed)
+          const movementBlocked = (providerSyncPending && !replacementDowngradeAllowed)
             || checkoutBlocksPlan
             || checkoutBlockedByDebt
             || (Boolean(billingStatus?.reactivation_pending) && !recoverInvoice)
@@ -656,15 +649,12 @@ export default function PlanosSection({
           const selectedCanceledOrCancellationScheduled = active
             && (canceledOrCancellationScheduled || SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus));
           const canCancelDowngrade = active
-            && !cancellationPending
             && !providerSyncFailed
             && Boolean(billingStatus?.can_cancel_plan_downgrade);
           const canCancel = active
-            && (cancellationPending || (
-              (!selectedCanceledOrCancellationScheduled
-                || SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus))
-              && Boolean(billingStatus?.can_cancel_subscription)
-            ));
+            && (!selectedCanceledOrCancellationScheduled
+              || SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus))
+            && Boolean(billingStatus?.can_cancel_subscription);
           const activeFreeAccess = active && freeAccessOpen;
           const needsPayment = active
             && !activeFreeAccess
@@ -762,7 +752,7 @@ export default function PlanosSection({
             canCancel
               ? {
                 key: 'cancel-plan',
-                label: canceling ? (cancellationPending ? 'Verificando...' : 'Cancelando...') : cancellationPending ? 'Verificar cancelamento' : 'Cancelar plano',
+                label: canceling ? 'Cancelando...' : 'Cancelar plano',
                 node: (
                   <button
                     type="button"
@@ -770,7 +760,7 @@ export default function PlanosSection({
                     onClick={() => handleCancelPlan(plan.code)}
                     className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {canceling ? (cancellationPending ? 'Verificando...' : 'Cancelando...') : cancellationPending ? 'Verificar cancelamento' : 'Cancelar plano'}
+                    {canceling ? 'Cancelando...' : 'Cancelar plano'}
                   </button>
                 ),
               }
