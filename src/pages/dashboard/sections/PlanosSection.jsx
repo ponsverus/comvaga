@@ -197,7 +197,7 @@ function getPlanCancelErrorMessage(error) {
   if (raw.includes('subscription_not_cancelable')) {
     return messageBody('dashboard.billing_cancel_not_cancelable');
   }
-  if (raw.includes('cancel_result_unknown')) {
+  if (raw.includes('cancel_result_unknown') || raw.includes('billing_action_in_progress')) {
     return messageBody('dashboard.billing_subscription_reconciliation_pending');
   }
   if (raw.includes('checkout_in_progress') || raw.includes('plan_downgrade_pending') || raw.includes('provider_sync_in_progress')) {
@@ -259,7 +259,7 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('provider_subscription_recovery_required')) {
     return messageBody('dashboard.billing_existing_subscription_recovery');
   }
-  if (raw.includes('provider_subscription_reconciliation_pending')) {
+  if (raw.includes('provider_subscription_reconciliation_pending') || raw.includes('billing_action_in_progress')) {
     return messageBody('dashboard.billing_subscription_reconciliation_pending');
   }
   if (raw.includes('subscription_charge_reconciliation_pending')) {
