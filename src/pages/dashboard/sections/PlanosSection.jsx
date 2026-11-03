@@ -418,6 +418,7 @@ export default function PlanosSection({
   const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
+  const billingActionPending = Boolean(billingStatus?.billing_action_pending);
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
   const providerSyncFailed = String(billingStatus?.provider_sync_status || '').toLowerCase() === 'failed';
   const replaceableScheduledDowngrade = isScheduledDowngradeSync(billingStatus);
@@ -433,7 +434,7 @@ export default function PlanosSection({
   );
 
   const handleSelectPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingCheckout) return;
+    if (!negocioId || savingPlan || cancelingCheckout || billingActionPending) return;
     const targetPlan = plans.find((plan) => plan.code === planCode);
     const replacingDowngrade = replaceableScheduledDowngrade
       && selectedPlan
@@ -490,8 +491,10 @@ export default function PlanosSection({
       console.error('Billing plan action failed:', err);
       if (err?.payload?.billing_status) {
         onBillingStatusChange?.(err.payload.billing_status);
-      } else if (`${err?.code || ''} ${err?.message || ''} ${err?.details || ''}`.toLowerCase().includes('subscription_debt_must_be_paid')) {
-        await reloadBillingStatus?.();
+      } else {
+        try { await reloadBillingStatus?.(); } catch (refreshError) {
+          console.error('billing status refresh failed:', refreshError);
+        }
       }
       const requestKey = getRequestErrorKey(err);
       if (requestKey === 'alerts.request_timeout') {
@@ -507,7 +510,7 @@ export default function PlanosSection({
   };
 
   const handleCancelPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingCheckout) return;
+    if (!negocioId || savingPlan || cancelingPlan || cancelingCheckout || billingActionPending) return;
     if (hasActiveCheckout || providerSyncPending) {
       showPlanAlert(hasActiveCheckout ? messageBody('dashboard.billing_checkout_in_progress') : messageBody('dashboard.billing_provider_sync_in_progress'), 'warning');
       return;
@@ -633,6 +636,7 @@ export default function PlanosSection({
             && Number(plan.sort_order) < Number(selectedPlan.sort_order);
           const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
           const movementBlocked = (providerSyncPending && !replacementDowngradeAllowed)
+            || billingActionPending
             || checkoutBlocksPlan
             || checkoutBlockedByDebt
             || (Boolean(billingStatus?.reactivation_pending) && !recoverInvoice)
@@ -756,7 +760,7 @@ export default function PlanosSection({
                 node: (
                   <button
                     type="button"
-                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending || billingStatus?.reactivation_pending}
+                    disabled={!!savingPlan || !!cancelingPlan || cancelingDowngrade || cancelingCheckout || hasActiveCheckout || providerSyncPending || billingActionPending || billingStatus?.reactivation_pending}
                     onClick={() => handleCancelPlan(plan.code)}
                     className="flex w-full items-center justify-center rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-xs font-normal uppercase tracking-wider text-red-300 transition-all hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                   >
