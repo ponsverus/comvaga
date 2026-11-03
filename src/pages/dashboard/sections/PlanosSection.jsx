@@ -77,27 +77,7 @@ function isCanceledOrCancellationScheduled(status) {
   return String(status?.status || '').toLowerCase() === 'canceled' || isCancellationScheduled(status);
 }
 
-const REMOVED_SUBSCRIPTION_STATUSES = new Set(['CANCELED', 'CANCELLED', 'DELETED']);
 const SUSPENDED_SUBSCRIPTION_STATUSES = new Set(['INACTIVE', 'EXPIRED']);
-
-function canRequestSubscriptionInvoice(status) {
-  const current = String(status?.status || '').toLowerCase();
-  const providerStatus = String(status?.provider_status || '').toUpperCase();
-  const dueChargeCount = Number(status?.due_charge_count || 0);
-  const suspendedWithDebt = SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus) && dueChargeCount > 0;
-  const reactivationDebt = Boolean(status?.reactivation_awaiting_payment) && dueChargeCount > 0;
-  return String(status?.provider || '').toLowerCase() === 'asaas'
-    && Boolean(status?.provider_subscription_id)
-    && (!status?.cancellation_scheduled || suspendedWithDebt || reactivationDebt)
-    && !REMOVED_SUBSCRIPTION_STATUSES.has(providerStatus)
-    && (!SUSPENDED_SUBSCRIPTION_STATUSES.has(providerStatus) || suspendedWithDebt)
-    && (['blocked', 'past_due', 'payment_grace', 'active'].includes(current)
-      || (current === 'canceled' && (suspendedWithDebt || reactivationDebt)))
-    && (['failed', 'expired'].includes(String(status?.payment_method_status || '').toLowerCase())
-      || (dueChargeCount > 0 && (current === 'blocked' || suspendedWithDebt || reactivationDebt)))
-    && !status?.provider_sync_pending
-    && !status?.plan_change_scheduled;
-}
 
 function statusText(status) {
   if (status?.reactivation_awaiting_payment) return 'Aguardando pagamento';
@@ -150,7 +130,7 @@ function statusBadgeClass(status) {
 function statusButtonText(status) {
   if (status?.provider_sync_pending) return 'Aguarde atualiza.';
   if (status?.plan_change_scheduled) return 'Troca agendada';
-  if (canRequestSubscriptionInvoice(status)) {
+  if (status?.can_request_subscription_invoice === true) {
     const dueChargeCount = Number(status?.due_charge_count || 0);
     return dueChargeCount > 1
       ? `Pagar 1 de ${dueChargeCount} faturas`
@@ -419,6 +399,7 @@ export default function PlanosSection({
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
   const billingActionPending = Boolean(billingStatus?.billing_action_pending);
+  const canRequestInvoice = billingStatus?.can_request_subscription_invoice === true;
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
   const providerSyncFailed = String(billingStatus?.provider_sync_status || '').toLowerCase() === 'failed';
   const replaceableScheduledDowngrade = isScheduledDowngradeSync(billingStatus);
@@ -447,7 +428,7 @@ export default function PlanosSection({
     }
     const targetLimit = getPlanLimit(targetPlan);
     if (targetLimit != null && billableProfessionalsCount > targetLimit
-      && !(planCode === currentPlanCode && canRequestSubscriptionInvoice(billingStatus))) {
+      && !(planCode === currentPlanCode && canRequestInvoice)) {
       showPlanAlert(getPlanLimitMessage(targetPlan, billableProfessionalsCount), 'warning');
       return;
     }
@@ -455,7 +436,7 @@ export default function PlanosSection({
     const currentStatus = String(billingStatus?.status || '').toLowerCase();
     const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
     const freeAccessOpen = currentStatus === 'trialing';
-    const recoverExistingSubscription = canRequestSubscriptionInvoice(billingStatus);
+    const recoverExistingSubscription = canRequestInvoice;
     const resumeCheckout = hasActiveCheckout && activeCheckoutPlanCode === planCode;
 
     setSavingPlan(planCode);
@@ -626,7 +607,7 @@ export default function PlanosSection({
           const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
           const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
           const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
-          const recoverInvoice = active && canRequestSubscriptionInvoice(billingStatus);
+          const recoverInvoice = active && canRequestInvoice;
           const checkoutBlockedByDebt = checkoutCanResume && !active && Number(billingStatus?.due_charge_count || 0) > 0;
           const checkoutBlocksPlan = hasActiveCheckout && !checkoutCanResume && !recoverInvoice;
           const replacementDowngradeAllowed = replaceableScheduledDowngrade
