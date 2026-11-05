@@ -128,8 +128,6 @@ function statusBadgeClass(status) {
 }
 
 function statusButtonText(status) {
-  if (status?.provider_sync_pending) return 'Aguarde atualiza.';
-  if (status?.plan_change_scheduled) return 'Troca agendada';
   if (status?.can_request_subscription_invoice === true) {
     const dueChargeCount = Number(status?.due_charge_count || 0);
     return dueChargeCount > 1
@@ -138,6 +136,8 @@ function statusButtonText(status) {
         ? 'Pagar fatura restante'
         : 'Regularizar pagamento';
   }
+  if (status?.provider_sync_pending) return 'Aguarde atualiza.';
+  if (status?.plan_change_scheduled) return 'Troca agendada';
   if (status?.has_active_checkout) return 'Pagamento em andamento';
   if (status?.reactivation_pending) return status?.reactivation_awaiting_payment
     ? 'Aguardando pagamento' : 'Reativando assinatura';
@@ -415,14 +415,15 @@ export default function PlanosSection({
   );
 
   const handleSelectPlan = async (planCode) => {
-    if (!negocioId || savingPlan || cancelingCheckout || billingActionPending) return;
+    const recoveringCurrentInvoice = planCode === currentPlanCode && canRequestInvoice;
+    if (!negocioId || savingPlan || cancelingCheckout || (billingActionPending && !recoveringCurrentInvoice)) return;
     const targetPlan = plans.find((plan) => plan.code === planCode);
     const replacingDowngrade = replaceableScheduledDowngrade
       && selectedPlan
       && targetPlan
       && planCode !== billingStatus?.pending_plan_code
       && Number(targetPlan.sort_order) < Number(selectedPlan.sort_order);
-    if (providerSyncPending && !replacingDowngrade) {
+    if (providerSyncPending && !replacingDowngrade && !recoveringCurrentInvoice) {
       showPlanAlert(messageBody('dashboard.billing_provider_sync_in_progress'), 'warning');
       return;
     }
@@ -616,8 +617,8 @@ export default function PlanosSection({
             && !pendingForPlan
             && Number(plan.sort_order) < Number(selectedPlan.sort_order);
           const providerStatus = String(billingStatus?.provider_status || '').toUpperCase();
-          const movementBlocked = (providerSyncPending && !replacementDowngradeAllowed)
-            || billingActionPending
+          const movementBlocked = (providerSyncPending && !replacementDowngradeAllowed && !recoverInvoice)
+            || (billingActionPending && !recoverInvoice)
             || checkoutBlocksPlan
             || checkoutBlockedByDebt
             || (Boolean(billingStatus?.reactivation_pending) && !recoverInvoice)
@@ -647,7 +648,7 @@ export default function PlanosSection({
               || suspendedWithDebt
               || (['blocked', 'past_due', 'payment_grace'].includes(currentStatus)
                 && Number(billingStatus?.due_charge_count || 0) > 0));
-          const planChangeBlocksPayment = active && needsPayment && planChangeScheduled;
+          const planChangeBlocksPayment = active && needsPayment && planChangeScheduled && !recoverInvoice;
           const activeWithoutAction = active && currentStatus === 'active' && !activeFreeAccess
             && !needsPayment && !selectedCanceledOrCancellationScheduled;
           const planLimit = getPlanLimit(plan);
@@ -673,17 +674,17 @@ export default function PlanosSection({
               ? 'Agendado'
               : activeFreeAccess
                 ? 'Teste grátis'
-                : awaitingPaymentConfirmation
-                  ? 'Aguardando retorno'
-                : activeWithoutAction
-                  ? 'Plano ativo'
-                  : saving
-                    ? (recoverInvoice ? 'Verificando fatura...'
-                      : freeAccessOpen ? 'Salvando...'
-                      : providerStatus === 'INACTIVE' ? 'Reativando plano...'
-                      : 'Abrindo checkout...')
-                    : recoverInvoice
-                      ? selectedPaymentButtonText
+                : saving
+                  ? (recoverInvoice ? 'Verificando fatura...'
+                    : freeAccessOpen ? 'Salvando...'
+                    : providerStatus === 'INACTIVE' ? 'Reativando plano...'
+                    : 'Abrindo checkout...')
+                  : recoverInvoice
+                    ? selectedPaymentButtonText
+                    : awaitingPaymentConfirmation
+                      ? 'Aguardando retorno'
+                    : activeWithoutAction
+                      ? 'Plano ativo'
                       : checkoutBlockedByDebt
                         ? 'Quite as faturas'
                       : checkoutCanResume
