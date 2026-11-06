@@ -149,7 +149,7 @@ export const ptBR = {
     },
     billing_subscription_reconciliation_pending: {
       title: 'Verificando assinatura',
-      body: 'Um processo relacionado à assinatura está em andamento ou pendente. Aguarde e tente novamenete. Caso persista, contate o suporte.',
+      body: 'Um processo relacionado à assinatura está em andamento ou pendente. Aguarde e tente novamente. Caso persista, contate o suporte.',
       variant: 'warning',
       screen: 'dark',
       buttonText: 'ENTENDI',
