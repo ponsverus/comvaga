@@ -496,8 +496,9 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     const status = String(billingStatus?.status || '').toLowerCase();
     const remaining = Number(billingStatus?.due_charge_count || 0);
     const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
-    if (!souDono || !negocio?.id || !['blocked', 'past_due'].includes(status)
-      || (remaining < 1 && paymentStatus !== 'valid')) return undefined;
+    const awaitingConfirmation = status === 'payment_grace'
+      || (['blocked', 'past_due'].includes(status) && (remaining >= 1 || paymentStatus === 'valid'));
+    if (!souDono || !negocio?.id || !awaitingConfirmation) return undefined;
 
     let stopped = false;
     let attempts = 0;
@@ -510,8 +511,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         if (stopped) return;
         setBillingStatus(nextStatus);
         setBillingStatusLoadError(false);
-        if (!['blocked', 'past_due'].includes(String(nextStatus?.status || '').toLowerCase())
-          || Number(nextStatus?.due_charge_count || 0) !== remaining) return;
+        if (String(nextStatus?.status || '').toLowerCase() !== status
+          || (status !== 'payment_grace' && Number(nextStatus?.due_charge_count || 0) !== remaining)) return;
       } catch {
         if (stopped) return;
       }
