@@ -100,9 +100,9 @@ export const ptBR = {
       buttonText: 'ENTENDI',
     },
     billing_checkout_success: {
-      title: 'Pagamento iniciado/confirmado',
-      body: 'Pagamento iniciado/confirmado. Seu plano será atualizado em instantes.',
-      variant: 'success',
+      title: 'Aguardando processamento',
+      body: 'Recebemos o retorno do checkout. Seu plano será atualizado assim que o Asaas processar o pagamento.',
+      variant: 'info',
       screen: 'light',
       buttonText: 'OK',
     },
