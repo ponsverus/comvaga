@@ -620,12 +620,13 @@ export async function updateNegocioInfo(negocioId, ownerId, payload) {
 }
 
 export async function updateNegocioTema(negocioId, ownerId, tema) {
-  const { error } = await withAuthRetry(
-    () => supabase.from('negocios').update({ tema }).eq('id', negocioId).eq('owner_id', ownerId),
+  const { data, error } = await withAuthRetry(
+    () => supabase.from('negocios').update({ tema }).eq('id', negocioId).eq('owner_id', ownerId).select('tema').single(),
     6000,
     'negocio-tema-update'
   );
   if (error) throw error;
+  return data.tema;
 }
 
 export async function insertGaleriaItem(negocioId, path) {

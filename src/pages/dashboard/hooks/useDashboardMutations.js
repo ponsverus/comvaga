@@ -228,7 +228,6 @@ export function useDashboardMutations({
         endereco_estado: cleanText(formInfo.endereco_estado).toUpperCase() || null,
         instagram: String(formInfo.instagram || '').trim() || null,
         facebook: String(formInfo.facebook || '').trim() || null,
-        tema: formInfo.tema || 'dark',
       };
       await updateNegocioInfo(negocio.id, userId, payload);
       await uiAlert('dashboard.business_info_updated', 'success');
@@ -248,8 +247,9 @@ export function useDashboardMutations({
     setFormInfo((prev) => ({ ...prev, tema: novoTema }));
     try {
       setTemaSaving(true);
-      await updateNegocioTema(negocio.id, userId, novoTema);
-      setNegocio((prev) => (prev ? { ...prev, tema: novoTema } : prev));
+      const temaSalvo = await updateNegocioTema(negocio.id, userId, novoTema);
+      setNegocio((prev) => (prev ? { ...prev, tema: temaSalvo } : prev));
+      setFormInfo((prev) => ({ ...prev, tema: temaSalvo }));
     } catch {
       setFormInfo((prev) => ({ ...prev, tema: negocio?.tema || 'dark' }));
       await uiAlert('dashboard.business_info_update_error', 'error');

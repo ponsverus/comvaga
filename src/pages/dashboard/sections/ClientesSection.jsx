@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFeedback } from '../../../feedback/useFeedback';
-import { UsersIcon, CheckIcon } from '../../../components/icons';
+import { UsersIcon, CalendarIcon } from '../../../components/icons';
 import { formatDateBRFromISO } from '../utils';
 import { getPublicUrl } from '../api/dashboardApi';
 
@@ -55,7 +55,7 @@ function ClienteCard({ cliente, itemLabelText, onAgendarCliente }) {
         onClick={() => onAgendarCliente(cliente)}
         className="mt-auto w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-2"
       >
-        <CheckIcon className="w-4 h-4" />
+        <CalendarIcon className="w-4 h-4" />
         AGENDAR CLIENTE
       </button>
     </div>
