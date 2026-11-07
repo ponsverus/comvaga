@@ -597,7 +597,7 @@ export const ptBR = {
     },
 
     billing_status_load_error_inline: {
-      body: 'Houve um erro ao verificar o pagamento agora.',
+      body: 'HOUVE UM ERRO AO VERIFICAR O PAGAMENTO AGORA.',
     },
     billing_status_retry_action: {
       body: 'TENTAR DE NOVO',
