@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckDoubleIcon, ZapIcon, CheckIcon } from './icons';
 import { getCustomPlanHref, getSupportHref } from '../support';
@@ -27,6 +28,28 @@ function SmileGlyph({ className = '', sizeClass = 'h-8 w-8 text-[32px]' }) {
   );
 }
 
+function useAnimateOnView(threshold = 0.6) {
+  const ref = useRef(null);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return undefined;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setActive(true);
+        observer.disconnect();
+      }
+    }, { threshold });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, active];
+}
+
 export default function HomePublicContent({
   SearchBoxComponent,
   searchOpen,
@@ -44,6 +67,9 @@ export default function HomePublicContent({
   handleLogoutClick,
   appReviews,
 }) {
+  const [problemTagRef, problemTagActive] = useAnimateOnView();
+  const [solvedTagRef, solvedTagActive] = useAnimateOnView();
+
   return (
     <div className="min-h-screen bg-black text-white relative">
       <div className="relative z-50 w-full bg-yellow-400 border-b border-yellow-300/50 overflow-hidden h-10 flex items-center">
@@ -134,7 +160,10 @@ export default function HomePublicContent({
 
       <section className="pt-20 sm:pt-24 pb-6 sm:pb-8 px-4 bg-dark-100">
         <div className="max-w-4xl mx-auto text-center">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6">
+          <span
+            ref={problemTagRef}
+            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6${problemTagActive ? ' home-tag-problem' : ''}`}
+          >
             Problema
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 leading-tight">
@@ -154,7 +183,10 @@ export default function HomePublicContent({
 
       <section id="como-funciona" className="pt-6 sm:pt-8 pb-0 sm:pb-0 bg-dark-100 w-full">
         <div className="max-w-4xl mx-auto text-center mb-12 px-4">
-          <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 mb-6">
+          <span
+            ref={solvedTagRef}
+            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 mb-6${solvedTagActive ? ' home-tag-solved' : ''}`}
+          >
             RESOLVIDO
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight">
