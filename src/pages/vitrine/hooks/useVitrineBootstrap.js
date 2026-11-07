@@ -256,7 +256,6 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
     }, 12000);
 
     try {
-      // Reuse only the first matching public snapshot; retries and other routes fetch fresh data.
       const initial = initialBusinessRef.current;
       initialBusinessRef.current = null;
       const negocioData = initial?.slug === slug ? initial : await fetchVitrineNegocioBySlug(slug);
@@ -276,6 +275,17 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
       }
 
       setNegocio(negocioData);
+      if (initial?.slug === slug) {
+        fetchVitrineNegocioBySlug(slug)
+          .then((freshProfile) => {
+            if (loadRunRef.current === runId && freshProfile?.id === negocioData.id) {
+              setNegocio(freshProfile);
+            }
+          })
+          .catch(() => {
+            // The server-rendered snapshot remains usable if revalidation fails.
+          });
+      }
       if (authUserId) {
         fetchBusinessBookingAvailability(negocioData.id)
           .then((status) => {
