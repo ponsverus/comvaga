@@ -120,8 +120,9 @@ export default function HomePublicContent({
       </header>
 
       <section className="relative pt-32 pb-12 sm:pt-40 sm:pb-16 lg:pt-48 lg:pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-yellow-600/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/15"></div>
         <div className="absolute top-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse animation-delay-1s"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-button mb-8 backdrop-blur-sm">
@@ -257,7 +258,7 @@ export default function HomePublicContent({
               key={i}
               className="bg-dark-200 p-8 sm:p-10 hover:bg-dark-100 transition-colors flex flex-col px-4 sm:px-8 md:px-16 lg:px-24"
             >
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-accent/15 ring-1 ring-accent/40 rounded-full flex items-center justify-center mb-6">
                 <Icon className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-2xl font-normal mb-3 text-white">{title}</h3>
@@ -270,7 +271,7 @@ export default function HomePublicContent({
       <section className="py-0 bg-black overflow-hidden border-b border-gray-800">
         <div className="w-full bg-dark-200 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent/15 rounded-full blur-[100px] animate-pulse" />
 
           <div className="bg-gray-800 w-full">
             <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center justify-center px-4 py-16 text-center sm:px-8 sm:py-20 md:px-16 lg:px-24">
