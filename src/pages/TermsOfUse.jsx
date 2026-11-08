@@ -122,7 +122,7 @@ export default function TermsOfUsePage() {
     <div className="min-h-screen bg-black text-white">
       <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
         <Link to="/" className="mb-8 inline-block">
-          <img src="/Comvaga Logo.png" alt="Comvaga" className="h-14 w-auto object-contain" />
+          <img src="/comvaga-logo.png" alt="Comvaga" className="h-14 w-auto object-contain" />
         </Link>
 
         <div className="mb-10">
