@@ -33,7 +33,7 @@ export default function SignupChoice() {
 
         <div className="flex justify-center mb-8">
           <img
-            src="/Comvaga Logo.png"
+            src="/comvaga-logo.png"
             alt="COMVAGA"
             className="h-20 w-auto object-contain"
           />
