@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import '../home-theme.css';
 import { Link } from 'react-router-dom';
 import { CheckDoubleIcon, ZapIcon, CheckIcon } from './icons';
 import { getCustomPlanHref, getSupportHref } from '../support';
@@ -71,8 +72,8 @@ export default function HomePublicContent({
   const [solvedTagRef, solvedTagActive] = useAnimateOnView();
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      <div className="relative z-50 w-full bg-yellow-400 border-b border-yellow-300/50 overflow-hidden h-10 flex items-center">
+    <div className="home-theme relative min-h-screen text-white">
+      <div className="relative z-50 w-full bg-primary border-b border-primary/50 overflow-hidden h-10 flex items-center">
         <div className="announcement-bar-wrapper flex">
           {[1, 2].map((i) => (
             <div
@@ -119,8 +120,8 @@ export default function HomePublicContent({
         </div>
       </header>
 
-      <section className="relative pt-32 pb-12 sm:pt-40 sm:pb-16 lg:pt-48 lg:pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-yellow-600/10"></div>
+      <section className="home-hero relative pt-32 pb-12 sm:pt-40 sm:pb-16 lg:pt-48 lg:pb-20 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5"></div>
         <div className="absolute top-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto text-center">
@@ -131,19 +132,19 @@ export default function HomePublicContent({
 
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-6 leading-tight drop-shadow-lg">
             SUA AGENDA,<br />
-            <span className="bg-gradient-to-r from-primary to-yellow-600 bg-clip-text text-transparent">
+            <span className="text-primary">
               MATEMATICAMENTE PERFEITA
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-3xl mx-auto drop-shadow-md">
+          <p className="text-lg md:text-xl text-white/70 mb-8 max-w-3xl mx-auto drop-shadow-md">
             A Comvaga organiza agenda, vitrine, equipe e clientes em uma experiência só. O sistema <span className="text-primary">ANTECIPA CONFLITOS</span>, respeita o tempo real de cada trabalho e transforma horários livres em oportunidades reais de atendimento.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-0">
             <Link
               to="/cadastro"
-              className="px-10 py-5 bg-gradient-to-r from-primary to-yellow-600 text-black rounded-button font-black text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105 flex items-center justify-center gap-3"
+              className="px-10 py-5 bg-primary text-black hover:bg-primary/90 rounded-button font-black text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105 flex items-center justify-center gap-3"
             >
               TESTAR GRÁTIS POR 30 DIAS <ZapIcon className="w-5 h-5" />
             </Link>
@@ -162,7 +163,7 @@ export default function HomePublicContent({
         <div className="max-w-4xl mx-auto text-center">
           <span
             ref={problemTagRef}
-            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded-full px-3 py-1 mb-6${problemTagActive ? ' home-tag-problem' : ''}`}
+            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-white/80 bg-white/5 border border-white/20 rounded-full px-3 py-1 mb-6${problemTagActive ? ' home-tag-problem' : ''}`}
           >
             Problema
           </span>
@@ -170,7 +171,7 @@ export default function HomePublicContent({
             AGENDA COMUM SÓ REGISTRA.<br />
             <span className="text-primary">ELA NÃO PENSA.</span>
           </h2>
-          <div className="space-y-5 text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
+          <div className="space-y-5 text-lg text-white/75 leading-relaxed max-w-2xl mx-auto">
             <p>
               Agendar um horário é fácil. Difícil é manter a agenda sempre otimizada: sem ter que engessar turnos ignorando a rotina e as pausas de cada profissional, sem ter que somar atendimento por atendimento para prever a receita e o rendimento do dia, sem buracos e horários mortos espalhados entre os atendimentos, sem contas exaustivas toda vez que o cliente escolhe mais de um trabalho, sem um cancelamento virar um intervalo vago o resto do dia em vez de virar novas oportunidades de horário, e sem risco de dois clientes agendados na mesma janela.
             </p>
@@ -185,7 +186,7 @@ export default function HomePublicContent({
         <div className="max-w-4xl mx-auto text-center mb-12 px-4">
           <span
             ref={solvedTagRef}
-            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 mb-6${solvedTagActive ? ' home-tag-solved' : ''}`}
+            className={`inline-block text-[10px] font-normal uppercase tracking-widest text-primary bg-primary/10 border border-primary/30 rounded-full px-3 py-1 mb-6${solvedTagActive ? ' home-tag-solved' : ''}`}
           >
             RESOLVIDO
           </span>
@@ -229,11 +230,11 @@ export default function HomePublicContent({
             },
           ].map(({ num, title, text }) => (
             <div key={num} className="bg-dark-100 p-8 md:p-10 flex flex-col px-4 sm:px-8 md:px-10 lg:px-12">
-              <div className="w-14 h-14 bg-gradient-to-br from-primary to-yellow-600 rounded-full flex items-center justify-center text-black font-normal text-xl shadow-lg shadow-primary/50 mb-6 shrink-0">
+              <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-black font-normal text-xl shadow-lg shadow-primary/50 mb-6 shrink-0">
                 {num}
               </div>
               <h3 className="text-2xl font-normal mb-3 text-white">{title}</h3>
-              <p className="text-gray-400 leading-relaxed">{text}</p>
+              <p className="text-white/70 leading-relaxed">{text}</p>
             </div>
           ))}
         </div>
@@ -244,7 +245,7 @@ export default function HomePublicContent({
           <h2 className="text-5xl font-black mb-4">
             O QUE VOCÊ <span className="text-primary">GANHA</span>
           </h2>
-          <p className="text-xl text-gray-400">Menos atrito na sua rotina, mais praticidade na vida do seu cliente.</p>
+          <p className="text-xl text-white/70">Menos atrito na sua rotina, mais praticidade na vida do seu cliente.</p>
         </div>
 
         <div className="w-full bg-gray-800 border-y border-gray-800 grid sm:grid-cols-2 lg:grid-cols-3 gap-px">
@@ -261,7 +262,7 @@ export default function HomePublicContent({
                 <Icon className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-2xl font-normal mb-3 text-white">{title}</h3>
-              <p className="text-gray-400 leading-relaxed">{text}</p>
+              <p className="text-white/70 leading-relaxed">{text}</p>
             </div>
           ))}
         </div>
@@ -279,7 +280,7 @@ export default function HomePublicContent({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                <span className="text-[10px] font-normal text-gray-400 uppercase tracking-widest">VEJA AO VIVO</span>
+                <span className="text-[10px] font-normal text-white/70 uppercase tracking-widest">VEJA AO VIVO</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
@@ -287,7 +288,7 @@ export default function HomePublicContent({
                 <span className="text-primary">EM FUNCIONAMENTO.</span>
               </h2>
 
-              <p className="text-lg text-gray-400 mb-10 leading-relaxed max-w-3xl">
+              <p className="text-lg text-white/70 mb-10 leading-relaxed max-w-3xl">
                 Seu negócio merece mais do que um link de WhatsApp. Veja como seus clientes podem encontrar seus trabalhos, depoimentos, equipe e horários e chegar ao agendamento em uma experiência só.
               </p>
 
@@ -296,7 +297,7 @@ export default function HomePublicContent({
                   href="https://comvaga.com.br/v/vikings"
                   target="_blank"
                   rel="noreferrer"
-                  className="px-8 py-4 bg-primary text-black font-black rounded-button hover:shadow-[0_0_30px_rgba(255,209,26,0.3)] transition-all flex items-center justify-center gap-3 group"
+                  className="px-8 py-4 bg-primary text-black font-black rounded-button hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-3 group"
                 >
                   VER VITRINE EXEMPLO
                   <ZapIcon className="w-5 h-5 group-hover:animate-bounce" />
@@ -315,7 +316,7 @@ export default function HomePublicContent({
           <h2 className="text-5xl font-normal mb-4">
             SEM <span className="text-primary">BUROCRACIA</span>
           </h2>
-          <p className="text-xl text-gray-400">Teste grátis por 30 dias o plano escolhido. Sem compromisso e sem letras miúdas ;)</p>
+          <p className="text-xl text-white/70">Teste grátis por 30 dias o plano escolhido. Sem compromisso e sem letras miúdas ;)</p>
         </div>
 
         <div className="
@@ -326,11 +327,11 @@ export default function HomePublicContent({
           [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
         ">
           <div className="shrink-0 w-[85vw] md:w-auto snap-start bg-dark-100 px-4 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16">
-            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-gray-400 bg-gray-800 rounded-full px-3 py-1 mb-4">
+            <span className="inline-block text-[10px] font-normal uppercase tracking-widest text-white/70 bg-gray-800 rounded-full px-3 py-1 mb-4">
               Todos os planos incluem
             </span>
             <h3 className="text-3xl md:text-4xl font-black text-white mb-2">TODOS OS RECURSOS</h3>
-            <p className="text-gray-400 mb-8">A mesma inteligência em todos os planos. Nenhum recurso fica bloqueado atrás de um plano mais caro.</p>
+            <p className="text-white/70 mb-8">A mesma inteligência em todos os planos. Nenhum recurso fica bloqueado atrás de um plano mais caro.</p>
 
             <div>
               <div className="flex flex-col gap-5">
@@ -375,8 +376,8 @@ export default function HomePublicContent({
                   <div key={item.title} className="flex items-start gap-2.5">
                     <CheckIcon className="w-4 h-4 text-primary shrink-0 mt-1" />
                     <div>
-                      <p className="text-sm font-medium text-gray-200 leading-snug">{item.title}</p>
-                      <p className="text-sm text-gray-500 leading-snug mt-0.5">{item.text}</p>
+                      <p className="text-sm font-medium text-white/85 leading-snug">{item.title}</p>
+                      <p className="text-sm text-white/60 leading-snug mt-0.5">{item.text}</p>
                     </div>
                   </div>
                 ))}
@@ -390,7 +391,7 @@ export default function HomePublicContent({
                 Escolha a capacidade
               </span>
               <h3 className="text-3xl md:text-4xl font-black text-white mb-2">QUANTOS PROFISSIONAIS?</h3>
-              <p className="text-gray-400">Estrutura flexível para qualquer volume de trabalho. Encontre o limite perfeito para a sua equipe e garanta a capacidade operacional que seu negócio precisa.</p>
+              <p className="text-white/70">Estrutura flexível para qualquer volume de trabalho. Encontre o limite perfeito para a sua equipe e garanta a capacidade operacional que seu negócio precisa.</p>
             </div>
 
             {HOME_PLANS.map((plan) => (
@@ -404,12 +405,12 @@ export default function HomePublicContent({
                 ].join(' ')}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-gray-300">
+                  <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-normal uppercase tracking-widest text-white/75">
                     {plan.name}
                   </span>
 
                   {plan.badge && (
-                    <span className="inline-flex items-center rounded-full bg-green-500/20 border border-green-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                    <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                       {plan.badge}
                     </span>
                   )}
@@ -422,17 +423,17 @@ export default function HomePublicContent({
                     </p>
                     <div className="flex items-end gap-x-3 gap-y-1 flex-wrap">
                       {plan.oldPriceCents !== null && (
-                        <span className="text-base font-normal text-red-500 line-through decoration-red-500 decoration-2">
+                        <span className="text-base font-normal text-white/45 line-through decoration-white/45 decoration-2">
                           {formatHomePlanPrice(plan.oldPriceCents)}
                         </span>
                       )}
                       <span
                         className={`text-xl font-normal ${
-                          plan.code === 'profissional' ? 'text-green-400' : 'text-white'
+                          plan.code === 'profissional' ? 'text-primary' : 'text-white'
                         }`}
                       >
                         {formatHomePlanPrice(plan.priceCents)}
-                        <span className="text-sm font-normal text-gray-500">/mês</span>
+                        <span className="text-sm font-normal text-white/60">/mês</span>
                       </span>
                     </div>
                   </div>
@@ -444,7 +445,7 @@ export default function HomePublicContent({
                       'shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-normal uppercase tracking-wider rounded-full transition-all',
                       plan.code === 'premium'
                         ? 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-100 hover:shadow-lg hover:shadow-zinc-700/30'
-                        : 'bg-gradient-to-r from-primary to-yellow-600 text-black hover:shadow-lg hover:shadow-primary/30',
+                        : 'bg-primary text-black hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30',
                     ].join(' ')}
                   >
                     Testar o {plan.name} <ZapIcon className="w-3.5 h-3.5" />
@@ -460,14 +461,14 @@ export default function HomePublicContent({
               <p className="text-xl md:text-2xl font-normal text-white">
                 Precisa de um plano personalizado?
               </p>
-              <p className="text-sm text-gray-400 max-w-sm">
+              <p className="text-sm text-white/70 max-w-sm">
                 Precisa de mais limite, recursos específicos ou um formato diferente de atendimento? Fale com nossa equipe e crie um plano pensado exclusivamente para você.
               </p>
               <a
                 href={getCustomPlanHref()}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-yellow-600 text-black text-xs font-normal uppercase tracking-wider rounded-full hover:shadow-lg hover:shadow-primary/30 transition-all"
+                className="mt-2 w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-black hover:bg-primary/90 text-xs font-normal uppercase tracking-wider rounded-full hover:shadow-lg hover:shadow-primary/30 transition-all"
               >
                 Falar com suporte <ZapIcon className="w-3.5 h-3.5" />
               </a>
@@ -476,7 +477,7 @@ export default function HomePublicContent({
         </div>
       </section>
 
-      <section className="py-24 px-4 bg-gradient-to-r from-primary via-yellow-500 to-yellow-600">
+      <section className="py-24 px-4 bg-primary">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl font-black text-black mb-6">SUA AGENDA PODE TRABALHAR MELHOR</h2>
           <p className="text-2xl text-black/80 mb-8">Uma vitrine para apresentar seu negócio, um painel para operar e uma agenda que pensa antes de confirmar.</p>
@@ -502,7 +503,7 @@ export default function HomePublicContent({
         pagination={appReviews?.pagination}
       />
 
-      <footer className="bg-black py-12 px-4">
+      <footer className="bg-dark-200 py-12 px-4 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="flex flex-col justify-start">
@@ -513,7 +514,7 @@ export default function HomePublicContent({
                   className="h-16 w-auto object-contain"
                 />
               </Link>
-              <p className="text-gray-600 text-xs mt-3 uppercase leading-relaxed">
+              <p className="text-white/50 text-xs mt-3 uppercase leading-relaxed">
                 Sua agenda,<br />matematicamente perfeita.
               </p>
             </div>
@@ -526,7 +527,7 @@ export default function HomePublicContent({
                     <li>
                       <Link
                         to={loggedAreaLink}
-                        className="text-gray-500 hover:text-primary transition-colors text-sm"
+                        className="text-white/60 hover:text-primary transition-colors text-sm"
                       >
                         {loggedAreaLabel}
                       </Link>
@@ -535,7 +536,7 @@ export default function HomePublicContent({
                       <button
                         type="button"
                         onClick={handleLogoutClick}
-                        className="text-gray-500 hover:text-primary transition-colors text-sm"
+                        className="text-white/60 hover:text-primary transition-colors text-sm"
                       >
                         SAIR
                       </button>
@@ -544,22 +545,22 @@ export default function HomePublicContent({
                 ) : (
                   <>
                     <li>
-                      <Link to="/login" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                      <Link to="/login" className="text-white/60 hover:text-primary transition-colors text-sm">
                         LOGIN
                       </Link>
                     </li>
                     <li>
-                      <Link to="/cadastro" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                      <Link to="/cadastro" className="text-white/60 hover:text-primary transition-colors text-sm">
                         CADASTRAR GRÁTIS
                       </Link>
                     </li>
                     <li>
-                      <Link to="/login/parceiro" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                      <Link to="/login/parceiro" className="text-white/60 hover:text-primary transition-colors text-sm">
                         LOGIN PARCEIRO
                       </Link>
                     </li>
                     <li>
-                      <Link to="/cadastro/parceiro" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                      <Link to="/cadastro/parceiro" className="text-white/60 hover:text-primary transition-colors text-sm">
                         CADASTRO PARCEIRO
                       </Link>
                     </li>
@@ -570,7 +571,7 @@ export default function HomePublicContent({
                     href={supportHref}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-gray-500 hover:text-primary transition-colors text-sm"
+                    className="text-white/60 hover:text-primary transition-colors text-sm"
                   >
                     SUPORTE
                   </a>
@@ -582,12 +583,12 @@ export default function HomePublicContent({
               <h2 className="text-white font-normal mb-4">EMPRESA</h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/sobre" className="text-gray-400 hover:text-primary transition-colors text-sm">
+                  <Link to="/sobre" className="text-white/70 hover:text-primary transition-colors text-sm">
                     SOBRE
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blog" className="text-gray-400 hover:text-primary transition-colors text-sm">
+                  <Link to="/blog" className="text-white/70 hover:text-primary transition-colors text-sm">
                     BLOG
                   </Link>
                 </li>
@@ -598,12 +599,12 @@ export default function HomePublicContent({
               <h2 className="text-white font-normal mb-4">LEGAL</h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/privacidade" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                  <Link to="/privacidade" className="text-white/60 hover:text-primary transition-colors text-sm">
                     PRIVACIDADE
                   </Link>
                 </li>
                 <li>
-                  <Link to="/termos" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                  <Link to="/termos" className="text-white/60 hover:text-primary transition-colors text-sm">
                     TERMOS
                   </Link>
                 </li>
@@ -612,7 +613,7 @@ export default function HomePublicContent({
           </div>
 
           <div className="pt-6">
-            <p className="text-gray-600 text-sm">© 2026 COMVAGA. Todos os direitos reservados.</p>
+            <p className="text-white/50 text-sm">© 2026 COMVAGA. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
