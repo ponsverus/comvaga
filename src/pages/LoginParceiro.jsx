@@ -127,7 +127,7 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/Comvaga Logo.png" alt="COMVAGA" className="h-20 w-auto object-contain mx-auto mb-4" />
+          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-20 w-auto object-contain mx-auto mb-4" />
           <h1 className="text-3xl font-normal text-white uppercase">LOGIN PARCEIRO</h1>
           <p className="text-gray-500 text-sm mt-2 font-normal">ACESSE SUA CENTRAL DE NEGÓCIOS</p>
         </div>

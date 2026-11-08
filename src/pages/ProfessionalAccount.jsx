@@ -189,7 +189,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
-          <img src="/Comvaga Logo.png" alt="COMVAGA" className="h-12 w-auto object-contain" />
+          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-12 w-auto object-contain" />
         </div>
 
         <div className="mb-8">

@@ -33,7 +33,7 @@ export default function SelecionarNegocio({ onLogout, professionalRole = null, n
 
       <div className="relative z-10 mx-auto w-full max-w-4xl">
         <div className="mb-8 flex items-center justify-between gap-4">
-          <img src="/Comvaga Logo.png" alt="COMVAGA" className="h-14 w-auto object-contain" />
+          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-14 w-auto object-contain" />
           <button
             type="button"
             onClick={() => onLogout?.()}

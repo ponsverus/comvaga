@@ -13,7 +13,7 @@ export function loadHistoryPdfRenderer() {
         }
         return btoa(binary);
       }),
-      fetch(`${import.meta.env?.BASE_URL || '/'}Comvaga%20Logo.png`).then(async (response) => {
+      fetch(`${import.meta.env?.BASE_URL || '/'}comvaga-logo.png`).then(async (response) => {
         if (!response.ok) throw new Error('Falha ao carregar a logo do PDF');
         return new Uint8Array(await response.arrayBuffer());
       }),

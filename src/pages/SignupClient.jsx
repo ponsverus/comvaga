@@ -124,7 +124,7 @@ export default function SignupClient({ onLogin }) {
 
         <div className="flex justify-center mb-8">
           <img
-            src="/Comvaga Logo.png"
+            src="/comvaga-logo.png"
             alt="COMVAGA"
             className="h-24 w-auto object-contain"
           />

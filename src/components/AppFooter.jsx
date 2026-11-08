@@ -48,7 +48,7 @@ export default function AppFooter({
           <div className="flex flex-col justify-start">
             <Link to="/" className="inline-block hover:opacity-75 transition-opacity">
               <img
-                src="/Comvaga Logo.png"
+                src="/comvaga-logo.png"
                 alt="Comvaga"
                 className="h-16 w-auto object-contain"
               />
