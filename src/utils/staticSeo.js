@@ -40,7 +40,7 @@ export const STATIC_SEO = Object.freeze(Object.fromEntries(
   Object.entries(pages).map(([path, metadata]) => [path, Object.freeze({
     ...metadata,
     canonical: metadata.canonical || `${PUBLIC_ORIGIN}${path}`,
-    image: metadata.image || `${PUBLIC_ORIGIN}/Comvaga%20Logo.png`,
+    image: metadata.image || `${PUBLIC_ORIGIN}/comvaga-logo.png`,
     imageAlt: metadata.imageAlt || 'Logo da Comvaga',
   })]),
 ));
