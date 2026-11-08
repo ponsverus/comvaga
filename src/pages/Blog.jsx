@@ -15,7 +15,7 @@ export default function Blog() {
       <header className="border-b border-gray-900 bg-black px-4 py-6 sm:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/Comvaga Logo.png" alt="Comvaga" className="h-12 w-auto" />
+            <img src="/comvaga-logo.png" alt="Comvaga" className="h-12 w-auto" />
             <span className="hidden text-xl font-black sm:inline">COMVAGA</span>
           </Link>
           <Link to="/cadastro" className="rounded-full bg-primary px-5 py-2.5 text-xs font-black uppercase text-black transition hover:shadow-lg hover:shadow-primary/30">Testar grátis</Link>
