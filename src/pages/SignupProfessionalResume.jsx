@@ -334,7 +334,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
         </Link>
 
         <div className="flex justify-center mb-8">
-          <img src="/Comvaga Logo.png" alt="COMVAGA" className="h-24 w-auto object-contain" />
+          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-24 w-auto object-contain" />
         </div>
 
         <div className="text-center mb-10">
