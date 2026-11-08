@@ -98,7 +98,7 @@ export default function HomePublicContent({
           <div className="relative flex items-center justify-center h-16 sm:h-20">
             <Link to="/" className="flex flex-col items-center justify-center gap-1">
               <img
-                src="/Comvaga Logo.png"
+                src="/comvaga-logo.png"
                 alt="Comvaga"
                 className="h-15 w-auto object-contain sm:h-17"
               />
