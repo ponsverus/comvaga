@@ -343,7 +343,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       <div className="relative z-10 mx-auto w-full max-w-4xl">
         <h1 className="sr-only">Selecionar negócio parceiro</h1>
         <div className="mb-8 flex items-center justify-between gap-4">
-          <img src="/Comvaga Logo.png" alt="COMVAGA" className="h-14 w-auto object-contain" />
+          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-14 w-auto object-contain" />
           <div className="flex items-center gap-2">
             <div ref={desktopSearchRef} className="relative hidden md:block">
               <div
