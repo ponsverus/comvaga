@@ -493,6 +493,45 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   }, [reloadBillingStatus, souDono]);
 
   useEffect(() => {
+    const checkoutStatus = String(billingStatus?.active_checkout_status || '').toLowerCase();
+    if (!souDono || !negocio?.id || !billingStatus?.has_active_checkout
+      || billingStatus?.active_checkout_url
+      || !['creating', 'unknown', 'active'].includes(checkoutStatus)) return undefined;
+
+    let stopped = false;
+    let attempts = 0;
+    let timer;
+    const pollCheckoutRecovery = async () => {
+      if (stopped) return;
+      if (document.visibilityState !== 'visible') {
+        timer = window.setTimeout(pollCheckoutRecovery, 15_000);
+        return;
+      }
+
+      attempts += 1;
+      try {
+        const nextStatus = await fetchBusinessBillingStatus(negocio.id);
+        if (stopped) return;
+        setBillingStatus(nextStatus);
+        setBillingStatusLoadError(false);
+        const nextCheckoutStatus = String(nextStatus?.active_checkout_status || '').toLowerCase();
+        if (!nextStatus?.has_active_checkout || nextStatus?.active_checkout_url
+          || !['creating', 'unknown', 'active'].includes(nextCheckoutStatus)) return;
+      } catch {
+        if (stopped) return;
+      }
+
+      if (attempts < 8) timer = window.setTimeout(pollCheckoutRecovery, 15_000);
+    };
+    timer = window.setTimeout(pollCheckoutRecovery, 15_000);
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+    };
+  }, [billingStatus?.has_active_checkout, billingStatus?.active_checkout_status,
+    billingStatus?.active_checkout_url, negocio?.id, souDono]);
+
+  useEffect(() => {
     const status = String(billingStatus?.status || '').toLowerCase();
     const remaining = Number(billingStatus?.due_charge_count || 0);
     const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
