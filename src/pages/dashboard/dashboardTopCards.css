@@ -1,0 +1,213 @@
+/* Exclusivo dos quatro indicadores no topo do Dashboard.
+   Nao altera icones, valores, badges ou regras de negocio. */
+.dashboard-kpi-grid {
+  perspective: 1200px;
+}
+
+.dashboard-kpi {
+  --kpi-rgb: 245 186 63;
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  perspective: 950px;
+}
+
+.dashboard-kpi--revenue { --kpi-rgb: 74 222 128; }
+.dashboard-kpi--appointments { --kpi-rgb: 96 165 250; }
+.dashboard-kpi--team { --kpi-rgb: 192 132 252; }
+.dashboard-kpi--activity { --kpi-rgb: 255 215 0; }
+
+/* Placa inferior: profundidade fisica, sem imagens ou bibliotecas 3D. */
+.dashboard-kpi::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 6px 3px -6px;
+  border: 1px solid rgb(var(--kpi-rgb) / 0.24);
+  border-radius: 18px;
+  background: linear-gradient(155deg, #303139 0%, #131417 48%, #08090b 100%);
+  box-shadow: 0 12px 22px rgb(0 0 0 / 0.34);
+  transition: transform 380ms cubic-bezier(.2,.75,.2,1), box-shadow 380ms ease;
+}
+
+.dashboard-kpi__surface {
+  position: relative;
+  display: flex;
+  min-height: 194px;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 19px 19px 17px;
+  border: 1px solid rgb(255 255 255 / 0.13);
+  border-radius: 17px;
+  background:
+    radial-gradient(ellipse at 110% -30%, rgb(var(--kpi-rgb) / .20), transparent 60%),
+    linear-gradient(142deg, #222327 0%, #17181c 43%, #101114 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    inset 0 -1px 0 rgb(0 0 0 / .66),
+    0 5px 16px rgb(0 0 0 / .12);
+  transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  transition:
+    transform 380ms cubic-bezier(.2,.75,.2,1),
+    border-color 380ms ease,
+    box-shadow 380ms ease;
+}
+
+/* O faturamento continua recebendo o destaque verde que ja tinha. */
+.dashboard-kpi--highlight .dashboard-kpi__surface {
+  border-color: rgb(var(--kpi-rgb) / .31);
+  background:
+    radial-gradient(ellipse at 105% -20%, rgb(var(--kpi-rgb) / .22), transparent 62%),
+    linear-gradient(142deg, #1d2922 0%, #17201b 43%, #101613 100%);
+}
+
+/* Reflexo diagonal e faixa de luz discretos, sem cobrir os dados. */
+.dashboard-kpi__surface::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  background: linear-gradient(114deg, rgb(255 255 255 / .055), transparent 29%, transparent 72%, rgb(255 255 255 / .015));
+}
+
+.dashboard-kpi__surface::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 20px;
+  width: 74px;
+  height: 2px;
+  border-radius: 0 0 5px 5px;
+  background: rgb(var(--kpi-rgb) / .96);
+  box-shadow: 0 0 17px rgb(var(--kpi-rgb) / .47);
+}
+
+.dashboard-kpi__header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-kpi__icon {
+  display: inline-flex;
+  flex: 0 0 47px;
+  width: 47px;
+  height: 47px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(var(--kpi-rgb) / .23);
+  border-radius: 13px;
+  background: linear-gradient(150deg, rgb(var(--kpi-rgb) / .13), rgb(var(--kpi-rgb) / .025));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .055), 0 5px 14px rgb(0 0 0 / .12);
+  transform: translateZ(8px);
+}
+
+.dashboard-kpi__label {
+  min-width: 0;
+  color: #c3c5cb;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+
+.dashboard-kpi__corner {
+  flex: 0 0 12px;
+  height: 12px;
+  margin-left: auto;
+  align-self: flex-start;
+  border-top: 1px solid rgb(var(--kpi-rgb) / .55);
+  border-right: 1px solid rgb(var(--kpi-rgb) / .55);
+  border-top-right-radius: 3px;
+  opacity: .8;
+}
+
+.dashboard-kpi__value {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  margin: 21px 0 17px;
+  color: #fff;
+  font-size: clamp(1.65rem, 2.25vw, 2.35rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.045em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 15px rgb(0 0 0 / .19);
+  transform: translateZ(13px);
+}
+
+.dashboard-kpi__bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 35px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgb(255 255 255 / .085);
+}
+
+.dashboard-kpi__detail {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-kpi__detail > * {
+  max-width: 100%;
+}
+
+.dashboard-kpi__mark {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 5px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, rgb(var(--kpi-rgb) / .75) 0 38%, rgb(var(--kpi-rgb) / .23) 38% 100%);
+  box-shadow: 0 0 11px rgb(var(--kpi-rgb) / .19);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-kpi:hover { z-index: 2; }
+
+  .dashboard-kpi:hover .dashboard-kpi__surface {
+    transform: translate3d(0, -7px, 24px) rotateX(2.5deg) rotateY(-2deg);
+    border-color: rgb(var(--kpi-rgb) / .38);
+    box-shadow: 0 20px 35px rgb(0 0 0 / .26), inset 0 1px 0 rgb(255 255 255 / .11);
+  }
+
+  .dashboard-kpi:hover::before {
+    transform: translateY(2px);
+    box-shadow: 0 20px 27px rgb(0 0 0 / .33), 0 10px 25px rgb(var(--kpi-rgb) / .07);
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-kpi__surface {
+    min-height: 178px;
+    padding: 17px;
+  }
+  .dashboard-kpi__value {
+    font-size: clamp(1.9rem, 7vw, 2.5rem);
+    margin-top: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-kpi::before,
+  .dashboard-kpi__surface { transition: none; }
+  .dashboard-kpi:hover::before,
+  .dashboard-kpi:hover .dashboard-kpi__surface { transform: none; }
+}
