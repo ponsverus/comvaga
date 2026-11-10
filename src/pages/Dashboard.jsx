@@ -37,7 +37,6 @@ import { useDashboardClientes } from './dashboard/hooks/useDashboardClientes';
 import { useDashboardHistorico } from './dashboard/hooks/useDashboardHistorico';
 import { useDashboardMetrics } from './dashboard/hooks/useDashboardMetrics';
 import { useDashboardMutations } from './dashboard/hooks/useDashboardMutations';
-import './dashboard/dashboardTopCards.css';
 
 function formatCurrency(value) {
   return `R$ ${Number(value || 0).toFixed(2)}`;
@@ -350,22 +349,22 @@ const BILLING_CHECKOUT_MESSAGE_KEYS = {
   expired: 'dashboard.billing_checkout_expired',
 };
 
-function DashboardTopCard({ icon, label, value, children, highlight = false, tone = 'activity' }) {
+function DashboardTopCard({ icon, label, value, children, highlight = false }) {
+  const baseClass = highlight
+    ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30'
+    : 'bg-dark-100 border-gray-800';
+
   return (
-    <div className={`dashboard-kpi dashboard-kpi--${tone}${highlight ? ' dashboard-kpi--highlight' : ''}`}>
-      <div className="dashboard-kpi__surface">
-        <div className="dashboard-kpi__header">
-          <span className="dashboard-kpi__icon">{icon}</span>
-          <span className="dashboard-kpi__label">{label}</span>
-          <span className="dashboard-kpi__corner" aria-hidden="true" />
+    <div className={`${baseClass} border rounded-custom p-6 min-h-[136px]`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="mb-2 flex items-center gap-2">
+            {icon}
+            <span className="text-sm text-gray-500">{label}</span>
+          </div>
+          <div className="text-3xl font-normal text-white mb-1">{value}</div>
         </div>
-
-        <div className="dashboard-kpi__value">{value}</div>
-
-        <div className="dashboard-kpi__bottom">
-          <div className="dashboard-kpi__detail">{children}</div>
-          <span className="dashboard-kpi__mark" aria-hidden="true" />
-        </div>
+        <div className="shrink-0 flex flex-col items-end gap-2">{children}</div>
       </div>
     </div>
   );
@@ -1046,9 +1045,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="dashboard-kpi-grid grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 items-stretch">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-start">
           <DashboardTopCard
-            tone="revenue"
             highlight
             icon={<span className="font-condensed text-green-400 font-normal text-3xl leading-none">$</span>}
             label="FATURAMENTO HOJE"
@@ -1060,7 +1058,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
           </DashboardTopCard>
 
           <DashboardTopCard
-            tone="appointments"
             icon={<CalendarIcon className="w-8 h-8 text-blue-400" dotOpacity={0} />}
             label="AGENDAMENTOS HOJE"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topAgendamentos.total || 0) : '--'}
@@ -1071,7 +1068,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
           </DashboardTopCard>
 
           <DashboardTopCard
-            tone="team"
             icon={<UsersIcon className="w-8 h-8 text-purple-400" />}
             label="PROFISSIONAIS"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topProfissionais.total || 0) : '--'}
@@ -1082,7 +1078,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
           </DashboardTopCard>
 
           <DashboardTopCard
-            tone="activity"
             icon={<TrendingUpIcon className="w-8 h-8 text-primary" />}
             label={tabEntregasLabel || 'ATENDIMENTOS'}
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topEntregas.total || 0) : '--'}
