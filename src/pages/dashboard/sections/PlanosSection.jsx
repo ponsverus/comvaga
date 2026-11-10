@@ -222,8 +222,13 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('plan_professional_limit_reached')) {
     return messageBody('dashboard.plan_professional_limit_reached');
   }
+  if (raw.includes('checkout_record_pending')) {
+    return messageBody('dashboard.billing_checkout_record_pending');
+  }
   if (
-    raw.includes('checkout_reconciliation_pending')
+    raw.includes('checkout_result_unknown')
+    || raw.includes('checkout_state_unavailable')
+    || raw.includes('checkout_reconciliation_pending')
     || raw.includes('checkout_session_reconciliation_pending')
     || raw.includes('checkout_session_unknown')
     || raw.includes('checkout_session_creating')
@@ -239,7 +244,7 @@ function getPlanChangeErrorMessage(error) {
   if (raw.includes('provider_subscription_recovery_required')) {
     return messageBody('dashboard.billing_existing_subscription_recovery');
   }
-  if (raw.includes('provider_subscription_reconciliation_pending') || raw.includes('billing_action_in_progress')) {
+  if (raw.includes('provider_subscription_reconciliation_pending') || raw.includes('billing_action_in_progress') || raw.includes('billing_action_confirmation_pending')) {
     return messageBody('dashboard.billing_subscription_reconciliation_pending');
   }
   if (raw.includes('subscription_charge_reconciliation_pending')) {
@@ -259,6 +264,12 @@ function getPlanChangeErrorMessage(error) {
   }
   if (raw.includes('provider_sync_in_progress')) {
     return messageBody('dashboard.billing_provider_sync_in_progress');
+  }
+  if (raw.includes('checkout_provider_rejected')) {
+    return messageBody('dashboard.billing_checkout_provider_rejected');
+  }
+  if (raw.includes('billing_upgrade_provider_rejected')) {
+    return messageBody('dashboard.billing_upgrade_provider_rejected');
   }
   if (raw.includes('asaas_checkout_failed')) {
     return messageBody('dashboard.billing_checkout_error');
