@@ -495,7 +495,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   useEffect(() => {
     const checkoutStatus = String(billingStatus?.active_checkout_status || '').toLowerCase();
     if (!souDono || !negocio?.id || !billingStatus?.has_active_checkout
-      || billingStatus?.active_checkout_url
+      || (checkoutStatus === 'active' && billingStatus?.active_checkout_url)
       || !['creating', 'unknown', 'active'].includes(checkoutStatus)) return undefined;
 
     let stopped = false;
@@ -515,7 +515,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         setBillingStatus(nextStatus);
         setBillingStatusLoadError(false);
         const nextCheckoutStatus = String(nextStatus?.active_checkout_status || '').toLowerCase();
-        if (!nextStatus?.has_active_checkout || nextStatus?.active_checkout_url
+        if (!nextStatus?.has_active_checkout || (nextCheckoutStatus === 'active' && nextStatus?.active_checkout_url)
           || !['creating', 'unknown', 'active'].includes(nextCheckoutStatus)) return;
       } catch {
         if (stopped) return;
