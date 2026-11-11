@@ -133,7 +133,7 @@ export const ptBR = {
     },
     billing_cancel_checkout_confirm: {
       title: 'Cancelar pagamento pendente?',
-      body: 'O link de pagamento aberto será cancelado, liberando a escolha dos planos novamente.',
+      body: 'O checkout pendente será cancelado, liberando a escolha dos planos novamente.',
       variant: 'warning',
       screen: 'dark',
       confirmText: 'CANCELAR PAGAMENTO',
