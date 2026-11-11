@@ -410,6 +410,7 @@ export default function PlanosSection({
   const activeCheckoutStatus = String(billingStatus?.active_checkout_status || '').toLowerCase();
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
+  const canCancelCheckout = hasActiveCheckout && billingStatus?.can_cancel_checkout === true;
   const billingActionPending = Boolean(billingStatus?.billing_action_pending);
   const canRequestInvoice = billingStatus?.can_request_subscription_invoice === true;
   const providerSyncPending = Boolean(billingStatus?.provider_sync_pending);
@@ -568,7 +569,7 @@ export default function PlanosSection({
 
 
   const handleCancelCheckout = async () => {
-    if (!negocioId || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
+    if (!negocioId || !canCancelCheckout || savingPlan || cancelingPlan || cancelingDowngrade || cancelingCheckout) return;
     const confirmed = await feedback.confirm('dashboard.billing_cancel_checkout_confirm');
     if (!confirmed) return;
 
@@ -589,6 +590,11 @@ export default function PlanosSection({
         showPlanAlert(billingRateLimitMessage(err), 'warning');
       } else {
         showPlanAlert(getCheckoutCancelErrorMessage(err));
+      }
+      const errorText = `${err?.code || ''} ${err?.message || ''} ${err?.details || ''}`.toLowerCase();
+      if (['checkout_creation_in_progress', 'payment_already_confirmed', 'checkout_not_found']
+        .some((code) => errorText.includes(code))) {
+        await reloadBillingStatus?.();
       }
     } finally {
       setCancelingCheckout(false);
@@ -734,7 +740,7 @@ export default function PlanosSection({
                 </button>
               ),
             },
-            checkoutForPlan
+            checkoutForPlan && canCancelCheckout
               ? {
                 key: 'cancel-checkout',
                 label: cancelingCheckout ? 'Cancelando pagamento...' : 'Cancelar pagamento pendente',
