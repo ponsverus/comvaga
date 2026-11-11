@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabase';
 import { isPasswordRecoveryUrl } from './utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from './utils/profileAccess';
@@ -28,7 +28,7 @@ import BlogPublicPreview        from './components/BlogPublicPreview';
 import { sleep } from './utils/async';
 
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
-const PROFILE_CONFIRM_ERROR_MESSAGE = ptBR.alerts.profile_access_unavailable.body;
+const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
 
 function isRecoverableLazyLoadError(error) {
   const text = `${error?.name || ''} ${error?.message || ''}`.toLowerCase();
@@ -148,31 +148,6 @@ function PublicRouteLoading({ initialBusiness }) {
     ? <PublicBusinessPreview business={initialBusiness} /> : <FullScreenLoading />;
 }
 
-function PublicProfileNotice({ error, pending, onRetry }) {
-  return (
-    <>
-      {(error || pending) && (
-        <div role={error ? 'alert' : 'status'} className="relative z-50 border-b border-primary/30 bg-[#1a1307] px-4 py-3 text-center text-sm text-white">
-          <span>{error || ptBR.alerts.profile_confirmation_pending.body}</span>
-          {error && (
-            <button type="button" onClick={onRetry} className="ml-3 font-semibold text-primary underline underline-offset-2">
-              {ptBR.alerts.profile_access_unavailable.buttonText}
-            </button>
-          )}
-        </div>
-      )}
-      <Outlet />
-    </>
-  );
-}
-
-function ProfileRouteGate({ booting, error, inRecovery, user, userType, onRetry }) {
-  if (booting) return <FullScreenLoading />;
-  if (error && !inRecovery) return <FullScreenError message={error} onRetry={onRetry} />;
-  if (user && !userType && !inRecovery) return <FullScreenLoading text="CARREGANDO PERFIL..." />;
-  return <Outlet />;
-}
-
 async function getUserProfileRobust(authUser) {
   if (!authUser?.id) return null;
 
@@ -290,7 +265,6 @@ export default function App({ initialBusiness = null }) {
   const [professionalRole, setProfessionalRole] = useState(null);
   const [accessState,      setAccessState]      = useState('active');
   const [booting,          setBooting]          = useState(true);
-  const [initialPreviewComplete, setInitialPreviewComplete] = useState(false);
   const [typeLoading,      setTypeLoading]      = useState(false);
   const [fatalError,       setFatalError]       = useState(null);
   const [inRecovery,       setInRecovery]       = useState(() => isPasswordRecoveryUrl());
@@ -303,7 +277,6 @@ export default function App({ initialBusiness = null }) {
   const inRecoveryRef   = useRef(inRecovery);
 
   const isLoggedIn = !!user;
-  const confirmedPublicUser = isLoggedIn && userType && !typeLoading && !fatalError && !inRecovery ? user : null;
   const metadataPartnerSignup = user?.user_metadata?.partner_signup === true
     || String(user?.user_metadata?.partner_signup || '').toLowerCase() === 'true';
   const isPartnerSignup = professionalRole === 'partner' || metadataPartnerSignup;
@@ -316,8 +289,6 @@ export default function App({ initialBusiness = null }) {
     inRecoveryRef.current = !!next;
     setInRecovery(!!next);
   }, []);
-
-  useEffect(() => { setInitialPreviewComplete(true); }, []);
 
   const handleLocalSessionEnded = useCallback(async (redirectTo = '/login') => {
     const safeRedirect = (
@@ -396,7 +367,7 @@ export default function App({ initialBusiness = null }) {
           setProfessionalRole(null);
           setAccessState('active');
           loadedUserRef.current = null;
-          setFatalError(ptBR.alerts.profile_missing.body);
+          setFatalError('Perfil inexistente. Crie ou conclua seu cadastro para prosseguir.');
         });
         return null;
       }
@@ -596,7 +567,9 @@ export default function App({ initialBusiness = null }) {
       : currentPath === '/'
         ? <HomePublicPreview />
         : <FullScreenLoading />;
-  if (!initialPreviewComplete && booting) return <Router>{initialPreview}</Router>;
+  if (booting) return <Router>{initialPreview}</Router>;
+  if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={handleRetry} />;
+  if (isLoggedIn && !userType && !inRecovery) return (matchesInitialRoute || isBlogRoute) ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
 
   return (
     <Router>
@@ -609,8 +582,7 @@ export default function App({ initialBusiness = null }) {
         <RouteErrorGuard>
           <Suspense fallback={<PublicRouteLoading initialBusiness={initialBusiness} />}>
             <Routes>
-            <Route element={<PublicProfileNotice error={!inRecovery ? fatalError : null} pending={isLoggedIn && !confirmedPublicUser && !fatalError && !inRecovery} onRetry={handleRetry} />}>
-            <Route path="/" element={<Home user={confirmedPublicUser} userType={confirmedPublicUser ? userType : null} professionalRole={confirmedPublicUser ? professionalRole : null} onLogout={handleLogout} />} />
+            <Route path="/" element={<Home user={isLoggedIn ? user : null} userType={isLoggedIn ? userType : null} professionalRole={isLoggedIn ? professionalRole : null} onLogout={handleLogout} />} />
 
             <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/termos" element={<TermsOfUse />} />
@@ -618,11 +590,6 @@ export default function App({ initialBusiness = null }) {
             <Route path="/blog/*" element={<BlogRoutes nested />} />
 
             <Route path="/reset-password" element={<ResetPassword />} />
-
-            <Route path="/v/:slug" element={<Vitrine initialBusiness={initialBusiness} user={confirmedPublicUser} userType={confirmedPublicUser ? userType : null} professionalRole={confirmedPublicUser ? professionalRole : null} onLogout={handleLogout} />} />
-            </Route>
-
-            <Route element={<ProfileRouteGate booting={booting} error={fatalError} inRecovery={inRecovery} user={user} userType={userType} onRetry={handleRetry} />}>
 
             <Route path="/login" element={
               inRecovery ? <ResetPassword defaultRedirect="/login" />
@@ -695,6 +662,8 @@ export default function App({ initialBusiness = null }) {
               ) : <Navigate to="/login" />
             } />
 
+            <Route path="/v/:slug" element={<Vitrine initialBusiness={initialBusiness} user={isLoggedIn ? user : null} userType={isLoggedIn ? userType : null} professionalRole={professionalRole} onLogout={handleLogout} />} />
+
             <Route path="/criar-negocio" element={
               isLoggedIn ? (
                 typeLoading ? <FullScreenLoading text="CARREGANDO..." />
@@ -744,8 +713,6 @@ export default function App({ initialBusiness = null }) {
                 : <Navigate to={postLogoutRedirect || "/login"} />
               ) : <Navigate to={postLogoutRedirect || "/login"} />
             } />
-
-            </Route>
 
             <Route path="*" element={<NotFound />} />
             </Routes>
