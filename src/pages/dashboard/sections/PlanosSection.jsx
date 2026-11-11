@@ -407,6 +407,7 @@ export default function PlanosSection({
   const planChangeScheduled = Boolean(billingStatus?.plan_change_scheduled);
   const pendingPlanDate = billingStatus?.pending_plan_effective_label || '';
   const activeCheckoutPlanCode = billingStatus?.active_checkout_plan_code || '';
+  const activeCheckoutStatus = String(billingStatus?.active_checkout_status || '').toLowerCase();
   const activeCheckoutUrl = billingStatus?.active_checkout_url || '';
   const hasActiveCheckout = Boolean(billingStatus?.has_active_checkout && activeCheckoutPlanCode);
   const billingActionPending = Boolean(billingStatus?.billing_action_pending);
@@ -618,7 +619,8 @@ export default function PlanosSection({
           const active = plan.code === currentPlanCode;
           const pendingForPlan = planChangeScheduled && billingStatus?.pending_plan_code === plan.code;
           const checkoutForPlan = hasActiveCheckout && activeCheckoutPlanCode === plan.code;
-          const checkoutCanResume = checkoutForPlan && Boolean(activeCheckoutUrl);
+          const checkoutCanResume = checkoutForPlan && activeCheckoutStatus === 'active' && Boolean(activeCheckoutUrl);
+          const checkoutAwaitingConfirmation = checkoutForPlan && !checkoutCanResume;
           const recoverInvoice = active && canRequestInvoice;
           const checkoutBlockedByDebt = checkoutCanResume && !active && Number(billingStatus?.due_charge_count || 0) > 0;
           const checkoutBlocksPlan = hasActiveCheckout && !checkoutCanResume && !recoverInvoice;
@@ -700,9 +702,11 @@ export default function PlanosSection({
                         ? 'Quite as faturas'
                       : checkoutCanResume
                         ? 'Continuar pagamento'
-                        : active && (needsPayment || selectedCanceledOrCancellationScheduled)
-                        ? selectedPaymentButtonText
-                        : content.buttonText;
+                        : checkoutAwaitingConfirmation
+                          ? 'Checkout em conferência'
+                          : active && (needsPayment || selectedCanceledOrCancellationScheduled)
+                            ? selectedPaymentButtonText
+                            : content.buttonText;
           const buttonItems = [
             {
               key: 'primary',
