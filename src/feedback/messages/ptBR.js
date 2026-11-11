@@ -1,5 +1,3 @@
-const PROFILE_ACCESS_UNAVAILABLE_BODY = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
-
 export const ptBR = {
   alerts: {
     action_failed_support: {
@@ -39,16 +37,6 @@ export const ptBR = {
       variant: 'danger',
       screen: 'dark',
       buttonText: 'TENTAR NOVAMENTE',
-    },
-    profile_access_unavailable: {
-      body: PROFILE_ACCESS_UNAVAILABLE_BODY,
-      buttonText: 'TENTAR NOVAMENTE',
-    },
-    profile_confirmation_pending: {
-      body: 'Confirmando seu perfil. O acesso completo da conta ficará pronto em instantes.',
-    },
-    profile_missing: {
-      body: 'Perfil inexistente. Crie ou conclua seu cadastro para prosseguir.',
     },
   },
 
@@ -1265,7 +1253,7 @@ export const ptBR = {
     email_not_confirmed:            { body: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada e spam.', variant: 'aviso' },
     rate_limit_exceeded:            { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
     auth_error:                     { body: 'Erro ao autenticar agora. Tente novamente.', variant: 'erro' },
-    profile_access_unavailable:     { body: PROFILE_ACCESS_UNAVAILABLE_BODY, variant: 'erro' },
+    profile_access_unavailable:     { body: 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.', variant: 'erro' },
     not_partner:                    { body: 'Este login pertence a outro tipo de conta para este negócio.', variant: 'erro' },
     unexpected_error:               { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
     reset_email_required:           { body: 'Digite seu e-mail antes de solicitar o resgate de senha.', variant: 'aviso' },
