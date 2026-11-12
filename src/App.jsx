@@ -29,6 +29,11 @@ import { sleep } from './utils/async';
 
 const LAZY_RELOAD_STORAGE_KEY = 'comvaga:lazy-route-reload:v1';
 const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
+const PRIVATE_PROFILE_PATHS = new Set([
+  '/cadastro/profissional/retomada', '/dashboard', '/minha-area',
+  '/criar-negocio', '/selecionar-negocio', '/selecionar-negocio-parceiro',
+  '/conta-profissional',
+]);
 
 function isRecoverableLazyLoadError(error) {
   const text = `${error?.name || ''} ${error?.message || ''}`.toLowerCase();
@@ -103,6 +108,15 @@ function FullScreenError({ message, onRetry }) {
       </div>
     </div>
   );
+}
+
+function ProfileRouteGate({ fatalError, inRecovery, isLoggedIn, userType, onRetry, children }) {
+  const { pathname } = useLocation();
+  if (PRIVATE_PROFILE_PATHS.has(pathname)) {
+    if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={onRetry} />;
+    if (isLoggedIn && !userType && !inRecovery) return <FullScreenLoading text="CARREGANDO PERFIL..." />;
+  }
+  return children;
 }
 
 const ROUTE_LOAD_FAILED_MESSAGE =
@@ -568,11 +582,10 @@ export default function App({ initialBusiness = null }) {
         ? <HomePublicPreview />
         : <FullScreenLoading />;
   if (booting) return <Router>{initialPreview}</Router>;
-  if (fatalError && !inRecovery) return <FullScreenError message={fatalError} onRetry={handleRetry} />;
-  if (isLoggedIn && !userType && !inRecovery) return (matchesInitialRoute || isBlogRoute) ? initialPreview : <FullScreenLoading text="CARREGANDO PERFIL..." />;
 
   return (
     <Router>
+      <ProfileRouteGate fatalError={fatalError} inRecovery={inRecovery} isLoggedIn={isLoggedIn} userType={userType} onRetry={handleRetry}>
       <FeedbackProvider>
         <RecoveryWatcher onChange={setRecoveryMode} />
         <LogoutRedirectResetter redirectPath={postLogoutRedirect} onClear={() => setPostLogoutRedirect(null)} />
@@ -719,6 +732,7 @@ export default function App({ initialBusiness = null }) {
           </Suspense>
         </RouteErrorGuard>
       </FeedbackProvider>
+      </ProfileRouteGate>
     </Router>
   );
 }
