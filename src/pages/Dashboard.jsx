@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CalendarIcon, ProfessionalIcon, TrendingUpIcon, UsersIcon } from '../components/icons';
 import AppFooter from '../components/AppFooter';
 import { Eye, LogOut, AlertCircle } from 'lucide-react';
-import { supabase } from '../supabase';
 import { formatPhoneForDisplay } from '../utils/phone';
 import { NOW_RPC_SEQUENCE } from '../utils/officialDate';
 import { useFeedback } from '../feedback/useFeedback';
-import { ptBR } from '../feedback/messages/ptBR.js';
 import { useBusinessGroup } from '../businessTerms';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
 import EntregaModal from './dashboard/components/EntregaModal';
 import ProfissionalModal from './dashboard/components/ProfissionalModal';
+import DashboardAnnouncementBar from './dashboard/components/DashboardAnnouncementBar';
+import { getDashboardAnnouncements } from './dashboard/Announcements';
+import { DashboardTopCard, InfoPill, RevenueTrendBadge, TrendBadge } from './dashboard/components/DashboardTopCards';
 import GeralSection from './dashboard/sections/GeralSection';
 import AgendamentosSection from './dashboard/sections/AgendamentosSection';
 import HistoricoSection from './dashboard/sections/HistoricoSection';
@@ -26,321 +27,18 @@ import {
   WEEKDAYS,
   compareAgendamentoDateTimeDesc,
   getBizLabel,
-  hasPaymentHistory,
-  isCancellationScheduled,
-  isScheduledDowngradeSync,
-  normalizeStatus,
 } from './dashboard/utils';
-import { fetchBusinessBillingStatus, getPublicUrl } from './dashboard/api/dashboardApi';
+import { getPublicUrl } from './dashboard/api/dashboardApi';
 import { useDashboardBootstrap } from './dashboard/hooks/useDashboardBootstrap';
+import { useDashboardBillingStatus } from './dashboard/hooks/useDashboardBillingStatus';
 import { useDashboardClientes } from './dashboard/hooks/useDashboardClientes';
 import { useDashboardHistorico } from './dashboard/hooks/useDashboardHistorico';
 import { useDashboardMetrics } from './dashboard/hooks/useDashboardMetrics';
 import { useDashboardMutations } from './dashboard/hooks/useDashboardMutations';
+import { useDashboardRealtime } from './dashboard/hooks/useDashboardRealtime';
 
 function formatCurrency(value) {
   return `R$ ${Number(value || 0).toFixed(2)}`;
-}
-
-function formatDelta(value) {
-  const number = Number(value || 0);
-  if (number === 0) return '0';
-  return `${number > 0 ? '+' : ''}${number}`;
-}
-
-function formatPercentDelta(value) {
-  const number = Number(value || 0);
-  if (number === 0) return '0.0%';
-  return `${number > 0 ? '+' : ''}${number.toFixed(1)}%`;
-}
-
-function TrendBadge({ data }) {
-  const percent = data?.variacao_percentual;
-  const delta = data?.variacao_valor;
-  const hasPercent = percent !== null && percent !== undefined;
-  const value = hasPercent ? Number(percent || 0) : Number(delta || 0);
-  const tone = value > 0
-    ? 'border-green-400/30 bg-green-400/10 text-green-400'
-    : value < 0
-      ? 'border-red-400/30 bg-red-400/10 text-red-400'
-      : 'border-gray-700 bg-transparent text-gray-400';
-  const text = hasPercent ? formatPercentDelta(percent) : formatDelta(delta);
-
-  if (text === '0') return null;
-
-  return (
-    <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${tone}`}>
-      {text}
-    </div>
-  );
-}
-
-function RevenueTrendBadge({ data }) {
-  const percent = data?.variacao_percentual;
-  const delta = data?.variacao_valor;
-  const hasPercent = percent !== null && percent !== undefined;
-  const value = hasPercent ? Number(percent || 0) : Number(delta || 0);
-  const text = hasPercent ? formatPercentDelta(percent) : formatDelta(delta);
-  const tone = value > 0 ? 'text-green-500' : value < 0 ? 'text-red-500' : 'text-gray-500';
-
-  if (text === '0') return null;
-
-  return (
-    <div className={`inline-flex items-center rounded-full border border-white bg-white px-3 py-1 text-xs ${tone}`}>
-      {text}
-    </div>
-  );
-}
-
-function InfoPill({ label, value, tone = 'text-gray-300', border = 'border-gray-700', bg = 'bg-transparent' }) {
-  return (
-    <div className={`inline-flex items-center justify-center gap-1.5 rounded-full border ${border} ${bg} px-3 py-1 text-xs`}>
-      {label ? <span className="text-gray-500 uppercase">{label}</span> : null}
-      <span className={tone}>{value}</span>
-    </div>
-  );
-}
-
-function interpolateMessage(value, params) {
-  return String(value || '').replace(/\{(\w+)\}/g, (_, key) => {
-    const next = params?.[key];
-    return next === undefined || next === null ? '' : String(next);
-  });
-}
-
-function dashboardBillingMessage(key, params) {
-  const entry = ptBR.dashboard?.[key];
-  return interpolateMessage(entry?.body || '', params);
-}
-
-function billingDayLabel(value) {
-  return dashboardBillingMessage(Number(value) === 1 ? 'billing_day_singular_header' : 'billing_day_plural_header');
-}
-
-function joinBillingMessages(...messages) {
-  return messages.filter(Boolean).join(' ');
-}
-
-function getPendingPlanChangeSuffix(status) {
-  const planChangeScheduled = Boolean(status?.plan_change_scheduled);
-  const pendingPlanLabel = status?.pending_plan_name || status?.pending_plan_code || '';
-  if (!planChangeScheduled || !pendingPlanLabel) return '';
-
-  const pendingPlanDate = status?.pending_plan_effective_label || '';
-  const messageKey = pendingPlanDate
-    ? 'billing_pending_plan_change_scheduled_header'
-    : 'billing_pending_plan_change_continues_header';
-
-  return dashboardBillingMessage(messageKey, {
-    plan: pendingPlanLabel,
-    date: pendingPlanDate,
-  });
-}
-
-function getBillingAnnouncements(status) {
-  if (!status) return [];
-  const announcements = [];
-  const providerSyncStatus = String(status.provider_sync_status || '').toLowerCase();
-  if (status.provider_sync_pending && (providerSyncStatus === 'failed' || !isScheduledDowngradeSync(status))) {
-    const syncFailed = providerSyncStatus === 'failed';
-    const syncRetrying = providerSyncStatus === 'retryable';
-    announcements.push({
-      id: 'billing-sync',
-      tone: syncFailed ? 'danger' : 'warning',
-      text: dashboardBillingMessage(syncFailed
-        ? 'billing_provider_sync_failed_header'
-        : syncRetrying
-          ? 'billing_provider_sync_retry_header'
-          : 'billing_provider_sync_pending_header'),
-      hideAction: true,
-    });
-  }
-
-  const statusAnnouncement = getBillingStatusAnnouncement(status);
-  if (statusAnnouncement) announcements.push({ ...statusAnnouncement, id: 'billing-status' });
-  return announcements;
-}
-
-function getBillingStatusAnnouncement(status) {
-  const current = String(status.status || '').toLowerCase();
-  const paymentStatus = String(status.payment_method_status || '').toLowerCase();
-  const providerStatus = String(status.provider_status || '').toUpperCase();
-  const daysUntilTrialEnd = Number(status.days_until_trial_end);
-  const daysUntilBlock = Number(status.days_until_block);
-  const trialDays = Number(status.trial_days);
-  const pendingPlanChangeSuffix = getPendingPlanChangeSuffix(status);
-
-  if (status.reactivation_awaiting_payment) {
-    return {
-      tone: Number(status.due_charge_count || 0) > 0 ? 'danger' : 'warning',
-      text: dashboardBillingMessage(Number(status.due_charge_count || 0) > 0
-        ? 'billing_blocked_header' : 'billing_reactivation_awaiting_payment_header'),
-    };
-  }
-
-  if (providerStatus === 'INACTIVE' || providerStatus === 'EXPIRED') {
-    const prefix = providerStatus === 'INACTIVE' ? 'billing_inactive' : 'billing_expired';
-    const hasDebt = Number(status.due_charge_count || 0) > 0;
-    const hasPaidAccess = status.booking_allowed === true && Boolean(status.access_ends_label);
-    const key = status.reactivation_pending
-      ? 'billing_reactivation_pending_header'
-      : hasDebt ? `${prefix}_debt_header`
-      : hasPaidAccess ? `${prefix}_paid_header` : `${prefix}_header`;
-    return {
-      tone: hasDebt ? 'danger' : 'warning',
-      text: dashboardBillingMessage(key, { date: status.access_ends_label || '' }),
-    };
-  }
-
-  if (isCancellationScheduled(status)) {
-    const accessEndLabel = status?.access_ends_label || '';
-    return {
-      tone: 'warning',
-      text: joinBillingMessages(
-        dashboardBillingMessage(accessEndLabel ? 'billing_canceled_access_until_header' : 'billing_canceled_header', {
-          date: accessEndLabel,
-        }),
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (current === 'canceled') {
-    return {
-      tone: 'danger',
-      text: joinBillingMessages(
-        dashboardBillingMessage('billing_canceled_expired_header'),
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (current === 'blocked') {
-    return {
-      tone: 'danger',
-      text: joinBillingMessages(
-        dashboardBillingMessage(hasPaymentHistory(status) ? 'billing_blocked_header' : 'billing_blocked_never_paid_header'),
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (current === 'past_due') {
-    const suffix = Number.isFinite(daysUntilBlock) && daysUntilBlock > 0
-      ? dashboardBillingMessage('billing_block_countdown_header', {
-        days: daysUntilBlock,
-        dayLabel: billingDayLabel(daysUntilBlock),
-      })
-      : '';
-    return {
-      tone: 'warning',
-      text: joinBillingMessages(
-        dashboardBillingMessage('billing_past_due_header'),
-        suffix,
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (current === 'payment_grace') {
-    const suffix = Number.isFinite(daysUntilBlock) && daysUntilBlock > 0
-      ? dashboardBillingMessage('billing_block_countdown_header', {
-        days: daysUntilBlock,
-        dayLabel: billingDayLabel(daysUntilBlock),
-      })
-      : '';
-    const paymentFailed = ['failed', 'expired'].includes(paymentStatus);
-    return {
-      tone: 'warning',
-      text: joinBillingMessages(
-        dashboardBillingMessage(paymentFailed ? 'billing_payment_failed_header' : 'billing_trial_ended_header'),
-        suffix,
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (current === 'trialing' && Number.isFinite(daysUntilTrialEnd) && daysUntilTrialEnd > 0) {
-    const total = Number.isFinite(trialDays) && trialDays > 0
-      ? dashboardBillingMessage('billing_trial_total_header', {
-        days: trialDays,
-        dayLabel: billingDayLabel(trialDays),
-      })
-      : '';
-    return {
-      tone: 'warning',
-      text: joinBillingMessages(
-        dashboardBillingMessage('billing_trial_active_header', {
-          days: daysUntilTrialEnd,
-          dayLabel: billingDayLabel(daysUntilTrialEnd),
-          total,
-        }),
-        pendingPlanChangeSuffix
-      ),
-    };
-  }
-
-  if (pendingPlanChangeSuffix) {
-    return {
-      tone: 'warning',
-      text: pendingPlanChangeSuffix,
-    };
-  }
-
-  return null;
-}
-
-function DashboardAnnouncementBar({ announcements }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const count = announcements.length;
-
-  useEffect(() => {
-    if (count < 2 || paused) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveIndex((index) => (index + 1) % count);
-    }, 3000);
-    return () => window.clearInterval(timer);
-  }, [count, paused]);
-
-  const announcement = announcements[activeIndex % count];
-  if (!announcement) return null;
-  const toneClass = announcement.tone === 'danger'
-    ? 'border-red-500/30 bg-[#1a0b0b] text-red-100'
-    : announcement.id === 'clock'
-      ? 'border-primary/25 bg-[#151106] text-white'
-      : 'border-primary/25 bg-[#151106] text-primary';
-  const actionLabel = announcement.actionLabel || 'VER PLANOS';
-  const canAct = typeof announcement.onAction === 'function' && !announcement.hideAction;
-
-  return (
-    <div
-      role={count === 1 && announcement.id === 'clock' ? 'alert' : undefined}
-      className={`border-b ${toneClass}`}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs sm:text-sm font-normal">
-        <div className="flex flex-row flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
-          <span>{announcement.text}</span>
-          {canAct ? (
-            <button
-              type="button"
-              onClick={announcement.onAction}
-              disabled={announcement.actionLoading}
-              className="inline-flex items-center justify-center font-normal uppercase text-primary transition-colors hover:text-primary/80 disabled:cursor-wait disabled:opacity-60"
-            >
-              {announcement.actionLoading ? 'VERIFICANDO...' : actionLabel}
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 const BILLING_CHECKOUT_MESSAGE_KEYS = {
@@ -348,27 +46,6 @@ const BILLING_CHECKOUT_MESSAGE_KEYS = {
   cancel: 'dashboard.billing_checkout_cancel',
   expired: 'dashboard.billing_checkout_expired',
 };
-
-function DashboardTopCard({ icon, label, value, children, highlight = false }) {
-  const baseClass = highlight
-    ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/30'
-    : 'bg-dark-100 border-gray-800';
-
-  return (
-    <div className={`${baseClass} border rounded-custom p-6 min-h-[136px]`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            {icon}
-            <span className="text-sm text-gray-500">{label}</span>
-          </div>
-          <div className="text-3xl font-normal text-white mb-1">{value}</div>
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-2">{children}</div>
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard({ user, onLogout, userType = 'professional', professionalRole = null }) {
   const navigate = useNavigate();
@@ -379,9 +56,6 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const uiConfirm = useCallback(async (key, variant = 'warning') => { if (feedback?.confirm) return !!(await feedback.confirm(key, { variant })); return false; }, [feedback]);
 
   const [activeTab, setActiveTab] = useState('agendamentos');
-  const [billingStatus, setBillingStatus] = useState(null);
-  const [billingLoading, setBillingLoading] = useState(false);
-  const [billingStatusLoadError, setBillingStatusLoadError] = useState(false);
   const {
     parceiroProfissional,
     negocio,
@@ -424,179 +98,13 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const parceiroProfissionalId = parceiroProfissional?.id ?? null;
   const acessoDashboardAutorizado = souDono || !!parceiroProfissional;
 
-  useEffect(() => {
-    let active = true;
-    if (!negocio?.id || !souDono) {
-      setBillingStatus(null);
-      setBillingStatusLoadError(false);
-      setBillingLoading(false);
-      return () => { active = false; };
-    }
-    setBillingStatusLoadError(false);
-    setBillingLoading(true);
-    fetchBusinessBillingStatus(negocio.id)
-      .then((status) => {
-        if (active) {
-          setBillingStatus(status);
-          setBillingStatusLoadError(false);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setBillingStatus(null);
-          setBillingStatusLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (active) setBillingLoading(false);
-      });
-    return () => { active = false; };
-  }, [negocio?.id, souDono]);
-
-  const reloadBillingStatus = useCallback(async () => {
-    if (!negocio?.id || !souDono) {
-      setBillingStatus(null);
-      setBillingStatusLoadError(false);
-      setBillingLoading(false);
-      return null;
-    }
-
-    setBillingStatusLoadError(false);
-    setBillingLoading(true);
-    try {
-      const status = await fetchBusinessBillingStatus(negocio.id);
-      setBillingStatus(status);
-      setBillingStatusLoadError(false);
-      return status;
-    } catch {
-      setBillingStatus(null);
-      setBillingStatusLoadError(true);
-      return null;
-    } finally {
-      setBillingLoading(false);
-    }
-  }, [negocio?.id, souDono]);
-
-  useEffect(() => {
-    if (!souDono) return undefined;
-
-    const refreshBillingStatus = () => {
-      if (document.visibilityState === 'visible') void reloadBillingStatus();
-    };
-
-    window.addEventListener('focus', refreshBillingStatus);
-    document.addEventListener('visibilitychange', refreshBillingStatus);
-    return () => {
-      window.removeEventListener('focus', refreshBillingStatus);
-      document.removeEventListener('visibilitychange', refreshBillingStatus);
-    };
-  }, [reloadBillingStatus, souDono]);
-
-  useEffect(() => {
-    const checkoutStatus = String(billingStatus?.active_checkout_status || '').toLowerCase();
-    if (!souDono || !negocio?.id || !billingStatus?.has_active_checkout
-      || (checkoutStatus === 'active' && billingStatus?.active_checkout_url)
-      || !['creating', 'unknown', 'active'].includes(checkoutStatus)) return undefined;
-
-    let stopped = false;
-    let attempts = 0;
-    let timer;
-    const pollCheckoutRecovery = async () => {
-      if (stopped) return;
-      if (document.visibilityState !== 'visible') {
-        timer = window.setTimeout(pollCheckoutRecovery, 15_000);
-        return;
-      }
-
-      attempts += 1;
-      try {
-        const nextStatus = await fetchBusinessBillingStatus(negocio.id);
-        if (stopped) return;
-        setBillingStatus(nextStatus);
-        setBillingStatusLoadError(false);
-        const nextCheckoutStatus = String(nextStatus?.active_checkout_status || '').toLowerCase();
-        if (!nextStatus?.has_active_checkout || (nextCheckoutStatus === 'active' && nextStatus?.active_checkout_url)
-          || !['creating', 'unknown', 'active'].includes(nextCheckoutStatus)) return;
-      } catch {
-        if (stopped) return;
-      }
-
-      if (attempts < 8) timer = window.setTimeout(pollCheckoutRecovery, 15_000);
-    };
-    timer = window.setTimeout(pollCheckoutRecovery, 15_000);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [billingStatus?.has_active_checkout, billingStatus?.active_checkout_status,
-    billingStatus?.active_checkout_url, negocio?.id, souDono]);
-
-  useEffect(() => {
-    const status = String(billingStatus?.status || '').toLowerCase();
-    const remaining = Number(billingStatus?.due_charge_count || 0);
-    const paymentStatus = String(billingStatus?.payment_method_status || '').toLowerCase();
-    const awaitingConfirmation = status === 'payment_grace'
-      || (['blocked', 'past_due'].includes(status) && (remaining >= 1 || paymentStatus === 'valid'));
-    if (!souDono || !negocio?.id || !awaitingConfirmation) return undefined;
-
-    let stopped = false;
-    let attempts = 0;
-    let timer;
-    const pollPaymentConfirmation = async () => {
-      if (stopped || document.visibilityState !== 'visible') return;
-      attempts += 1;
-      try {
-        const nextStatus = await fetchBusinessBillingStatus(negocio.id);
-        if (stopped) return;
-        setBillingStatus(nextStatus);
-        setBillingStatusLoadError(false);
-        if (String(nextStatus?.status || '').toLowerCase() !== status
-          || (status !== 'payment_grace' && Number(nextStatus?.due_charge_count || 0) !== remaining)) return;
-      } catch {
-        if (stopped) return;
-      }
-      if (attempts < 8) timer = window.setTimeout(pollPaymentConfirmation, 15_000);
-    };
-    timer = window.setTimeout(pollPaymentConfirmation, 15_000);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [billingStatus?.status, billingStatus?.due_charge_count, billingStatus?.payment_method_status, negocio?.id, souDono]);
-
-  useEffect(() => {
-    const syncStatus = String(billingStatus?.provider_sync_status || '').toLowerCase();
-    const scheduledDowngrade = isScheduledDowngradeSync(billingStatus);
-    if (!souDono
-      || !billingStatus?.provider_sync_pending
-      || (syncStatus === 'failed' && !scheduledDowngrade)) return undefined;
-
-    const nextAttemptAt = Date.parse(billingStatus?.provider_sync_next_attempt_at || '');
-    const waitUntilRetry = Number.isFinite(nextAttemptAt) && nextAttemptAt > Date.now()
-      ? Math.min(nextAttemptAt - Date.now() + 1000, scheduledDowngrade ? 86_400_000 : 60_000)
-      : 15_000;
-    const pollDelay = syncStatus === 'processing' && !scheduledDowngrade ? 10_000 : waitUntilRetry;
-    let timer;
-    let stopped = false;
-
-    const pollBillingStatus = async () => {
-      if (document.visibilityState !== 'visible') return;
-      try {
-        const status = await fetchBusinessBillingStatus(negocio.id);
-        if (stopped) return;
-        setBillingStatus(status);
-        setBillingStatusLoadError(false);
-      } catch {
-        if (!stopped) timer = window.setTimeout(pollBillingStatus, 15_000);
-      }
-    };
-
-    timer = window.setTimeout(pollBillingStatus, pollDelay);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [billingStatus, negocio?.id, souDono]);
+  const {
+    billingStatus,
+    setBillingStatus,
+    billingLoading,
+    billingStatusLoadError,
+    reloadBillingStatus,
+  } = useDashboardBillingStatus({ negocio, souDono });
 
   const checarPermissao = useCallback(async (profissionalId) => {
     if (!acessoDashboardAutorizado) {
@@ -707,42 +215,19 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     profissionais.some(p => p.user_id === user?.id),
   [profissionais, user?.id]);
 
-  const reloadAgendamentosRef = useRef(reloadAgendamentos);
-  useEffect(() => { reloadAgendamentosRef.current = reloadAgendamentos; }, [reloadAgendamentos]);
-
-  const loadOverviewRef = useRef(loadOverview);
-  useEffect(() => { loadOverviewRef.current = loadOverview; }, [loadOverview]);
-
-  const realtimeRefreshTimerRef = useRef(null);
-  const realtimeDashboardContextRef = useRef({
+  const { subscribeRealtime } = useDashboardRealtime({
     activeTab,
     faturamentoData,
     faturamentoMes,
     hoje,
-    negocioId: negocio?.id || null,
+    negocio,
     parceiroProfissionalId,
+    agendamentos,
+    profissionais,
+    reloadAgendamentos,
+    loadOverview,
+    setNotifAgendamentos,
   });
-  useEffect(() => {
-    realtimeDashboardContextRef.current = {
-      activeTab,
-      faturamentoData,
-      faturamentoMes,
-      hoje,
-      negocioId: negocio?.id || null,
-      parceiroProfissionalId,
-    };
-  }, [activeTab, faturamentoData, faturamentoMes, hoje, negocio?.id, parceiroProfissionalId]);
-
-  const agendamentosStatusRef = useRef(new Map());
-  useEffect(() => {
-    agendamentosStatusRef.current = new Map(
-      agendamentos
-        .filter((ag) => ag?.id)
-        .map((ag) => [ag.id, normalizeStatus(ag.status)])
-    );
-  }, [agendamentos]);
-
-  const agProfIdsKey = useMemo(() => profissionais.map(p => p.id).sort().join(','), [profissionais]);
   const {
     historicoAgendamentos,
     historicoHasMore,
@@ -800,14 +285,14 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     parceiroProfissional,
     reloadNegocio,
     reloadProfissionais,
-      reloadEntregas,
-      reloadAgendamentos,
-      reloadGaleria,
-      loadOverview,
-      navigate,
-      checarPermissao,
-      uiAlert,
-      uiConfirm,
+    reloadEntregas,
+    reloadAgendamentos,
+    reloadGaleria,
+    loadOverview,
+    navigate,
+    checarPermissao,
+    uiAlert,
+    uiConfirm,
     setNegocio,
     setGaleriaItems,
     formInfo,
@@ -829,59 +314,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     setFaturamentoMes(prev => prev ? prev : String(hoje || '').slice(0, 7));
   }, [hoje]);
 
-  useEffect(() => {
-    if (!negocio?.id || !agProfIdsKey || !hoje) return;
-    const scheduleDashboardRefresh = () => {
-      if (realtimeRefreshTimerRef.current) {
-        window.clearTimeout(realtimeRefreshTimerRef.current);
-      }
-
-      realtimeRefreshTimerRef.current = window.setTimeout(() => {
-        const ctx = realtimeDashboardContextRef.current;
-        if (!ctx.negocioId || !ctx.hoje) return;
-
-        Promise.resolve(reloadAgendamentosRef.current()).catch(() => {});
-        Promise.resolve(loadOverviewRef.current(
-          ctx.negocioId,
-          ctx.hoje,
-          ctx.faturamentoData || ctx.hoje,
-          ctx.faturamentoMes,
-          ctx.parceiroProfissionalId,
-          { silent: true }
-        )).catch(() => {});
-
-        realtimeRefreshTimerRef.current = null;
-      }, 1200);
-    };
-
-    const channelName = parceiroProfissionalId
-      ? `agendamentos:${negocio.id}:${parceiroProfissionalId}`
-      : `agendamentos:${negocio.id}`;
-    const channelFilter = parceiroProfissionalId
-      ? `profissional_id=eq.${parceiroProfissionalId}`
-      : `negocio_id=eq.${negocio.id}`;
-    const channel = supabase.channel(channelName)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos', filter: channelFilter }, (payload) => {
-        const ev = payload?.eventType;
-        const novo = payload?.new;
-        if (ev === 'INSERT') {
-          if (novo?.id) agendamentosStatusRef.current.set(novo.id, normalizeStatus(novo.status));
-          setNotifAgendamentos(prev => prev + 1);
-        }
-        if (ev === 'UPDATE') {
-          if (novo?.id) agendamentosStatusRef.current.set(novo.id, normalizeStatus(novo.status));
-        }
-        scheduleDashboardRefresh();
-      }).subscribe();
-    return () => {
-      if (realtimeRefreshTimerRef.current) {
-        window.clearTimeout(realtimeRefreshTimerRef.current);
-        realtimeRefreshTimerRef.current = null;
-      }
-      supabase.removeChannel(channel);
-    };
-  }, [negocio?.id, agProfIdsKey, hoje, parceiroProfissionalId]);
-
+  useEffect(() => subscribeRealtime(), [subscribeRealtime]);
 
   const agendamentosAgrupadosPorProfissional = useMemo(() => {
     const fonte = parceiroProfissionalId
@@ -1008,34 +441,17 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     </div>
   );
 
-  const billingAnnouncements = souDono
-    ? billingStatusLoadError
-      ? [{
-        id: 'billing-load-error',
-        tone: 'warning',
-        text: dashboardBillingMessage('billing_status_load_error_inline'),
-        actionLabel: dashboardBillingMessage('billing_status_retry_action'),
-      }]
-      : getBillingAnnouncements(billingStatus)
-    : [];
-  const announcements = [
-    ...billingAnnouncements.map((announcement) => ({
-      ...announcement,
-      onAction: billingStatusLoadError
-        ? reloadBillingStatus
-        : activeTab !== 'planos'
-          ? () => setActiveTab('planos')
-          : undefined,
-      actionLoading: billingStatusLoadError && billingLoading,
-    })),
-    ...(clockUnavailable ? [{
-      id: 'clock',
-      tone: 'warning',
-      text: ptBR.dashboard.official_time_unavailable,
-      actionLabel: ptBR.dashboard.official_time_retry_action,
-      onAction: reloadFull,
-    }] : []),
-  ];
+  const announcements = getDashboardAnnouncements({
+    souDono,
+    billingStatusLoadError,
+    billingLoading,
+    billingStatus,
+    activeTab,
+    reloadBillingStatus,
+    setActiveTab,
+    clockUnavailable,
+    reloadFull,
+  });
 
   return (
     <div className="min-h-screen bg-black text-white">
