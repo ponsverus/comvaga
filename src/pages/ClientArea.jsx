@@ -1,38 +1,25 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { SearchIcon, TimePastIcon, UserIcon } from '../components/icons';
 import AppFooter from '../components/AppFooter';
-import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
-import { ptBR } from '../feedback/messages/ptBR.js';
-import { convertImageToWebp, isImageFile, MEDIA_LIMITS } from '../utils/media';
 import { getPublicUrl } from '../utils/storage';
-import { isRateLimitError } from '../utils/errorUtils';
-import { normalizeBrazilPhone, formatPhoneForDisplay } from '../utils/phone';
 import { getRequestErrorKey } from '../utils/requestError';
-import { searchHome } from '../utils/searchHome';
-import { withAuthRetry } from '../utils/authSession';
 import {
-  cancelarAgendamentoCliente,
-  createBookingReview,
-  fetchAgendamentosCliente,
   fetchClientePerfil,
   fetchCurrentClienteId,
-  fetchFavoritosCliente,
-  fetchReviewedBookings,
-  excluirContaCliente,
-  removerFavoritoCliente,
 } from './clientArea/api/clientAreaApi';
 import Heart from './clientArea/components/Heart';
 import BookingsSection from './clientArea/components/BookingsSection';
 import FavoritesSection from './clientArea/components/FavoritesSection';
 import SearchResults from './clientArea/components/SearchResults';
+import { useClientAccount } from './clientArea/useClientAccount';
+import { useClientActivity } from './clientArea/useClientActivity';
+import { useClientSearch } from './clientArea/useClientSearch';
 import {
   PAGE_SIZE,
   maskedPrivateValue,
-  mergeById,
-  sortByDateThenTimeDesc,
 } from './clientArea/utils';
 
 export default function ClientArea({ user, onLogout, userType = 'client' }) {
@@ -49,122 +36,86 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
   };
 
   const [activeTab,       setActiveTab]       = useState('agendamentos');
-  const [agendamentos,    setAgendamentos]    = useState([]);
-  const [favoritos,       setFavoritos]       = useState([]);
   const [loading,         setLoading]         = useState(true);
-  const [agendamentosPage, setAgendamentosPage] = useState(0);
-  const [favoritosPage, setFavoritosPage] = useState(0);
-  const [agendamentosHasMore, setAgendamentosHasMore] = useState(false);
-  const [favoritosHasMore, setFavoritosHasMore] = useState(false);
-  const [agendamentosLoadingMore, setAgendamentosLoadingMore] = useState(false);
-  const [favoritosLoadingMore, setFavoritosLoadingMore] = useState(false);
-  const [removingFavoritoId, setRemovingFavoritoId] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchRows, setSearchRows] = useState([]);
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState('');
+  const {
+    searchOpen,
+    searchTerm,
+    searchRows,
+    searching,
+    searchError,
+    desktopSearchRef,
+    desktopSearchInputRef,
+    clearSearch,
+    handleSearchChange,
+    toggleDesktopSearch,
+  } = useClientSearch(feedback);
 
-  const [avatarPath,      setAvatarPath]      = useState(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const fileInputRef = useRef(null);
-  const removingFavoritoRef = useRef(false);
-  const desktopSearchRef = useRef(null);
-  const desktopSearchInputRef = useRef(null);
-
-  const [nomePerfil,   setNomePerfil]   = useState('');
-  const [savingPerfil, setSavingPerfil] = useState(false);
-
-  const [novoEmail,      setNovoEmail]      = useState(user?.email || '');
-  const [telefoneCliente, setTelefoneCliente] = useState('');
-  const [novaSenha,      setNovaSenha]      = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [savingDados,    setSavingDados]    = useState(false);
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [emailVisivel,   setEmailVisivel]   = useState(false);
-  const [editingDados, setEditingDados] = useState({});
-  const [dadosBaselines, setDadosBaselines] = useState({});
+  const {
+    avatarPath,
+    uploadingAvatar,
+    fileInputRef,
+    nomePerfil,
+    setNomePerfil,
+    savingPerfil,
+    novoEmail,
+    setNovoEmail,
+    telefoneCliente,
+    setTelefoneCliente,
+    novaSenha,
+    setNovaSenha,
+    confirmarSenha,
+    setConfirmarSenha,
+    savingDados,
+    deletingAccount,
+    emailVisivel,
+    isDadosEditing,
+    dadosFieldChanged,
+    dadosInputStateClass,
+    startDadosEditing,
+    saveDadosField,
+    openFilePicker,
+    onPickAvatar,
+    salvarNome,
+    salvarEmail,
+    salvarTelefone,
+    salvarSenha,
+    handleExcluirContaCliente,
+    applyProfile,
+  } = useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm });
 
   const [clienteId, setClienteId] = useState(null);
-  const [avaliacoesPorAgendamento, setAvaliacoesPorAgendamento] = useState({});
-  const [depoimentoLoading, setDepoimentoLoading] = useState(false);
-  const [depoimentoAlvo, setDepoimentoAlvo] = useState(null);
-  const [depoimentoNota, setDepoimentoNota] = useState(0);
-  const [depoimentoTexto, setDepoimentoTexto] = useState('');
-
-  const getVisiblePageRows = useCallback((rows, limit = PAGE_SIZE) => (rows || []).slice(0, limit), []);
-  const getHasMoreRows = useCallback((rows, limit = PAGE_SIZE) => (rows || []).length > limit, []);
-
-  useEffect(() => { setNovoEmail(user?.email || ''); }, [user?.email]);
+  const {
+    agendamentos,
+    favoritos,
+    agendamentosHasMore,
+    favoritosHasMore,
+    agendamentosLoadingMore,
+    favoritosLoadingMore,
+    removingFavoritoId,
+    avaliacoesPorAgendamento,
+    depoimentoLoading,
+    depoimentoAlvo,
+    depoimentoNota,
+    setDepoimentoNota,
+    depoimentoTexto,
+    setDepoimentoTexto,
+    agendamentosPorStatus,
+    fetchAgendamentos,
+    fetchFavoritos,
+    applyInitialRows,
+    clearActivity,
+    subscribeRealtime,
+    cancelarAgendamento,
+    marcarNovamente,
+    abrirDepoimento,
+    enviarDepoimentoAgendamento,
+    removerFavorito,
+    carregarMaisAgendamentos,
+    carregarMaisFavoritos,
+  } = useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, navigate });
 
   const fetchClienteId = useCallback(async () => {
     return fetchCurrentClienteId();
-  }, []);
-
-  const fetchAgendamentos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
-    const data = await fetchAgendamentosCliente({
-      clienteId: clienteIdParam,
-      limit,
-      cursor,
-    });
-    return (data || []).map(a => ({
-      ...a,
-      preco_final:  a.preco_final ?? null,
-      data:         String(a.data || ''),
-      hora_inicio:  a.horario_inicio ? String(a.horario_inicio).slice(0, 5) : '',
-      hora_fim:     a.horario_fim    ? String(a.horario_fim).slice(0, 5)    : '',
-      entregas: {
-        nome:              a.entrega_nome,
-        preco:             a.entrega_preco,
-        preco_promocional: a.entrega_promo,
-      },
-      profissionais: {
-        nome:    a.profissional_nome,
-        negocios: {
-          nome:         a.negocio_nome,
-          slug:         a.negocio_slug,
-          logo_path:    a.negocio_logo_path,
-          tipo_negocio: a.negocio_tipo,
-        },
-      },
-    }));
-  }, [clienteId]);
-
-  const fetchFavoritos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
-    const data = await fetchFavoritosCliente({
-      clienteId: clienteIdParam,
-      limit,
-      cursor,
-    });
-    return (data || []).map(f => ({
-      ...f,
-      negocios: f.tipo === 'negocio' && f.negocio_nome
-        ? { nome: f.negocio_nome, slug: f.negocio_slug, logo_path: f.negocio_logo_path, tipo_negocio: f.negocio_tipo }
-        : null,
-      profissionais: f.tipo === 'profissional' && f.profissional_nome
-        ? { nome: f.profissional_nome, negocios: f.profissional_negocio_slug ? { slug: f.profissional_negocio_slug } : null }
-        : null,
-    }));
-  }, [clienteId]);
-
-  const syncAvaliacoesConcluidas = useCallback(async (agendamentosRows) => {
-    const concluidosIds = (agendamentosRows || [])
-      .filter((item) => String(item?.status || '') === 'concluido')
-      .map((item) => item?.id)
-      .filter(Boolean);
-
-    if (!concluidosIds.length) {
-      setAvaliacoesPorAgendamento({});
-      return;
-    }
-
-    const reviews = await fetchReviewedBookings(concluidosIds);
-    const nextMap = {};
-    for (const review of reviews) {
-      if (!review?.agendamento_id) continue;
-      nextMap[review.agendamento_id] = review.id;
-    }
-    setAvaliacoesPorAgendamento(nextMap);
   }, []);
 
   const loadPerfil = useCallback(async () => {
@@ -184,18 +135,8 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
         fetchAgendamentos({ clienteId: currentClienteId, limit: PAGE_SIZE + 1 }),
         fetchFavoritos({ clienteId: currentClienteId, limit: PAGE_SIZE + 1 }),
       ]);
-      const visibleAgendamentos = getVisiblePageRows(agendamentosRows);
-      const visibleFavoritos = getVisiblePageRows(favoritosRows);
-      setNomePerfil(perfil.nome);
-      setAvatarPath(perfil.avatarPath);
-      setTelefoneCliente(formatPhoneForDisplay(perfil.telefone) || '');
-      setAgendamentos(visibleAgendamentos);
-      setFavoritos(visibleFavoritos);
-      await syncAvaliacoesConcluidas(visibleAgendamentos);
-      setAgendamentosPage(0);
-      setFavoritosPage(0);
-      setAgendamentosHasMore(getHasMoreRows(agendamentosRows));
-      setFavoritosHasMore(getHasMoreRows(favoritosRows));
+      applyProfile(perfil);
+      await applyInitialRows(agendamentosRows, favoritosRows);
     } catch (error) {
       const requestKey = getRequestErrorKey(error);
       if (requestKey === 'alerts.request_timeout') {
@@ -206,327 +147,22 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
         console.error('Client area load error:', error);
         uiAlert('clientArea.load_data_error', 'warning');
       }
-      setAgendamentos([]);
-      setFavoritos([]);
-      setAgendamentosPage(0);
-      setFavoritosPage(0);
-      setAgendamentosHasMore(false);
-      setFavoritosHasMore(false);
-      setAvaliacoesPorAgendamento({});
+      clearActivity();
     } finally {
       setLoading(false);
     }
-  }, [user?.id, loadPerfil, fetchClienteId, fetchAgendamentos, fetchFavoritos, getHasMoreRows, getVisiblePageRows, syncAvaliacoesConcluidas, uiAlert]);
+  }, [user?.id, loadPerfil, fetchClienteId, fetchAgendamentos, fetchFavoritos, applyProfile, applyInitialRows, clearActivity, uiAlert]);
 
   useEffect(() => {
     if (user?.id) loadData();
   }, [user?.id, loadData]);
 
-  useEffect(() => {
-    if (!searchOpen) return;
-    desktopSearchInputRef.current?.focus();
-  }, [searchOpen]);
-
-  useEffect(() => {
-    if (!searchOpen) return undefined;
-
-    const handlePointerDown = (event) => {
-      if (desktopSearchRef.current?.contains(event.target)) return;
-      setSearchOpen(false);
-      setSearchTerm('');
-      setSearchRows([]);
-      setSearchError('');
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [searchOpen]);
-
-  useEffect(() => {
-    const clean = String(searchTerm || '').trim();
-    let cancelled = false;
-    setSearchRows([]);
-    setSearchError('');
-
-    if (clean.length < 3) {
-      setSearching(false);
-      return undefined;
-    }
-
-    setSearching(true);
-    const timeout = window.setTimeout(() => {
-      const search = async () => {
-        try {
-          const rows = await searchHome(clean, { limit: 10 });
-          if (cancelled) return;
-          setSearchRows(rows);
-        } catch (error) {
-          if (cancelled) return;
-          console.error('Client search error:', error);
-          setSearchError(ptBR.clientArea.search_error.body);
-          feedback.showMessage('clientArea.search_error');
-        } finally {
-          if (!cancelled) setSearching(false);
-        }
-      };
-      search();
-    }, 300);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-    };
-  }, [feedback, searchTerm]);
-
-  const fetchAgendamentosRef = useRef(fetchAgendamentos);
-  useEffect(() => { fetchAgendamentosRef.current = fetchAgendamentos; }, [fetchAgendamentos]);
-
-  const agendamentosPageRef = useRef(agendamentosPage);
-  useEffect(() => { agendamentosPageRef.current = agendamentosPage; }, [agendamentosPage]);
-
-  const realtimeRefreshTimerRef = useRef(null);
-
-  useEffect(() => {
-    if (!clienteId) return;
-    const scheduleRefresh = () => {
-      if (realtimeRefreshTimerRef.current) {
-        window.clearTimeout(realtimeRefreshTimerRef.current);
-      }
-
-      realtimeRefreshTimerRef.current = window.setTimeout(async () => {
-        try {
-          const limit = (agendamentosPageRef.current + 1) * PAGE_SIZE;
-          const rows = await fetchAgendamentosRef.current({ limit: limit + 1 });
-          const visibleRows = getVisiblePageRows(rows, limit);
-          setAgendamentos(visibleRows);
-          await syncAvaliacoesConcluidas(visibleRows);
-          setAgendamentosHasMore(getHasMoreRows(rows, limit));
-        } catch (error) {
-          console.warn('Falha ao atualizar agendamentos em tempo real.', error);
-        } finally {
-          realtimeRefreshTimerRef.current = null;
-        }
-      }, 1200);
-    };
-
-    const channel = supabase
-      .channel(`agendamentos_cliente:${clienteId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'agendamentos', filter: `cliente_id=eq.${clienteId}` },
-        scheduleRefresh
-      )
-      .subscribe();
-    return () => {
-      if (realtimeRefreshTimerRef.current) {
-        window.clearTimeout(realtimeRefreshTimerRef.current);
-        realtimeRefreshTimerRef.current = null;
-      }
-      supabase.removeChannel(channel);
-    };
-  }, [clienteId, getHasMoreRows, getVisiblePageRows, syncAvaliacoesConcluidas]);
-
-  const openFilePicker = () => fileInputRef.current?.click();
-
-  const onPickAvatar = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-    const maxMb   = MEDIA_LIMITS.avatarInputBytes / (1024 * 1024);
-    if (!isImageFile(file)) { uiAlert('clientArea.avatar_invalid_format', 'error'); return; }
-    if (file.size > MEDIA_LIMITS.avatarInputBytes) { uiAlert('clientArea.avatar_too_large', 'error', { maxMb }); return; }
-    let uploadedPath = null;
-    try {
-      setUploadingAvatar(true);
-      const convertedFile = await convertImageToWebp(file, { maxDimension: MEDIA_LIMITS.avatarMaxDimension });
-      const path = `${user.id}/avatar-${Date.now()}.webp`;
-      const { error: upErr } = await withAuthRetry(
-        () => supabase.storage.from('avatars').upload(path, convertedFile, { upsert: false, contentType: convertedFile.type }),
-        10000,
-        'avatar-upload'
-      );
-      if (upErr) throw upErr;
-      uploadedPath = path;
-      const { data: updatedClient, error: updErr } = await withAuthRetry(
-        () => supabase
-          .from('clientes')
-          .update({ avatar_path: path })
-          .eq('user_id', user.id)
-          .eq('status', 'ativo')
-          .select('id')
-          .maybeSingle(),
-        6000,
-        'avatar-path-update'
-      );
-      if (updErr) throw updErr;
-      if (!updatedClient?.id) throw new Error('avatar_path_update_missing_client');
-      uploadedPath = null;
-      setAvatarPath(path);
-      uiAlert('clientArea.avatar_updated', 'success');
-    } catch {
-      if (uploadedPath) {
-        try {
-          const { error: queueError } = await withAuthRetry(
-            () => supabase.rpc('enqueue_owned_orphan_storage_delete', {
-              p_bucket: 'avatars',
-              p_path: uploadedPath,
-            }),
-            6000,
-            'avatar-enqueue-orphan-delete'
-          );
-          if (queueError) throw queueError;
-        } catch (queueError) {
-          console.warn('Falha ao enfileirar limpeza de avatar sem vinculo.', queueError);
-        }
-      }
-      uiAlert('clientArea.avatar_update_error', 'error');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const salvarNome = async () => {
-    const nome = String(nomePerfil || '').trim();
-    if (!nome) { uiAlert('clientArea.profile_name_required', 'error'); return false; }
-    try {
-      setSavingPerfil(true);
-      const { error: updErr } = await withAuthRetry(
-        () => supabase.from('users').update({ nome }).eq('id', user.id),
-        6000,
-        'cliente-nome-update'
-      );
-      if (updErr) throw updErr;
-      const { error: metaErr } = await withAuthRetry(
-        () => supabase.auth.updateUser({ data: { nome } }),
-        6000,
-        'cliente-auth-nome-update'
-      );
-      if (metaErr) {
-        console.warn('Falha ao atualizar metadados do usuário.', metaErr);
-      }
-      uiAlert('clientArea.profile_name_updated', 'success');
-      return true;
-    } catch {
-      uiAlert('clientArea.profile_name_update_error', 'error');
-      return false;
-    } finally {
-      setSavingPerfil(false);
-    }
-  };
-
-  const salvarEmail = async () => {
-    const email = String(novoEmail || '').trim();
-    if (!email || !email.includes('@')) { uiAlert('clientArea.account_email_invalid', 'error'); return false; }
-    try {
-      setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase.auth.updateUser({ email }),
-        6000,
-        'cliente-email-update'
-      );
-      if (error) throw error;
-      uiAlert('clientArea.account_email_update_sent', 'success');
-      return true;
-    } catch {
-      uiAlert('clientArea.account_email_update_error', 'error');
-      return false;
-    } finally {
-      setSavingDados(false);
-    }
-  };
-
-  const salvarTelefone = async () => {
-    const telefone = normalizeBrazilPhone(telefoneCliente);
-    if (telefone === null) {
-      uiAlert('clientArea.phone_invalid', 'error');
-      return false;
-    }
-
-    try {
-      setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase
-          .from('clientes')
-          .update({ telefone: telefone || null })
-          .eq('user_id', user.id)
-          .eq('status', 'ativo'),
-        6000,
-        'cliente-telefone-update'
-      );
-      if (error) throw error;
-      uiAlert('clientArea.phone_updated', 'success');
-      return true;
-    } catch {
-      uiAlert('clientArea.phone_update_error', 'error');
-      return false;
-    } finally {
-      setSavingDados(false);
-    }
-  };
-
-  const salvarSenha = async () => {
-    const pass = String(novaSenha || '');
-    const conf = String(confirmarSenha || '');
-    if (pass.length < 7) { uiAlert('clientArea.account_password_too_short', 'error'); return false; }
-    if (pass !== conf)   { uiAlert('clientArea.account_password_mismatch',  'error'); return false; }
-    try {
-      setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase.auth.updateUser({ password: pass }),
-        6000,
-        'cliente-password-update'
-      );
-      if (error) throw error;
-      setNovaSenha('');
-      setConfirmarSenha('');
-      uiAlert('clientArea.account_password_updated', 'success');
-      return true;
-    } catch {
-      uiAlert('clientArea.account_password_update_error', 'error');
-      return false;
-    } finally {
-      setSavingDados(false);
-    }
-  };
+  useEffect(() => subscribeRealtime(), [subscribeRealtime]);
 
   const dataEditButtonClass = 'shrink-0 rounded-full bg-primary px-3 py-1 text-[12px] font-normal uppercase text-black transition-colors hover:bg-primary/90 disabled:opacity-50';
   const dataSaveButtonClass = 'shrink-0 rounded-full border border-primary/30 px-3 py-1 text-[12px] font-normal uppercase text-primary transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-40';
   const dataInputClass = 'w-full bg-transparent px-0 py-2 text-[14px] text-white placeholder-gray-600 outline-none focus:text-white';
   const dataPillInputClass = 'w-full rounded-full border border-gray-800 bg-transparent px-4 py-2 text-center text-[14px] text-white placeholder-gray-600 outline-none focus:border-primary/50 focus:text-white';
-
-  const getDadosFieldValue = (field) => {
-    if (field === 'nome') return String(nomePerfil ?? '');
-    if (field === 'email') return String(novoEmail ?? '');
-    if (field === 'telefone') return String(telefoneCliente ?? '');
-    if (field === 'senha') return JSON.stringify([novaSenha || '', confirmarSenha || '']);
-    return '';
-  };
-
-  const isDadosEditing = (field) => Boolean(editingDados[field]);
-  const dadosFieldChanged = (field) => isDadosEditing(field) && dadosBaselines[field] !== getDadosFieldValue(field);
-  const dadosInputStateClass = (editing) => editing ? '' : 'cursor-default text-gray-300 focus:text-gray-300';
-
-  const startDadosEditing = (field) => {
-    if (field === 'email') setEmailVisivel(true);
-    setDadosBaselines((current) => ({ ...current, [field]: getDadosFieldValue(field) }));
-    setEditingDados((current) => ({ ...current, [field]: true }));
-  };
-
-  const stopDadosEditing = (field) => {
-    if (field === 'email') setEmailVisivel(false);
-    setEditingDados((current) => ({ ...current, [field]: false }));
-    setDadosBaselines((current) => {
-      const next = { ...current };
-      delete next[field];
-      return next;
-    });
-  };
-
-  const saveDadosField = async (field, saveFn) => {
-    if (!dadosFieldChanged(field)) return;
-    const saved = await Promise.resolve(saveFn());
-    if (saved !== false) stopDadosEditing(field);
-  };
 
   const renderDadosAction = (field, saveFn, saving) => (
     isDadosEditing(field) ? (
@@ -549,198 +185,9 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
       </button>
     )
   );
-  const cancelarAgendamento = async (agendamentoId) => {
-    const ok = await uiConfirm('clientArea.booking_cancel_confirm', 'warning');
-    if (!ok) return;
-    try {
-      await cancelarAgendamentoCliente(agendamentoId);
-      uiAlert('clientArea.booking_canceled', 'danger');
-      const limit = (agendamentosPage + 1) * PAGE_SIZE;
-      const rows = await fetchAgendamentos({ limit: limit + 1 });
-      const visibleRows = getVisiblePageRows(rows, limit);
-      setAgendamentos(visibleRows);
-      await syncAvaliacoesConcluidas(visibleRows);
-      setAgendamentosHasMore(getHasMoreRows(rows, limit));
-    } catch (error) {
-      const requestKey = getRequestErrorKey(error);
-      if (requestKey) {
-        await uiAlert(requestKey, 'warning');
-        return;
-      }
-      uiAlert('clientArea.booking_cancel_error', 'error');
-    }
-  };
-
-  const marcarNovamente = (agendamento) => {
-    const slug = String(agendamento?.negocio_slug || '').trim();
-    const profissionalId = agendamento?.profissional_id || null;
-    const entregaId = agendamento?.entrega_id || null;
-    if (!slug || !profissionalId || !entregaId) {
-      uiAlert('clientArea.rebook_unavailable', 'warning');
-      return;
-    }
-    navigate(`/v/${slug}`, {
-      state: {
-        rebook: {
-          profissionalId,
-          entregaId,
-        },
-      },
-    });
-  };
-
-  const abrirDepoimento = (agendamento) => {
-    const jaAberto = depoimentoAlvo?.id === agendamento?.id;
-    setDepoimentoAlvo(jaAberto ? null : agendamento);
-    setDepoimentoNota(0);
-    setDepoimentoTexto('');
-  };
-
-  const enviarDepoimentoAgendamento = async () => {
-    if (!depoimentoAlvo?.id) return;
-    if (!Number.isInteger(depoimentoNota) || depoimentoNota < 1 || depoimentoNota > 5) return;
-    try {
-      setDepoimentoLoading(true);
-      await createBookingReview({
-        agendamentoId: depoimentoAlvo.id,
-        nota: depoimentoNota,
-        comentario: depoimentoTexto,
-      });
-      setAvaliacoesPorAgendamento((prev) => ({
-        ...prev,
-        [depoimentoAlvo.id]: true,
-      }));
-      setDepoimentoAlvo(null);
-      setDepoimentoTexto('');
-      setDepoimentoNota(0);
-      feedback.showMessage('vitrine.depoimento_sent', { variant: 'success' });
-    } catch (e) {
-      const requestKey = getRequestErrorKey(e);
-      if (requestKey === 'alerts.rate_limit_exceeded' || isRateLimitError(e)) {
-        feedback.showMessage('clientArea.depoimento_rate_limit', { variant: 'warning' });
-        return;
-      }
-      if (requestKey === 'alerts.request_timeout') {
-        feedback.showMessage('alerts.request_timeout', { variant: 'warning' });
-        return;
-      }
-      console.error('Client review send error:', e);
-      feedback.showMessage('clientArea.depoimento_send_error');
-    } finally {
-      setDepoimentoLoading(false);
-    }
-  };
-
-  const removerFavorito = async (favoritoId) => {
-    if (!clienteId || removingFavoritoRef.current) return;
-    try {
-      removingFavoritoRef.current = true;
-      setRemovingFavoritoId(favoritoId);
-      await removerFavoritoCliente({ favoritoId, clienteId });
-      setFavoritos(prev => prev.filter(f => f.id !== favoritoId));
-      uiAlert('clientArea.favorite_removed', 'success');
-    } catch {
-      uiAlert('clientArea.favorite_remove_error', 'error');
-    } finally {
-      removingFavoritoRef.current = false;
-      setRemovingFavoritoId(null);
-    }
-  };
-
-  const handleExcluirContaCliente = async () => {
-    if (deletingAccount) return;
-    const ok = await uiConfirm('clientArea.account_delete_confirm', 'danger');
-    if (!ok) return;
-
-    try {
-      setDeletingAccount(true);
-      await excluirContaCliente();
-      await uiAlert('clientArea.account_deleted', 'success');
-      const logoutResult = onLogout?.('/');
-      if (logoutResult?.catch) logoutResult.catch(() => {});
-      navigate('/', { replace: true });
-    } catch (error) {
-      const requestKey = getRequestErrorKey(error);
-      if (requestKey) {
-        await uiAlert(requestKey, 'warning');
-        return;
-      }
-      uiAlert('clientArea.account_delete_error', 'error');
-    } finally {
-      setDeletingAccount(false);
-    }
-  };
-
-  const carregarMaisAgendamentos = async () => {
-    if (agendamentosLoadingMore || !agendamentosHasMore) return;
-    try {
-      setAgendamentosLoadingMore(true);
-      const nextPage = agendamentosPage + 1;
-      const cursor = agendamentos.length ? agendamentos[agendamentos.length - 1] : null;
-      const rows = await fetchAgendamentos({ cursor, limit: PAGE_SIZE + 1 });
-      const visibleRows = getVisiblePageRows(rows);
-      const merged = mergeById(agendamentos, visibleRows);
-      setAgendamentos(merged);
-      await syncAvaliacoesConcluidas(merged);
-      setAgendamentosPage(nextPage);
-      setAgendamentosHasMore(getHasMoreRows(rows));
-    } catch {
-      uiAlert('clientArea.load_more_agendamentos_error', 'warning');
-    } finally {
-      setAgendamentosLoadingMore(false);
-    }
-  };
-
-  const carregarMaisFavoritos = async () => {
-    if (favoritosLoadingMore || !favoritosHasMore) return;
-    try {
-      setFavoritosLoadingMore(true);
-      const nextPage = favoritosPage + 1;
-      const cursor = favoritos.length ? favoritos[favoritos.length - 1] : null;
-      const rows = await fetchFavoritos({ cursor, limit: PAGE_SIZE + 1 });
-      setFavoritos(prev => mergeById(prev, getVisiblePageRows(rows)));
-      setFavoritosPage(nextPage);
-      setFavoritosHasMore(getHasMoreRows(rows));
-    } catch {
-      uiAlert('clientArea.load_more_favoritos_error', 'warning');
-    } finally {
-      setFavoritosLoadingMore(false);
-    }
-  };
-
-  const agendamentosPorStatus = useMemo(() => {
-    const abertos = [], cancelados = [], concluidos = [];
-    for (const a of (agendamentos || [])) {
-      const st = String(a?.status || '');
-      if (st === 'concluido')            concluidos.push(a);
-      else if (st.includes('cancelado')) cancelados.push(a);
-      else                               abertos.push(a);
-    }
-    return {
-      abertos:    sortByDateThenTimeDesc(abertos),
-      cancelados: sortByDateThenTimeDesc(cancelados),
-      concluidos: sortByDateThenTimeDesc(concluidos),
-    };
-  }, [agendamentos]);
-
   const avatarUrl      = getPublicUrl('avatars', avatarPath);
   const nomeCabecalho  = String(nomePerfil || user?.user_metadata?.nome || '—').trim();
   const avatarFallback = nomeCabecalho?.[0]?.toUpperCase() || '?';
-  const clearSearch = useCallback(() => {
-    setSearchOpen(false);
-    setSearchTerm('');
-    setSearchRows([]);
-    setSearchError('');
-  }, []);
-
-  const handleSearchChange = (event) => {
-    const value = event.target.value;
-    setSearchTerm(value);
-    setSearchRows([]);
-    setSearchError('');
-    setSearching(value.trim().length >= 3);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -778,15 +225,7 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
                 >
                   <button
                     type="button"
-                    onClick={() => {
-                      if (searchOpen && !String(searchTerm || '').trim()) {
-                        setSearchOpen(false);
-                        setSearchRows([]);
-                        setSearchError('');
-                        return;
-                      }
-                      setSearchOpen(true);
-                    }}
+                    onClick={toggleDesktopSearch}
                     className="flex h-11 w-11 shrink-0 items-center justify-center text-gray-300 transition-colors hover:text-primary"
                     aria-label="Pesquisar negócio ou profissional"
                   >
