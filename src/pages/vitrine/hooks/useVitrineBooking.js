@@ -97,6 +97,10 @@ export function useVitrineBooking({
       if (ok) navigate('/login');
       return false;
     }
+    if (!userType) {
+      alertKey('profile_unconfirmed');
+      return false;
+    }
     if (userType !== 'client' && !isAssistedBooking) {
       alertKey(
         'schedule_only_client',
