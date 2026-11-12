@@ -2046,7 +2046,7 @@ export const ptBR = {
       retryingButtonText: 'VERIFICANDO...',
     },
     schedule_errors: {
-      no_slots: 'SEM VAGAS PRA HOJE :(',
+      no_slots: 'Sem vagas para a data escolhida.',
       slots_load_error: 'Erro ao buscar horários. Tente novamente.',
       plan_blocked: 'Agenda indisponível. Este negócio precisa ativar um plano para receber novos agendamentos.',
       rate_limit: 'Muitas tentativas de agendamento. Aguarde um minuto e tente novamente.',
