@@ -369,6 +369,10 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
       alertKey('favorite_need_login', 'Login necessário', 'Faça login para favoritar.', 'ENTENDI');
       return;
     }
+    if (!userType) {
+      alertKey('profile_unconfirmed');
+      return;
+    }
     if (userType !== 'client') {
       alertKey('favorite_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode favoritar negócios.', 'ENTENDI');
       return;
@@ -396,6 +400,10 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
       if (ok) navigate('/login');
       return;
     }
+    if (!userType) {
+      alertKey('profile_unconfirmed');
+      return;
+    }
     if (userType !== 'client') {
       alertKey('depoimento_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode deixar depoimentos.', 'ENTENDI');
       return;
@@ -415,6 +423,10 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
         'MAIS TARDE'
       );
       if (ok) navigate('/login');
+      return;
+    }
+    if (!userType) {
+      alertKey('profile_unconfirmed');
       return;
     }
     if (userType !== 'client') {
