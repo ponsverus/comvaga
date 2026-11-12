@@ -1,7 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import { AlertIcon } from '../../components/icons';
-import ModalDialog from '../../components/ModalDialog';
 
 const toneByVariant = {
   success: {
@@ -55,13 +54,28 @@ export default function FullScreenMessageView({
   onPrevious,
 }) {
   const [promptValue, setPromptValue] = useState('');
-  const titleId = useId();
-  const initialFocusRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     setPromptValue(String(payload?.initialValue ?? ''));
   }, [open, payload]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        if (payload?.type === 'message' && hasNext) {
+          onNext?.();
+          return;
+        }
+        onClose?.(payload?.type === 'confirm' ? false : null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [hasNext, onClose, onNext, open, payload?.type]);
 
   if (!open || !payload) return null;
 
@@ -103,24 +117,8 @@ export default function FullScreenMessageView({
     onClose?.(isConfirm ? false : null);
   };
 
-  const dismiss = () => {
-    if (payload.type === 'message' && hasNext) {
-      onNext?.();
-      return;
-    }
-    onClose?.(isConfirm ? false : null);
-  };
-
   return (
-    <ModalDialog
-      open={open}
-      onDismiss={dismiss}
-      labelledBy={titleId}
-      initialFocusRef={initialFocusRef}
-      focusKey={payload}
-      overlayClassName="bg-black/80 backdrop-blur-sm"
-      paddingClassName="px-4 py-6"
-    >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm">
       <div className={`w-full max-w-md rounded-custom border ${panelClass} ${tone.borderClass} p-6 shadow-2xl`}>
         <div className="mb-5 flex items-start gap-4">
           <div aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center">
@@ -133,7 +131,7 @@ export default function FullScreenMessageView({
             )}
           </div>
           <div className="min-w-0">
-            <h2 id={titleId} className="text-xl font-normal uppercase">{payload.title || 'Aviso'}</h2>
+            <h2 className="text-xl font-normal uppercase">{payload.title || 'Aviso'}</h2>
             {payload.body ? (
               <p className={`mt-3 text-sm leading-relaxed ${bodyClass}`}>
                 <BodyText text={payload.body} />
@@ -144,8 +142,7 @@ export default function FullScreenMessageView({
 
         {isPrompt ? (
           <input
-            ref={initialFocusRef}
-            aria-label={payload.inputLabel || payload.placeholder || 'Resposta'}
+            autoFocus
             value={promptValue}
             onChange={(event) => setPromptValue(event.target.value)}
             onKeyDown={(event) => {
@@ -168,7 +165,6 @@ export default function FullScreenMessageView({
               </button>
             ) : null}
             <button
-              ref={initialFocusRef}
               type="button"
               onClick={closeWithPrimary}
               className={`h-11 flex-1 rounded-button px-5 text-xs font-normal uppercase ${tone.buttonClass}`}
@@ -180,7 +176,6 @@ export default function FullScreenMessageView({
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             {(isConfirm || isPrompt) ? (
               <button
-                ref={isConfirm ? initialFocusRef : undefined}
                 type="button"
                 onClick={closeWithCancel}
                 className={`h-11 rounded-button border px-5 text-xs font-normal uppercase transition-colors ${secondaryClass}`}
@@ -189,7 +184,6 @@ export default function FullScreenMessageView({
               </button>
             ) : null}
             <button
-              ref={!isConfirm && !isPrompt ? initialFocusRef : undefined}
               type="button"
               onClick={closeWithPrimary}
               className={`h-11 rounded-button px-5 text-xs font-normal uppercase transition-colors ${isConfirm || isPrompt ? '' : 'w-full'} ${tone.buttonClass}`}
@@ -199,6 +193,6 @@ export default function FullScreenMessageView({
           </div>
         )}
       </div>
-    </ModalDialog>
+    </div>
   );
 }
