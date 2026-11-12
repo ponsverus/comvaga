@@ -1993,6 +1993,12 @@ export const ptBR = {
     generic_title: 'Aviso',
     common_ok: 'ENTENDI',
 
+    profile_unconfirmed: {
+      title: 'Perfil pendente',
+      body: 'Houve falha ao confirmar seu cadastro neste acesso. Atualize a página para tentar novamente.',
+      buttonText: 'ENTENDI',
+    },
+
     load_timeout: 'A vitrine demorou demais para carregar. Tente novamente.',
     load_error: 'Erro ao carregar a vitrine.',
 
