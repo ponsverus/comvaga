@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, ChevronRight, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import NotFound from './NotFound';
 import BookingCalendar from '../components/BookingCalendar';
-import { CalendarIcon } from '../components/icons';
 import AppFooter from '../components/AppFooter';
 import { ptBR } from '../feedback/messages/ptBR';
 import { useBusinessGroup } from '../businessTerms';
@@ -24,208 +23,16 @@ import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, b
 import { applyBusinessStructuredData } from '../utils/businessSeo.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
-
-function formatDateBR(ymd) {
-  if (!ymd) return '';
-  const [y, m, d] = String(ymd).split('-');
-  if (!y || !m || !d) return String(ymd);
-  return `${d}.${m}.${y}`;
-}
-
-function getDowFromDateSP(dateStr) {
-  if (!dateStr) return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr).trim());
-  if (!match) return null;
-  const [, year, month, day] = match;
-  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))).getUTCDay();
-}
-
-function pad2(value) {
-  return String(value).padStart(2, '0');
-}
-
-function parseSaoPauloDateTime(dateISO, timeValue) {
-  const normalizedTime = String(timeValue || '00:00').slice(0, 5);
-  return new Date(`${dateISO}T${normalizedTime}:00-03:00`);
-}
-
-function formatUtcCalendarDate(date) {
-  return `${date.getUTCFullYear()}${pad2(date.getUTCMonth() + 1)}${pad2(date.getUTCDate())}T${pad2(date.getUTCHours())}${pad2(date.getUTCMinutes())}${pad2(date.getUTCSeconds())}Z`;
-}
-
-function escapeIcsText(value) {
-  return String(value || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/\r?\n/g, '\\n')
-    .replace(/,/g, '\\,')
-    .replace(/;/g, '\\;');
-}
-
-function slugifyFilePart(value) {
-  return String(value || 'evento')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'evento';
-}
-
-function getCalendarPlatformMode() {
-  if (typeof navigator === 'undefined') return 'chooser';
-  const ua = navigator.userAgent || '';
-  const platform = navigator.platform || '';
-  const maxTouchPoints = navigator.maxTouchPoints || 0;
-  const isAndroid = /Android/i.test(ua);
-  const isIPhone = /iPhone/i.test(ua);
-  const isIPad = /iPad/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
-  const isMac = /Mac/i.test(platform) && maxTouchPoints <= 1;
-
-  if (isAndroid) return 'google-with-fallback';
-  if (isIPhone || isIPad || isMac) return 'ics';
-  return 'ics';
-}
-
-function getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin) {
-  const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
-  if (fimHHMM) return parseSaoPauloDateTime(dataISO, fimHHMM);
-  return new Date(inicio.getTime() + duracaoMin * 60000);
-}
-
-function gerarLinkGoogle({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoMin, detalhes, local }) {
-  const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
-  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin);
-  const details = [detalhes, local ? `Local: ${local}` : ''].filter(Boolean).join('\n');
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${formatUtcCalendarDate(inicio)}/${formatUtcCalendarDate(fim)}&ctz=America%2FSao_Paulo&details=${encodeURIComponent(details)}&location=${encodeURIComponent(local || '')}&sf=true&output=xml`;
-}
-
-function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoMin, detalhes, local, uidSeed }) {
-  const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
-  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin);
-  const dtStamp = formatUtcCalendarDate(new Date());
-  const dtStart = formatUtcCalendarDate(inicio);
-  const dtEnd = formatUtcCalendarDate(fim);
-  const uid = `${slugifyFilePart(uidSeed || titulo)}-${dtStart}@comvaga`;
-  const content = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Comvaga//Agenda//PT-BR',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:${uid}`,
-    `DTSTAMP:${dtStamp}`,
-    `DTSTART:${dtStart}`,
-    `DTEND:${dtEnd}`,
-    `SUMMARY:${escapeIcsText(titulo)}`,
-    `DESCRIPTION:${escapeIcsText(detalhes)}`,
-    `LOCATION:${escapeIcsText(local)}`,
-    'BEGIN:VALARM',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:Lembrete de agendamento',
-    'TRIGGER:-PT30M',
-    'END:VALARM',
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
-  return {
-    content,
-    filename: `${slugifyFilePart(titulo)}-${String(dataISO || '').replace(/-/g, '')}.ics`,
-  };
-}
-
-function getPrecoFinalEntrega(s) {
-  const preco = Number(s?.preco ?? 0);
-  const promo = Number(s?.preco_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
-  return temPromo ? promo : preco;
-}
-
-function sanitizeTel(raw) {
-  const v = String(raw || '').trim();
-  if (!v) return '';
-  return v.replace(/[^\d+]/g, '');
-}
-
-function AlertModal({ open, onClose, title, body, buttonText, isLight }) {
-  if (!open) return null;
-  const bg = isLight ? 'bg-vcard border-vborder' : 'bg-dark-100 border-gray-800';
-  const titleCl = isLight ? 'text-vtext' : 'text-white';
-  const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
-  const closeCl = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-400 hover:text-white';
-  const btnCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-      <div className={`border rounded-custom max-w-md w-full p-6 ${bg}`}>
-        <div className="flex justify-between items-start gap-3 mb-3">
-          <h3 className={`text-xl font-normal ${titleCl}`}>{title}</h3>
-          <button type="button" onClick={onClose} className={closeCl}><X className="w-6 h-6" /></button>
-        </div>
-        {body && <p className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
-        <button type="button" onClick={onClose} className={`mt-5 w-full py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
-          {buttonText || 'OK'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmText, cancelText, isLight }) {
-  if (!open) return null;
-  const bg = isLight ? 'bg-vcard border-vborder' : 'bg-dark-100 border-gray-800';
-  const titleCl = isLight ? 'text-vtext' : 'text-white';
-  const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
-  const closeCl = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-400 hover:text-white';
-  const cancelCl = isLight ? 'bg-vcard2 border-vborder text-vsub hover:border-vprimary hover:text-vtext' : 'bg-dark-200 border-gray-800 text-gray-200';
-  const confirmCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
-      <div className={`border rounded-custom max-w-md w-full p-6 ${bg}`}>
-        <div className="flex justify-between items-start gap-3 mb-3">
-          <h3 className={`text-xl font-normal ${titleCl}`}>{title}</h3>
-          <button type="button" onClick={onCancel} className={closeCl}><X className="w-6 h-6" /></button>
-        </div>
-        {body && <p className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
-        <div className="mt-5 flex gap-3">
-          <button type="button" onClick={onCancel} className={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${cancelCl}`}>{cancelText || 'CANCELAR'}</button>
-          <button type="button" onClick={onConfirm} className={`flex-1 py-3 rounded-button uppercase font-normal transition-colors ${confirmCl}`}>{confirmText || 'CONFIRMAR'}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SelectionBar({ itens, counterSingular, counterPlural, onConfirm, onClear, isLight }) {
-  const qtd = itens.length;
-  if (qtd === 0) return null;
-  const durTotal = itens.reduce((sum, x) => sum + Number(x.duracao_minutos || 0), 0);
-  const valTotal = itens.reduce((sum, x) => sum + getPrecoFinalEntrega(x), 0);
-  const label = qtd === 1 ? counterSingular : counterPlural;
-  const textMain = isLight ? 'text-vtext' : 'text-white';
-  const textSub = isLight ? 'text-vsub' : 'text-gray-500';
-  const clearBtn = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-600 hover:text-gray-400';
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60] vitrine-selection-bar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-vprimary flex items-center justify-center text-vprimary-text text-xs font-normal shrink-0 tabular-nums">{qtd}</div>
-          <div className="min-w-0">
-            <div className={`text-sm font-normal truncate ${textMain}`}>{qtd} {label} SELECIONADO{qtd > 1 ? 's' : ''}</div>
-            <div className={`text-xs font-normal ${textSub}`}>{durTotal} MIN • R$ {valTotal.toFixed(2)}</div>
-          </div>
-          <button type="button" onClick={onClear} className={`shrink-0 ml-1 ${clearBtn}`} title="Limpar"><X className="w-4 h-4" /></button>
-        </div>
-        <button type="button" onClick={onConfirm} className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-vprimary text-vprimary-text rounded-full text-sm font-normal uppercase whitespace-nowrap transition-opacity hover:opacity-80">
-          <CalendarIcon className="w-4 h-4" />
-          Escolher data
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
+import { AlertModal, ConfirmModal, SelectionBar } from './vitrine/components/VitrineOverlays';
+import {
+  formatDateBR,
+  getDowFromDateSP,
+  getCalendarPlatformMode,
+  gerarLinkGoogle,
+  gerarArquivoICS,
+  getPrecoFinalEntrega,
+  sanitizeTel,
+} from './vitrine/utils';
 
 export default function Vitrine({ user, userType, professionalRole = null, onLogout, initialBusiness = null }) {
   const { slug } = useParams();
