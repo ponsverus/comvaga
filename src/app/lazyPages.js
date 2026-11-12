@@ -41,11 +41,11 @@ function lazyRoute(loader, pageName) {
     }
   });
 }
-export const Dashboard                 = lazyRoute(() => import('./pages/Dashboard'), 'Dashboard');
-export const Vitrine                   = lazyRoute(() => import('./pages/Vitrine'), 'Vitrine');
-export const ClientArea                = lazyRoute(() => import('./pages/ClientArea'), 'ClientArea');
-export const CriarNegocio              = lazyRoute(() => import('./pages/CriarNegocio'), 'CriarNegocio');
-export const ProfessionalAccount       = lazyRoute(() => import('./pages/ProfessionalAccount'), 'ProfessionalAccount');
-export const SelecionarNegocio         = lazyRoute(() => import('./pages/SelecionarNegocio'), 'SelecionarNegocio');
-export const SelecionarNegocioParceiro = lazyRoute(() => import('./pages/SelecionarNegocioParceiro'), 'SelecionarNegocioParceiro');
-export const SignupProfessionalResume  = lazyRoute(() => import('./pages/SignupProfessionalResume'), 'SignupProfessionalResume');
+export const Dashboard                 = lazyRoute(() => import('../pages/Dashboard'), 'Dashboard');
+export const Vitrine                   = lazyRoute(() => import('../pages/Vitrine'), 'Vitrine');
+export const ClientArea                = lazyRoute(() => import('../pages/ClientArea'), 'ClientArea');
+export const CriarNegocio              = lazyRoute(() => import('../pages/CriarNegocio'), 'CriarNegocio');
+export const ProfessionalAccount       = lazyRoute(() => import('../pages/ProfessionalAccount'), 'ProfessionalAccount');
+export const SelecionarNegocio         = lazyRoute(() => import('../pages/SelecionarNegocio'), 'SelecionarNegocio');
+export const SelecionarNegocioParceiro = lazyRoute(() => import('../pages/SelecionarNegocioParceiro'), 'SelecionarNegocioParceiro');
+export const SignupProfessionalResume  = lazyRoute(() => import('../pages/SignupProfessionalResume'), 'SignupProfessionalResume');
