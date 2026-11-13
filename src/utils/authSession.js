@@ -36,14 +36,30 @@ function authSessionError(message, cause = null) {
   return error;
 }
 
+export async function getCurrentSession() {
+  let { data, error } = await supabase.auth.getSession();
+  if (error?.name === 'AuthRefreshDiscardedError') {
+    ({ data, error } = await supabase.auth.getSession());
+  }
+  if (error) throw authSessionError('auth_session_unavailable', error);
+  return data?.session || null;
+}
+
 export async function refreshCurrentSession(currentSession = null) {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
-    const session = currentSession || (await supabase.auth.getSession()).data?.session;
+    const session = currentSession || await getCurrentSession();
     if (!session?.user?.id) throw authSessionError('not_authenticated');
 
     const { data, error } = await supabase.auth.refreshSession(session);
+    if (error?.name === 'AuthRefreshDiscardedError') {
+      const latestSession = await getCurrentSession();
+      if (latestSession?.user?.id === session.user.id && latestSession.access_token) {
+        return latestSession;
+      }
+      throw authSessionError('not_authenticated', error);
+    }
     if (error) throw authSessionError('auth_session_refresh_failed', error);
 
     const freshSession = data?.session || null;
