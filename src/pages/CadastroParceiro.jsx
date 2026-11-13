@@ -29,7 +29,7 @@ function getEmailAvailabilityAlert(checkResult) {
   return msgs.email_registered_unknown;
 }
 
-export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
+export default function CadastroParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
   const navigate = useNavigate();
   const feedback = useFeedback();
 
@@ -61,7 +61,7 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
     if (senha.length < 7) return showPartnerAlert(msgs.senha_too_short);
 
     setLoading(true);
-    if (suppressAuthRef) suppressAuthRef.current = true;
+    const authFlowId = beginAuthFlow();
 
     try {
       const { data: emailStatus, error: emailStatusErr } = await supabase.rpc('check_signup_email_availability', {
@@ -111,7 +111,7 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
       console.error('Partner signup error:', e);
       await supabase.auth.signOut();
     } finally {
-      if (suppressAuthRef) suppressAuthRef.current = false;
+      endAuthFlow(authFlowId);
       setLoading(false);
     }
   };

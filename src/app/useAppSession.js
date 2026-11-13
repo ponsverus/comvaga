@@ -44,6 +44,8 @@ export function useAppSession() {
   const aliveRef        = useRef(true);
   const loadedUserRef   = useRef(null);
   const suppressAuthRef = useRef(false);
+  const deferredAuthEventRef = useRef(null);
+  const authFlowRef = useRef(0);
   const authRunRef = useRef(0);
   const pendingProfileRef = useRef(null);
   const inRecoveryRef   = useRef(inRecovery);
@@ -202,10 +204,7 @@ export function useAppSession() {
     }
   }, [safeSet]);
 
-  useEffect(() => {
-    aliveRef.current = true;
-
-    const processAuthEvent = async (event, eventSession, runId) => {
+  const processAuthEvent = useCallback(async (event, eventSession, runId) => {
       const isCurrent = () => aliveRef.current && runId === authRunRef.current && !suppressAuthRef.current;
       if (!isCurrent()) return;
 
@@ -259,18 +258,46 @@ export function useAppSession() {
       } finally {
         if (isCurrent()) safeSet(() => setBooting(false));
       }
-    };
+  }, [loadProfile, safeSet, setRecoveryMode]);
 
+  const scheduleAuthReconciliation = useCallback((event, session) => {
+    if (!aliveRef.current) return;
+    const runId = ++authRunRef.current;
+    // Defer Supabase reads until its auth callback has returned.
+    setTimeout(() => { void processAuthEvent(event, session, runId); }, 0);
+  }, [processAuthEvent]);
+
+  const beginAuthFlow = useCallback(() => {
+    const flowId = ++authFlowRef.current;
+    suppressAuthRef.current = true;
+    deferredAuthEventRef.current = null;
+    authRunRef.current += 1;
+    return flowId;
+  }, []);
+
+  const endAuthFlow = useCallback((flowId) => {
+    if (!suppressAuthRef.current || flowId !== authFlowRef.current) return;
+    suppressAuthRef.current = false;
+    const deferred = deferredAuthEventRef.current;
+    deferredAuthEventRef.current = null;
+    scheduleAuthReconciliation(deferred?.event || 'AUTH_FLOW_FINISHED', deferred?.session || null);
+  }, [scheduleAuthReconciliation]);
+
+  useEffect(() => {
+    aliveRef.current = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!aliveRef.current || suppressAuthRef.current) return;
+      if (!aliveRef.current) return;
+      if (suppressAuthRef.current) {
+        if (event === 'SIGNED_OUT') loadedUserRef.current = null;
+        deferredAuthEventRef.current = { event, session };
+        return;
+      }
       if (event === 'SIGNED_OUT') loadedUserRef.current = null;
-      const runId = ++authRunRef.current;
-      // Defer Supabase reads until its auth callback has returned.
-      setTimeout(() => { void processAuthEvent(event, session, runId); }, 0);
+      scheduleAuthReconciliation(event, session);
     });
 
     return () => { aliveRef.current = false; authRunRef.current += 1; subscription?.unsubscribe(); };
-  }, [loadProfile, safeSet, setRecoveryMode]);
+  }, [scheduleAuthReconciliation]);
 
   const handleLogin = useCallback((userData, type, nextOnboardingStatus = 'completed', nextAccessState = 'active', nextProfessionalRole = null) => {
     authRunRef.current += 1;
@@ -354,7 +381,7 @@ export function useAppSession() {
   return {
     user, userType, onboardingStatus, professionalRole, accessState,
     booting, typeLoading, fatalError, inRecovery, postLogoutRedirect,
-    suppressAuthRef, setRecoveryMode, setPostLogoutRedirect,
+    beginAuthFlow, endAuthFlow, setRecoveryMode, setPostLogoutRedirect,
     handleLocalSessionEnded, handleLogin, handleLogout, handleRetry,
   };
 }

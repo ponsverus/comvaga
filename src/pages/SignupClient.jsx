@@ -27,7 +27,7 @@ function getEmailAvailabilityMessageKey(checkResult) {
   return 'alerts.action_failed_support';
 }
 
-export default function SignupClient({ onLogin, suppressAuthRef }) {
+export default function SignupClient({ onLogin, beginAuthFlow, endAuthFlow }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -41,6 +41,7 @@ export default function SignupClient({ onLogin, suppressAuthRef }) {
     if (loading) return;
 
     setLoading(true);
+    let authFlowId;
 
     try {
       const nome = String(formData.nome || '').trim();
@@ -61,7 +62,7 @@ export default function SignupClient({ onLogin, suppressAuthRef }) {
         return;
       }
 
-      if (suppressAuthRef) suppressAuthRef.current = true;
+      authFlowId = beginAuthFlow();
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -99,7 +100,7 @@ export default function SignupClient({ onLogin, suppressAuthRef }) {
       showMessage('alerts.action_failed_support');
       console.error('SignupClient error:', err);
     } finally {
-      if (suppressAuthRef) suppressAuthRef.current = false;
+      endAuthFlow(authFlowId);
       setLoading(false);
     }
   };

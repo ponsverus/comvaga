@@ -10,7 +10,7 @@ import {
 } from '../utils/friendlyErrors';
 import { ProfessionalIcon, UserIcon } from '../components/icons';
 
-export default function Login({ onLogin, suppressAuthRef }) {
+export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +27,7 @@ export default function Login({ onLogin, suppressAuthRef }) {
     if (loading) return;
 
     setLoading(true);
-    if (suppressAuthRef) suppressAuthRef.current = true;
+    const authFlowId = beginAuthFlow();
 
     try {
       const email = String(formData.email || '').trim();
@@ -79,7 +79,7 @@ export default function Login({ onLogin, suppressAuthRef }) {
       showMessage(getLoginAuthAlertKey(err));
       console.error('Login error:', err);
     } finally {
-      if (suppressAuthRef) suppressAuthRef.current = false;
+      endAuthFlow(authFlowId);
       setLoading(false);
     }
   };

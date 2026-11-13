@@ -46,7 +46,7 @@ export default function App({ initialBusiness = null }) {
   const {
     user, userType, onboardingStatus, professionalRole, accessState,
     booting, typeLoading, fatalError, inRecovery, postLogoutRedirect,
-    suppressAuthRef, setRecoveryMode, setPostLogoutRedirect,
+    beginAuthFlow, endAuthFlow, setRecoveryMode, setPostLogoutRedirect,
     handleLocalSessionEnded, handleLogin, handleLogout, handleRetry,
   } = useAppSession();
 
@@ -100,13 +100,13 @@ export default function App({ initialBusiness = null }) {
             <Route path="/login" element={
               inRecovery ? <ResetPassword defaultRedirect="/login" />
               : isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <Login onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
+              : <Login onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
             } />
 
             <Route path="/cadastro/parceiro" element={
               isLoggedIn && userType
                 ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-                : <CadastroParceiro onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
+                : <CadastroParceiro onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
             } />
 
             <Route path="/login/parceiro" element={
@@ -114,7 +114,7 @@ export default function App({ initialBusiness = null }) {
                 ? <ResetPassword defaultRedirect="/login/parceiro" />
                 : isLoggedIn && userType
                   ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-                  : <LoginParceiro onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
+                  : <LoginParceiro onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
             } />
 
             <Route path="/cadastro" element={
@@ -125,12 +125,12 @@ export default function App({ initialBusiness = null }) {
 
             <Route path="/cadastro/cliente" element={
               isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <SignupClient onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
+              : <SignupClient onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
             } />
 
             <Route path="/cadastro/profissional" element={
               isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <SignupProfessional onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
+              : <SignupProfessional onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
             } />
 
             <Route path="/cadastro/profissional/retomada" element={

@@ -43,7 +43,7 @@ function SignupFieldRow({ label, children, last = false }) {
 
 const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white';
 
-export default function SignupProfessional({ onLogin, suppressAuthRef }) {
+export default function SignupProfessional({ onLogin, beginAuthFlow, endAuthFlow }) {
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,6 +69,7 @@ export default function SignupProfessional({ onLogin, suppressAuthRef }) {
     if (loading) return;
 
     setLoading(true);
+    let authFlowId;
 
     try {
       const nome = onlyTrim(formData.nome);
@@ -90,7 +91,7 @@ export default function SignupProfessional({ onLogin, suppressAuthRef }) {
         return;
       }
 
-      if (suppressAuthRef) suppressAuthRef.current = true;
+      authFlowId = beginAuthFlow();
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -133,7 +134,7 @@ export default function SignupProfessional({ onLogin, suppressAuthRef }) {
         console.warn('Houve um problema no cadastro, mas seu acesso continua ativo. Por favor, atualize a página.', signOutError);
       }
     } finally {
-      if (suppressAuthRef) suppressAuthRef.current = false;
+      endAuthFlow(authFlowId);
       setLoading(false);
     }
   };
