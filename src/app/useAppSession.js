@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabase';
 import { isPasswordRecoveryUrl } from '../utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from '../utils/profileAccess';
-import { isAuthSessionError, refreshCurrentSession, signOutLocalSession } from '../utils/authSession';
+import { getCurrentSession, isAuthSessionError, signOutLocalSession } from '../utils/authSession';
 import { sleep } from '../utils/async';
 
 const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
+const SESSION_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar sua sessão. Tente novamente em alguns segundos.';
 
 async function getUserProfileRobust(authUser) {
   if (!authUser?.id) return null;
@@ -43,7 +44,8 @@ export function useAppSession() {
   const aliveRef        = useRef(true);
   const loadedUserRef   = useRef(null);
   const suppressAuthRef = useRef(false);
-  const profileLoadingUserRef = useRef(null);
+  const authRunRef = useRef(0);
+  const pendingProfileRef = useRef(null);
   const inRecoveryRef   = useRef(inRecovery);
 
   const safeSet = useCallback((fn) => {
@@ -56,6 +58,7 @@ export function useAppSession() {
   }, []);
 
   const handleLocalSessionEnded = useCallback(async (redirectTo = '/login') => {
+    authRunRef.current += 1;
     const safeRedirect = (
       typeof redirectTo === 'string'
       && redirectTo.startsWith('/')
@@ -77,15 +80,15 @@ export function useAppSession() {
       setProfessionalRole(null);
       setAccessState('active');
       setFatalError(null);
+      setTypeLoading(false);
+      setBooting(false);
       setPostLogoutRedirect(safeRedirect);
       loadedUserRef.current = null;
     });
   }, [safeSet, setRecoveryMode]);
 
-  const loadProfile = useCallback(async (sessionUser, currentSession = null) => {
-    if (!sessionUser?.id) return null;
-    if (profileLoadingUserRef.current === sessionUser.id) return null;
-    profileLoadingUserRef.current = sessionUser.id;
+  const loadProfile = useCallback(async (sessionUser, runId) => {
+    if (!sessionUser?.id || runId !== authRunRef.current) return null;
 
     safeSet(() => {
       setTypeLoading(true);
@@ -96,28 +99,46 @@ export function useAppSession() {
     });
 
     try {
-      const sessionToCheck = currentSession || (await supabase.auth.getSession()).data?.session;
-      suppressAuthRef.current = true;
-      const freshSession = await refreshCurrentSession(sessionToCheck);
-      suppressAuthRef.current = false;
-
-      if (!freshSession?.access_token || !freshSession?.user?.id) {
-        throw new Error('not_authenticated');
+      let pending = pendingProfileRef.current;
+      if (pending?.userId !== sessionUser.id) {
+        pending = { userId: sessionUser.id, promise: getUserProfileRobust(sessionUser) };
+        pendingProfileRef.current = pending;
       }
-
-      const activeUser = freshSession.user;
-
-      if (activeUser.id !== sessionUser.id) {
-        throw new Error('auth_session_user_mismatch');
+      let profile;
+      try {
+        profile = await pending.promise;
+      } finally {
+        if (pendingProfileRef.current === pending) pendingProfileRef.current = null;
       }
+      if (runId !== authRunRef.current || !aliveRef.current || suppressAuthRef.current) return null;
 
-      safeSet(() => setUser(activeUser));
-      const profile = await getUserProfileRobust(activeUser);
+      const currentSession = await getCurrentSession();
+      if (runId !== authRunRef.current || !aliveRef.current || suppressAuthRef.current) return null;
+      if (!currentSession?.user?.id) {
+        safeSet(() => {
+          loadedUserRef.current = null;
+          setUser(null);
+          setUserType(null);
+          setOnboardingStatus(null);
+          setProfessionalRole(null);
+          setAccessState('active');
+          setFatalError(null);
+          setPostLogoutRedirect('/login');
+        });
+        return null;
+      }
+      if (currentSession.user.id !== sessionUser.id) {
+        safeSet(() => {
+          setUser(currentSession.user);
+          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+        });
+        return null;
+      }
+      const activeUser = currentSession.user;
 
       if (!profile) {
-        await supabase.auth.signOut();
         safeSet(() => {
-          setUser(null);
+          setUser(activeUser);
           setUserType(null);
           setOnboardingStatus(null);
           setProfessionalRole(null);
@@ -138,93 +159,16 @@ export function useAppSession() {
       });
       return profile;
     } catch (e) {
-      suppressAuthRef.current = false;
-      if (isAuthSessionError(e)) {
-        await handleLocalSessionEnded('/login');
-        return null;
+      if (runId !== authRunRef.current || !aliveRef.current || suppressAuthRef.current) return null;
+      let currentSession;
+      try {
+        currentSession = await getCurrentSession();
+      } catch {
+        currentSession = undefined;
       }
-      safeSet(() => {
-        setUserType(null);
-        setOnboardingStatus(null);
-        setProfessionalRole(null);
-        setAccessState('active');
-        setFatalError(PROFILE_CONFIRM_ERROR_MESSAGE);
-      });
-      console.error('Profile load error:', e);
-      return null;
-    } finally {
-      if (profileLoadingUserRef.current === sessionUser.id) {
-        profileLoadingUserRef.current = null;
-      }
-      suppressAuthRef.current = false;
-      safeSet(() => setTypeLoading(false));
-    }
-  }, [handleLocalSessionEnded, safeSet]);
-
-  useEffect(() => {
-    aliveRef.current = true;
-
-    const { data: { subscription } } =
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!aliveRef.current) return;
-        if (suppressAuthRef.current) return;
-
-        if (event === 'PASSWORD_RECOVERY') {
-          safeSet(() => { setRecoveryMode(true); setBooting(false); });
-          return;
-        }
-
-        if (event === 'INITIAL_SESSION') {
-          const sessionUser = session?.user || null;
-          if (isPasswordRecoveryUrl() || inRecoveryRef.current) {
-            safeSet(() => {
-              setRecoveryMode(true);
-              setUser(sessionUser);
-              setUserType(null);
-              setOnboardingStatus(null);
-              setProfessionalRole(null);
-              setAccessState('active');
-              setFatalError(null);
-              setTypeLoading(false);
-              setBooting(false);
-            });
-            return;
-          }
-
-          if (!sessionUser) {
-            safeSet(() => {
-              setUser(null);
-              setUserType(null);
-              setOnboardingStatus(null);
-              setProfessionalRole(null);
-              setAccessState('active');
-              setBooting(false);
-            });
-            return;
-          }
-
-          setUser(sessionUser);
-          if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser, session);
-          safeSet(() => setBooting(false));
-          return;
-        }
-
-        if (inRecoveryRef.current) {
-          safeSet(() => {
-            setUser(session?.user || null);
-            setUserType(null);
-            setOnboardingStatus(null);
-            setProfessionalRole(null);
-            setAccessState('active');
-            setFatalError(null);
-            setTypeLoading(false);
-            setBooting(false);
-          });
-          return;
-        }
-
-        const sessionUser = session?.user || null;
-        if (!sessionUser) {
+      if (runId !== authRunRef.current || !aliveRef.current || suppressAuthRef.current) return null;
+      if (currentSession === null) {
+        safeSet(() => {
           loadedUserRef.current = null;
           setUser(null);
           setUserType(null);
@@ -232,17 +176,104 @@ export function useAppSession() {
           setProfessionalRole(null);
           setAccessState('active');
           setFatalError(null);
+          setPostLogoutRedirect('/login');
+        });
+        return null;
+      }
+      if (currentSession?.user?.id && currentSession.user.id !== sessionUser.id) {
+        safeSet(() => {
+          setUser(currentSession.user);
+          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+        });
+        return null;
+      }
+      safeSet(() => {
+        setUserType(null);
+        setOnboardingStatus(null);
+        setProfessionalRole(null);
+        setAccessState('active');
+        setFatalError(isAuthSessionError(e) || e?.code === 'auth_session_unavailable'
+          ? SESSION_CONFIRM_ERROR_MESSAGE : PROFILE_CONFIRM_ERROR_MESSAGE);
+      });
+      console.error('Profile load error:', e);
+      return null;
+    } finally {
+      if (runId === authRunRef.current) safeSet(() => setTypeLoading(false));
+    }
+  }, [safeSet]);
+
+  useEffect(() => {
+    aliveRef.current = true;
+
+    const processAuthEvent = async (event, eventSession, runId) => {
+      const isCurrent = () => aliveRef.current && runId === authRunRef.current && !suppressAuthRef.current;
+      if (!isCurrent()) return;
+
+      if (event === 'PASSWORD_RECOVERY' || isPasswordRecoveryUrl() || inRecoveryRef.current) {
+        safeSet(() => {
+          setRecoveryMode(true);
+          setUser(eventSession?.user || null);
+          setUserType(null);
+          setOnboardingStatus(null);
+          setProfessionalRole(null);
+          setAccessState('active');
+          setFatalError(null);
+          setTypeLoading(false);
+          setBooting(false);
+        });
+        return;
+      }
+
+      try {
+        const currentSession = await getCurrentSession();
+        if (!isCurrent()) return;
+        const sessionUser = currentSession?.user || null;
+        if (!sessionUser) {
+          loadedUserRef.current = null;
+          safeSet(() => {
+            setUser(null);
+            setUserType(null);
+            setOnboardingStatus(null);
+            setProfessionalRole(null);
+            setAccessState('active');
+            setFatalError(null);
+            setTypeLoading(false);
+          });
           return;
         }
 
-        setUser(sessionUser);
-        if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser, session);
-      });
+        safeSet(() => setUser(sessionUser));
+        if (loadedUserRef.current !== sessionUser.id) await loadProfile(sessionUser, runId);
+      } catch (error) {
+        if (!isCurrent()) return;
+        safeSet(() => {
+          setUser(eventSession?.user || null);
+          setUserType(null);
+          setOnboardingStatus(null);
+          setProfessionalRole(null);
+          setAccessState('active');
+          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+          setTypeLoading(false);
+        });
+        console.error('Session load error:', error);
+      } finally {
+        if (isCurrent()) safeSet(() => setBooting(false));
+      }
+    };
 
-    return () => { aliveRef.current = false; subscription?.unsubscribe(); };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!aliveRef.current || suppressAuthRef.current) return;
+      if (event === 'SIGNED_OUT') loadedUserRef.current = null;
+      const runId = ++authRunRef.current;
+      // Defer Supabase reads until its auth callback has returned.
+      setTimeout(() => { void processAuthEvent(event, session, runId); }, 0);
+    });
+
+    return () => { aliveRef.current = false; authRunRef.current += 1; subscription?.unsubscribe(); };
   }, [loadProfile, safeSet, setRecoveryMode]);
 
   const handleLogin = useCallback((userData, type, nextOnboardingStatus = 'completed', nextAccessState = 'active', nextProfessionalRole = null) => {
+    authRunRef.current += 1;
     loadedUserRef.current = userData?.id || null;
     setUser(userData || null);
     setUserType(isValidType(type) ? type : null);
@@ -254,10 +285,13 @@ export function useAppSession() {
     setProfessionalRole(isValidProfessionalRole(nextProfessionalRole) ? nextProfessionalRole : null);
     setAccessState(nextAccessState);
     setFatalError(null);
+    setTypeLoading(false);
+    setBooting(false);
     setPostLogoutRedirect(null);
   }, []);
 
   const handleLogout = useCallback(async (redirectTo = '/login') => {
+    authRunRef.current += 1;
     const safeRedirect = (
       typeof redirectTo === 'string'
       && redirectTo.startsWith('/')
@@ -282,11 +316,14 @@ export function useAppSession() {
   }, [setRecoveryMode]);
 
   const handleRetry = useCallback(async () => {
+    const runId = ++authRunRef.current;
     safeSet(() => { setFatalError(null); setBooting(true); });
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await getCurrentSession();
+      if (runId !== authRunRef.current || !aliveRef.current) return;
       if (!session?.user) {
         safeSet(() => {
+          loadedUserRef.current = null;
           setUser(null);
           setUserType(null);
           setOnboardingStatus(null);
@@ -298,18 +335,19 @@ export function useAppSession() {
       }
 
       safeSet(() => setUser(session.user));
-      await loadProfile(session.user);
-      safeSet(() => setBooting(false));
-    } catch {
+      await loadProfile(session.user, runId);
+      if (runId === authRunRef.current) safeSet(() => setBooting(false));
+    } catch (error) {
+      if (runId !== authRunRef.current || !aliveRef.current) return;
       safeSet(() => {
-        setUser(null);
         setUserType(null);
         setOnboardingStatus(null);
         setProfessionalRole(null);
         setAccessState('active');
-        setFatalError(PROFILE_CONFIRM_ERROR_MESSAGE);
+        setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
         setBooting(false);
       });
+      console.error('Session retry error:', error);
     }
   }, [safeSet, loadProfile]);
 
