@@ -279,7 +279,7 @@ export default function HomePublicContent({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                <span className="text-[10px] font-normal text-gray-400 uppercase tracking-widest">VEJA AO VIVO</span>
+                <span className="text-[10px] font-normal text-gray-400 uppercase tracking-widest">AO VIVO</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
@@ -298,7 +298,7 @@ export default function HomePublicContent({
                   rel="noreferrer"
                   className="px-8 py-4 bg-primary text-black font-black rounded-button hover:shadow-[0_0_30px_rgba(255,209,26,0.3)] transition-all flex items-center justify-center gap-3 group"
                 >
-                  VER VITRINE EXEMPLO
+                  VER VITRINE
                   <ZapIcon className="w-5 h-5 group-hover:animate-bounce" />
                 </a>
               </div>
