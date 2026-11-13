@@ -21,7 +21,7 @@ function FieldRow({ label, children, last = false }) {
 
 const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white';
 
-export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
+export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow, confirmationNotice }) {
   const navigate = useNavigate();
   const feedback = useFeedback();
 
@@ -51,6 +51,7 @@ export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
 
     setLoading(true);
     const authFlowId = beginAuthFlow();
+    let signedInWithSession = false;
 
     try {
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
@@ -64,22 +65,27 @@ export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
         }
         throw signInErr;
       }
+      signedInWithSession = !!signInData?.session;
 
       const uid = signInData?.user?.id;
       if (!uid) throw new Error(msgs.auth_error.body);
 
       const accessProfile = await fetchUserAccessProfile();
-      if (accessProfile?.type !== 'professional') {
+      if (!accessProfile) {
+        await supabase.auth.signOut();
+        return showPartnerAlert(msgs.profile_not_ready);
+      }
+      if (accessProfile.type !== 'professional') {
         await supabase.auth.signOut();
         return showPartnerAlert(msgs.not_partner);
       }
 
-      if (accessProfile?.professionalRole === 'owner') {
+      if (accessProfile.professionalRole === 'owner') {
         await supabase.auth.signOut();
         return showPartnerAlert(ptBR.parceiroCadastro.owner_cannot_request_partner_access);
       }
 
-      if (accessProfile?.professionalRole !== 'partner') {
+      if (accessProfile.professionalRole !== 'partner') {
         await supabase.auth.signOut();
         return showPartnerAlert(msgs.not_partner);
       }
@@ -93,7 +99,8 @@ export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
       );
       navigate('/selecionar-negocio-parceiro', { replace: true });
     } catch (e2) {
-      showPartnerAlert(getParceiroLoginAlert(e2, msgs));
+      const alert = getParceiroLoginAlert(e2, msgs);
+      if (!signedInWithSession || alert !== msgs.profile_access_unavailable) showPartnerAlert(alert);
       console.error('Partner login error:', e2);
     } finally {
       endAuthFlow(authFlowId);
@@ -129,6 +136,8 @@ export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
           <h1 className="text-3xl font-normal text-white uppercase">LOGIN PARCEIRO</h1>
           <p className="text-gray-500 text-sm mt-2 font-normal">ACESSE SUA CENTRAL DE NEGÓCIOS</p>
         </div>
+
+        {confirmationNotice}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex items-center justify-end">
