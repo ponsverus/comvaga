@@ -129,7 +129,7 @@ function BookingGroup({
                   {podeMarcarNovamente && (
                     <button
                       onClick={() => onRebook(booking)}
-                      className={`min-w-0 w-full px-2 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words ${actionCount === 3 ? 'col-span-2 sm:col-span-1' : ''}`}
+                      className={`min-w-0 w-full px-2 py-2 bg-transparent hover:bg-green-500/10 border border-green-500/50 text-green-400 rounded-button text-sm transition-all uppercase whitespace-normal break-words ${actionCount === 3 ? 'col-span-2 sm:col-span-1' : ''}`}
                     >
                       AGENDAR NOVAMENTE
                     </button>
