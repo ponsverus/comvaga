@@ -4,9 +4,39 @@ import { isPasswordRecoveryUrl } from '../utils/auth';
 import { fetchUserAccessProfile, isValidProfessionalRole, isValidType, normalizeOnboardingStatus } from '../utils/profileAccess';
 import { getCurrentSession, isAuthSessionError, signOutLocalSession } from '../utils/authSession';
 import { sleep } from '../utils/async';
+import { isRateLimitError } from '../utils/errorUtils';
 
-const PROFILE_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.';
-const SESSION_CONFIRM_ERROR_MESSAGE = 'Ocorreu um erro ao confirmar sua sessão. Tente novamente em alguns segundos.';
+const PROFILE_CONFIRM_ERROR = {
+  kind: 'profile_unavailable',
+  message: 'Houve uma falha ao confirmar seus dados de acesso agora. Você pode tentar novamente sem informar a senha, caso seu login continue válido.',
+};
+const SESSION_CONFIRM_ERROR = {
+  kind: 'session_unavailable',
+  message: 'Houve falha ao verificar seu acesso agora. Tente novamente; se ele tiver terminado, entre com sua senha.',
+};
+const PROFILE_MISSING_ERROR = {
+  kind: 'profile_missing',
+  message: 'Sua conta ainda está sem um perfil de acesso válido. Se você acabou de se cadastrar, aguarde alguns instantes e atualize esta página. Se o problema continuar, fale com o suporte.',
+};
+const PROFILE_INVALID_ERROR = {
+  kind: 'profile_invalid',
+  message: 'Houve falha ao validar seus dados de acesso. Fale com o suporte para verificar sua conta.',
+};
+const PROFILE_RATE_LIMIT_ERROR = {
+  kind: 'profile_rate_limited',
+  message: 'Houve muitas consultas em pouco tempo. Aguarde um minuto e atualize esta página para confirmar seu perfil.',
+};
+
+function isProfileRateLimitError(error) {
+  return isRateLimitError(error) || isRateLimitError(error?.cause);
+}
+
+function getProfileConfirmationError(error) {
+  if (isAuthSessionError(error) || error?.code === 'auth_session_unavailable') return SESSION_CONFIRM_ERROR;
+  if (isProfileRateLimitError(error)) return PROFILE_RATE_LIMIT_ERROR;
+  if (error?.message === 'invalid_user_access_profile_contract') return PROFILE_INVALID_ERROR;
+  return PROFILE_CONFIRM_ERROR;
+}
 
 async function getUserProfileRobust(authUser) {
   if (!authUser?.id) return null;
@@ -20,6 +50,7 @@ async function getUserProfileRobust(authUser) {
       if (profile) return profile;
       if (i < delays.length - 1) await sleep(delays[i]);
     } catch (e) {
+      if (isProfileRateLimitError(e) || e?.message === 'invalid_user_access_profile_contract') throw e;
       lastErr = e;
       if (i < delays.length - 1) await sleep(delays[i]);
     }
@@ -132,7 +163,7 @@ export function useAppSession() {
       if (currentSession.user.id !== sessionUser.id) {
         safeSet(() => {
           setUser(currentSession.user);
-          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+          setFatalError(SESSION_CONFIRM_ERROR);
         });
         return null;
       }
@@ -146,7 +177,7 @@ export function useAppSession() {
           setProfessionalRole(null);
           setAccessState('active');
           loadedUserRef.current = null;
-          setFatalError('Perfil inexistente. Crie ou conclua seu cadastro para prosseguir.');
+          setFatalError(PROFILE_MISSING_ERROR);
         });
         return null;
       }
@@ -185,7 +216,7 @@ export function useAppSession() {
       if (currentSession?.user?.id && currentSession.user.id !== sessionUser.id) {
         safeSet(() => {
           setUser(currentSession.user);
-          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+          setFatalError(SESSION_CONFIRM_ERROR);
         });
         return null;
       }
@@ -194,8 +225,7 @@ export function useAppSession() {
         setOnboardingStatus(null);
         setProfessionalRole(null);
         setAccessState('active');
-        setFatalError(isAuthSessionError(e) || e?.code === 'auth_session_unavailable'
-          ? SESSION_CONFIRM_ERROR_MESSAGE : PROFILE_CONFIRM_ERROR_MESSAGE);
+        setFatalError(getProfileConfirmationError(e));
       });
       console.error('Profile load error:', e);
       return null;
@@ -251,7 +281,7 @@ export function useAppSession() {
           setOnboardingStatus(null);
           setProfessionalRole(null);
           setAccessState('active');
-          setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+          setFatalError(SESSION_CONFIRM_ERROR);
           setTypeLoading(false);
         });
         console.error('Session load error:', error);
@@ -371,7 +401,7 @@ export function useAppSession() {
         setOnboardingStatus(null);
         setProfessionalRole(null);
         setAccessState('active');
-        setFatalError(SESSION_CONFIRM_ERROR_MESSAGE);
+        setFatalError(SESSION_CONFIRM_ERROR);
         setBooting(false);
       });
       console.error('Session retry error:', error);
