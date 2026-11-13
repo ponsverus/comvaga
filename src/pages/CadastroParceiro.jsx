@@ -104,7 +104,6 @@ export default function CadastroParceiro({ onLogin, suppressAuthRef }) {
       const profile = await fetchUserAccessProfile(uid);
       if (!profile) throw new Error(msgs.account_create_error.body);
 
-      if (suppressAuthRef) suppressAuthRef.current = false;
       onLogin?.(signUpData.user, profile.type, profile.onboardingStatus, profile.accessState, profile.professionalRole);
       navigate('/selecionar-negocio-parceiro', { replace: true });
     } catch (e) {

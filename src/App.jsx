@@ -100,7 +100,7 @@ export default function App({ initialBusiness = null }) {
             <Route path="/login" element={
               inRecovery ? <ResetPassword defaultRedirect="/login" />
               : isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <Login onLogin={handleLogin} />
+              : <Login onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
             } />
 
             <Route path="/cadastro/parceiro" element={
@@ -125,12 +125,12 @@ export default function App({ initialBusiness = null }) {
 
             <Route path="/cadastro/cliente" element={
               isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <SignupClient onLogin={handleLogin} />
+              : <SignupClient onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
             } />
 
             <Route path="/cadastro/profissional" element={
               isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <SignupProfessional onLogin={handleLogin} />
+              : <SignupProfessional onLogin={handleLogin} suppressAuthRef={suppressAuthRef} />
             } />
 
             <Route path="/cadastro/profissional/retomada" element={
