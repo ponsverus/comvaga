@@ -1254,6 +1254,7 @@ export const ptBR = {
     rate_limit_exceeded:            { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
     auth_error:                     { body: 'Erro ao autenticar agora. Tente novamente.', variant: 'erro' },
     profile_access_unavailable:     { body: 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.', variant: 'erro' },
+    profile_not_ready:              { body: 'Sua conta ainda está sem um perfil de acesso válido. Se você acabou de se cadastrar, aguarde alguns instantes e atualize esta página. Se o problema continuar, fale com o suporte.', variant: 'aviso' },
     not_partner:                    { body: 'Este login pertence a outro tipo de conta para este negócio.', variant: 'erro' },
     unexpected_error:               { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
     reset_email_required:           { body: 'Digite seu e-mail antes de solicitar o resgate de senha.', variant: 'aviso' },
@@ -2046,7 +2047,7 @@ export const ptBR = {
       retryingButtonText: 'VERIFICANDO...',
     },
     schedule_errors: {
-      no_slots: 'Sem vagas para a data escolhida. Selecione outro dia no calendário para continuar o agendamento.',
+      no_slots: 'SEM VAGAS PRA HOJE :(',
       slots_load_error: 'Erro ao buscar horários. Tente novamente.',
       plan_blocked: 'Agenda indisponível. Este negócio precisa ativar um plano para receber novos agendamentos.',
       rate_limit: 'Muitas tentativas de agendamento. Aguarde um minuto e tente novamente.',
