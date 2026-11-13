@@ -84,7 +84,6 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
         return showPartnerAlert(msgs.not_partner);
       }
 
-      if (suppressAuthRef) suppressAuthRef.current = false;
       onLogin(
         signInData.user,
         'professional',
@@ -96,7 +95,6 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
     } catch (e2) {
       showPartnerAlert(getParceiroLoginAlert(e2, msgs));
       console.error('Partner login error:', e2);
-      await supabase.auth.signOut();
     } finally {
       if (suppressAuthRef) suppressAuthRef.current = false;
       setLoading(false);
