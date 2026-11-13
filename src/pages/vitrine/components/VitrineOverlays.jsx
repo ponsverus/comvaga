@@ -1,9 +1,13 @@
+import { useId, useRef } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { CalendarIcon } from '../../../components/icons';
+import ModalDialog from '../../../components/ModalDialog';
 import { getPrecoFinalEntrega } from '../utils';
 
 export function AlertModal({ open, onClose, title, body, buttonText, isLight }) {
-  if (!open) return null;
+  const titleId = useId();
+  const bodyId = useId();
+  const primaryRef = useRef(null);
   const bg = isLight ? 'bg-vcard border-vborder' : 'bg-dark-100 border-gray-800';
   const titleCl = isLight ? 'text-vtext' : 'text-white';
   const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
@@ -11,23 +15,25 @@ export function AlertModal({ open, onClose, title, body, buttonText, isLight }) 
   const btnCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+    <ModalDialog open={open} onDismiss={onClose} labelledBy={titleId} describedBy={body ? bodyId : undefined} initialFocusRef={primaryRef} focusKey={`${title}\n${body}`}>
       <div className={`border rounded-custom max-w-md w-full p-6 ${bg}`}>
         <div className="flex justify-between items-start gap-3 mb-3">
-          <h3 className={`text-xl font-normal ${titleCl}`}>{title}</h3>
-          <button type="button" onClick={onClose} className={closeCl}><X className="w-6 h-6" /></button>
+          <h3 id={titleId} className={`text-xl font-normal ${titleCl}`}>{title}</h3>
+          <button type="button" onClick={onClose} aria-label="Fechar aviso" className={closeCl}><X className="w-6 h-6" /></button>
         </div>
-        {body && <p className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
-        <button type="button" onClick={onClose} className={`mt-5 w-full py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
+        {body && <p id={bodyId} className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
+        <button ref={primaryRef} type="button" onClick={onClose} className={`mt-5 w-full py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
           {buttonText || 'OK'}
         </button>
       </div>
-    </div>
+    </ModalDialog>
   );
 }
 
 export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmText, cancelText, isLight }) {
-  if (!open) return null;
+  const titleId = useId();
+  const bodyId = useId();
+  const cancelRef = useRef(null);
   const bg = isLight ? 'bg-vcard border-vborder' : 'bg-dark-100 border-gray-800';
   const titleCl = isLight ? 'text-vtext' : 'text-white';
   const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
@@ -36,19 +42,19 @@ export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmTe
   const confirmCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+    <ModalDialog open={open} onDismiss={onCancel} labelledBy={titleId} describedBy={body ? bodyId : undefined} initialFocusRef={cancelRef} focusKey={`${title}\n${body}`}>
       <div className={`border rounded-custom max-w-md w-full p-6 ${bg}`}>
         <div className="flex justify-between items-start gap-3 mb-3">
-          <h3 className={`text-xl font-normal ${titleCl}`}>{title}</h3>
-          <button type="button" onClick={onCancel} className={closeCl}><X className="w-6 h-6" /></button>
+          <h3 id={titleId} className={`text-xl font-normal ${titleCl}`}>{title}</h3>
+          <button type="button" onClick={onCancel} aria-label="Fechar confirmação" className={closeCl}><X className="w-6 h-6" /></button>
         </div>
-        {body && <p className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
+        {body && <p id={bodyId} className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
         <div className="mt-5 flex gap-3">
-          <button type="button" onClick={onCancel} className={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${cancelCl}`}>{cancelText || 'CANCELAR'}</button>
+          <button ref={cancelRef} type="button" onClick={onCancel} className={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${cancelCl}`}>{cancelText || 'CANCELAR'}</button>
           <button type="button" onClick={onConfirm} className={`flex-1 py-3 rounded-button uppercase font-normal transition-colors ${confirmCl}`}>{confirmText || 'CONFIRMAR'}</button>
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 }
 
