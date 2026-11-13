@@ -16,7 +16,7 @@ const SESSION_CONFIRM_ERROR = {
 };
 const PROFILE_MISSING_ERROR = {
   kind: 'profile_missing',
-  message: 'Sua conta ainda está sem um perfil de acesso válido. Se você acabou de se cadastrar, aguarde alguns instantes e atualize esta página. Se o problema continuar, fale com o suporte.',
+  message: 'Estamos com dificuldades para confirmar seu perfil de acesso. Aguarde alguns instantes e tente entrar novamente. Se o problema continuar, entre em contato com o suporte.',
 };
 const PROFILE_INVALID_ERROR = {
   kind: 'profile_invalid',
