@@ -45,7 +45,7 @@ export default function VitrineDepoimentosSection({
     ? 'text-vtext placeholder:text-vmuted focus:text-vtext'
     : 'text-white placeholder:text-gray-600 focus:text-white';
   const buttonClass = isLight
-    ? 'border-yellow-600/60 bg-vprimary/15 text-vprimary hover:bg-vprimary/25'
+    ? 'border-vprimary bg-vprimary text-vprimary-text hover:opacity-90'
     : 'border-primary/50 bg-primary/20 text-primary hover:bg-primary/30 hover:border-primary';
   const commentButtonClass = isLight
     ? 'border-yellow-600/60 text-yellow-800 hover:bg-yellow-500/10'
@@ -101,7 +101,7 @@ export default function VitrineDepoimentosSection({
                 type="button"
                 onClick={reviewActions?.onEnviar}
                 disabled={sendDisabled}
-                className={`min-w-0 flex-1 rounded-button border px-4 py-2 text-sm font-normal uppercase transition-colors disabled:opacity-60 sm:flex-none sm:bg-transparent ${buttonClass}`}
+                className={`min-w-0 flex-1 rounded-button border px-4 py-2 text-sm font-normal uppercase transition-colors disabled:opacity-60 sm:flex-none ${isLight ? '' : 'sm:bg-transparent'} ${buttonClass}`}
               >
                 {reviewState?.loading ? 'ENVIANDO...' : sendLabel}
               </button>
