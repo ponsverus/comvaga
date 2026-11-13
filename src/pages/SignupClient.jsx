@@ -27,7 +27,7 @@ function getEmailAvailabilityMessageKey(checkResult) {
   return 'alerts.action_failed_support';
 }
 
-export default function SignupClient({ onLogin }) {
+export default function SignupClient({ onLogin, suppressAuthRef }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -61,6 +61,7 @@ export default function SignupClient({ onLogin }) {
         return;
       }
 
+      if (suppressAuthRef) suppressAuthRef.current = true;
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -98,6 +99,7 @@ export default function SignupClient({ onLogin }) {
       showMessage('alerts.action_failed_support');
       console.error('SignupClient error:', err);
     } finally {
+      if (suppressAuthRef) suppressAuthRef.current = false;
       setLoading(false);
     }
   };
