@@ -283,8 +283,8 @@ export default function HomePublicContent({
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
-                VEJA A COMVAGA <br/>
-                <span className="text-primary">EM FUNCIONAMENTO.</span>
+                VEJA COMO FICA A VITRINE DO SEU <br/>
+                <span className="text-primary">NEGÓCIO.</span>
               </h2>
 
               <p className="text-lg text-gray-400 mb-10 leading-relaxed max-w-3xl">
