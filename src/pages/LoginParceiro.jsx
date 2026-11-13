@@ -21,7 +21,7 @@ function FieldRow({ label, children, last = false }) {
 
 const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white';
 
-export default function LoginParceiro({ onLogin, suppressAuthRef }) {
+export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow }) {
   const navigate = useNavigate();
   const feedback = useFeedback();
 
@@ -50,7 +50,7 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
     if (senha.length < 7) return showPartnerAlert(msgs.senha_too_short);
 
     setLoading(true);
-    if (suppressAuthRef) suppressAuthRef.current = true;
+    const authFlowId = beginAuthFlow();
 
     try {
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
@@ -96,7 +96,7 @@ export default function LoginParceiro({ onLogin, suppressAuthRef }) {
       showPartnerAlert(getParceiroLoginAlert(e2, msgs));
       console.error('Partner login error:', e2);
     } finally {
-      if (suppressAuthRef) suppressAuthRef.current = false;
+      endAuthFlow(authFlowId);
       setLoading(false);
     }
   };
