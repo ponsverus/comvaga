@@ -33,6 +33,7 @@ import {
 import {
   FullScreenLoading,
   ProfileRouteGate,
+  ProfileConfirmationNotice,
   RouteErrorGuard,
   PublicRouteLoading,
   ScrollToTopOnRouteChange,
@@ -100,7 +101,12 @@ export default function App({ initialBusiness = null }) {
             <Route path="/login" element={
               inRecovery ? <ResetPassword defaultRedirect="/login" />
               : isLoggedIn && userType ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-              : <Login onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
+              : <Login
+                  onLogin={handleLogin}
+                  beginAuthFlow={beginAuthFlow}
+                  endAuthFlow={endAuthFlow}
+                  confirmationNotice={<ProfileConfirmationNotice error={fatalError} onRetry={handleRetry} />}
+                />
             } />
 
             <Route path="/cadastro/parceiro" element={
@@ -114,7 +120,12 @@ export default function App({ initialBusiness = null }) {
                 ? <ResetPassword defaultRedirect="/login/parceiro" />
                 : isLoggedIn && userType
                   ? <Navigate to={getPostLoginPath(userType, accessState, onboardingStatus)} />
-                  : <LoginParceiro onLogin={handleLogin} beginAuthFlow={beginAuthFlow} endAuthFlow={endAuthFlow} />
+                  : <LoginParceiro
+                      onLogin={handleLogin}
+                      beginAuthFlow={beginAuthFlow}
+                      endAuthFlow={endAuthFlow}
+                      confirmationNotice={<ProfileConfirmationNotice error={fatalError} onRetry={handleRetry} />}
+                    />
             } />
 
             <Route path="/cadastro" element={

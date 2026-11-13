@@ -10,7 +10,7 @@ import {
 } from '../utils/friendlyErrors';
 import { ProfessionalIcon, UserIcon } from '../components/icons';
 
-export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
+export default function Login({ onLogin, beginAuthFlow, endAuthFlow, confirmationNotice }) {
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +28,7 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
 
     setLoading(true);
     const authFlowId = beginAuthFlow();
+    let signedInWithSession = false;
 
     try {
       const email = String(formData.email || '').trim();
@@ -38,6 +39,7 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
       });
 
       if (authError) throw authError;
+      signedInWithSession = !!authData?.session;
 
       const authUser = authData?.user;
       if (!authUser?.id) throw new Error('Falha ao autenticar.');
@@ -76,7 +78,8 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
       );
 
     } catch (err) {
-      showMessage(getLoginAuthAlertKey(err));
+      const alertKey = getLoginAuthAlertKey(err);
+      if (!signedInWithSession || alertKey !== 'login.profile_access_unavailable') showMessage(alertKey);
       console.error('Login error:', err);
     } finally {
       endAuthFlow(authFlowId);
@@ -143,6 +146,8 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow }) {
               <p className="text-gray-500 text-base font-normal">:)</p>
             )}
           </div>
+
+          {confirmationNotice}
 
           <>
               {step === 1 ? (
