@@ -1,19 +1,31 @@
 import { createAdminClient } from './supabase.ts';
+import { reconcileAsaasSubscriptionCharges } from './asaas-charges.ts';
 
 const ASAAS_PROVIDER = 'asaas';
-const DEFAULT_ASAAS_BASE_URL = 'https://api-sandbox.asaas.com/v3';
+const DEFAULT_CHECKOUT_BASE_URL = 'https://asaas.com/checkoutSession/show';
+const DEFAULT_SANDBOX_CHECKOUT_BASE_URL = 'https://sandbox.asaas.com/checkoutSession/show';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 export type BillingEventOutcome = {
   outcome: 'processed' | 'ignored';
   note?: string;
+  subscriptionToReconcile?: { negocioId: string; subscriptionId: string };
 };
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`missing_${name.toLowerCase()}`);
   return value;
+}
+
+export function checkoutUrlFor(id: string) {
+  const apiBase = requiredEnv('ASAAS_BASE_URL');
+  const defaultBase = apiBase.includes('api-sandbox.') ? DEFAULT_SANDBOX_CHECKOUT_BASE_URL : DEFAULT_CHECKOUT_BASE_URL;
+  const base = Deno.env.get('ASAAS_CHECKOUT_BASE_URL') || defaultBase;
+  const url = new URL(base);
+  url.searchParams.set('id', id);
+  return url.toString();
 }
 
 export function scalarId(value: unknown) {
@@ -80,29 +92,13 @@ export function providerCheckoutSessionId(
     || scalarId(checkout.id);
 }
 
-export async function timingSafeTokenMatch(received: string, expected: string) {
-  const encoder = new TextEncoder();
-  const [receivedHash, expectedHash] = await Promise.all([
-    crypto.subtle.digest('SHA-256', encoder.encode(received)),
-    crypto.subtle.digest('SHA-256', encoder.encode(expected)),
-  ]);
-  const receivedBytes = new Uint8Array(receivedHash);
-  const expectedBytes = new Uint8Array(expectedHash);
-
-  let diff = 0;
-  for (let index = 0; index < receivedBytes.length; index++) {
-    diff |= receivedBytes[index] ^ expectedBytes[index];
-  }
-  return diff === 0;
-}
-
 function centsToReais(cents: number) {
   return Number((Number(cents || 0) / 100).toFixed(2));
 }
 
 async function callAsaas(path: string, body: Record<string, unknown>, method = 'POST') {
   const apiKey = requiredEnv('ASAAS_API_KEY');
-  const baseUrl = (Deno.env.get('ASAAS_BASE_URL') || DEFAULT_ASAAS_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = requiredEnv('ASAAS_BASE_URL').replace(/\/+$/, '');
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
@@ -164,19 +160,18 @@ function currentPeriodStart(eventType: string, entity: Record<string, unknown>) 
 
 function mapEvent(eventType: string, entity: Record<string, unknown>) {
   const event = eventType.toUpperCase();
-  const status = String(entity.status || '').toUpperCase();
 
   if (event === 'CHECKOUT_PAID') return { status: null, paymentMethodStatus: null };
   if (event === 'CHECKOUT_CANCELED' || event === 'CHECKOUT_EXPIRED') {
     return { status: 'payment_grace', paymentMethodStatus: 'missing' };
   }
-  if (event === 'SUBSCRIPTION_DELETED' || event === 'SUBSCRIPTION_INACTIVATED') {
+  if (event === 'SUBSCRIPTION_DELETED') {
     return { status: 'canceled', paymentMethodStatus: null };
   }
-  if (event === 'SUBSCRIPTION_CREATED' || event === 'SUBSCRIPTION_UPDATED') {
-    if (status === 'INACTIVE' || status === 'EXPIRED') {
-      return { status: 'canceled', paymentMethodStatus: null };
-    }
+  if (event === 'SUBSCRIPTION_INACTIVATED' || event === 'SUBSCRIPTION_UPDATED') {
+    return { status: null, paymentMethodStatus: null };
+  }
+  if (event === 'SUBSCRIPTION_CREATED') {
     return { status: null, paymentMethodStatus: null };
   }
   if (event === 'PAYMENT_CONFIRMED') return { status: 'active', paymentMethodStatus: 'valid' };
@@ -264,7 +259,7 @@ export async function processAsaasBillingEvent(
   const checkoutSessionId = scalarId(event.checkout_session_id)
     || directReference.checkoutSessionId
     || storedReference.checkoutSessionId;
-  const negocioId = scalarId(event.negocio_id)
+  let negocioId = scalarId(event.negocio_id)
     || directReference.negocioId
     || storedReference.negocioId;
   const planCode = directReference.planCode || storedReference.planCode;
@@ -282,11 +277,6 @@ export async function processAsaasBillingEvent(
     if (linkError) throw linkError;
   }
 
-  const { error: checkoutEventError } = await admin.rpc('apply_billing_checkout_event', {
-    p_event_id: eventId,
-  });
-  if (checkoutEventError) throw checkoutEventError;
-
   const normalizedEventType = eventType.toUpperCase();
   const checkoutLifecycleEvents = new Set([
     'CHECKOUT_CREATED',
@@ -294,18 +284,30 @@ export async function processAsaasBillingEvent(
     'CHECKOUT_CANCELED',
     'CHECKOUT_EXPIRED',
   ]);
+  const recoveredCheckoutUrl = checkoutSessionId && providerCheckoutId
+    && checkoutLifecycleEvents.has(normalizedEventType)
+    ? checkoutUrlFor(providerCheckoutId)
+    : null;
+  const { error: checkoutEventError } = await admin.rpc('apply_billing_checkout_event_with_url', {
+    p_event_id: eventId,
+    p_checkout_url: recoveredCheckoutUrl,
+  });
+  if (checkoutEventError) throw checkoutEventError;
 
   if (action === 'upgrade' || action === 'upgrade_proration') {
     if (!negocioId || !planCode) throw new Error('upgrade_reference_missing');
     if (normalizedEventType !== 'PAYMENT_CONFIRMED') return { outcome: 'processed' };
+    if (!checkoutSessionId) throw new Error('upgrade_checkout_session_missing');
 
     const { data: subscription, error: subscriptionError } = await admin
       .from('business_subscriptions')
-      .select('id, provider, provider_subscription_id')
+      .select('id, provider, provider_subscription_id, provider_status, canceled_at, billing_action_kind')
       .eq('negocio_id', negocioId)
       .maybeSingle();
     if (subscriptionError) throw subscriptionError;
     if (!subscription) throw new Error('subscription_not_found');
+    if (subscription.billing_action_kind) throw new Error('billing_action_in_progress');
+    if (subscription.provider_status === 'DELETED' || subscription.canceled_at) throw new Error('subscription_not_upgradeable');
 
     const { data: targetPlan, error: planError } = await admin
       .from('billing_plans')
@@ -331,6 +333,7 @@ export async function processAsaasBillingEvent(
       p_plan_code: planCode,
       p_provider_event_id: providerEventId,
       p_provider_payload: {
+        checkout_session_id: checkoutSessionId,
         webhook_payload: payload,
         checkout_request: storedReference.request,
         providerPayload,
@@ -344,8 +347,69 @@ export async function processAsaasBillingEvent(
     return { outcome: 'processed' };
   }
 
+  let newSubscriptionPayment = false;
+  let suspendedExistingSubscriptionPayment = false;
+  if (normalizedEventType === 'PAYMENT_CONFIRMED') {
+    if (!subscriptionId) throw new Error('confirmed_subscription_reference_missing');
+    const { data: currentSubscription, error: currentSubscriptionError } = await admin
+      .from('business_subscriptions')
+      .select('negocio_id, provider_status, reactivation_request_id')
+      .eq('provider', ASAAS_PROVIDER)
+      .eq('provider_subscription_id', subscriptionId)
+      .maybeSingle();
+    if (currentSubscriptionError) throw currentSubscriptionError;
+    let historicalBusinessId: string | null = null;
+    if (!currentSubscription?.negocio_id) {
+      const { data: historicalSession, error: historicalError } = await admin
+        .from('billing_checkout_sessions')
+        .select('negocio_id')
+        .eq('action', 'subscription')
+        .eq('status', 'paid')
+        .eq('origin_provider_status', 'EXPIRED')
+        .eq('origin_provider_subscription_id', subscriptionId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (historicalError) throw historicalError;
+      historicalBusinessId = historicalSession?.negocio_id || null;
+      if (historicalBusinessId) {
+        if (negocioId && negocioId !== historicalBusinessId) throw new Error('historical_subscription_business_mismatch');
+        negocioId = historicalBusinessId;
+        await reconcileAsaasSubscriptionCharges(admin, negocioId, subscriptionId, undefined, 'worker');
+      }
+    }
+    newSubscriptionPayment = !currentSubscription?.negocio_id && !historicalBusinessId;
+    suspendedExistingSubscriptionPayment = Boolean(currentSubscription?.negocio_id)
+      && (['INACTIVE', 'EXPIRED'].includes(String(currentSubscription.provider_status || '').toUpperCase())
+        || Boolean(currentSubscription.reactivation_request_id));
+    if (newSubscriptionPayment && (!checkoutSessionId || !negocioId || action !== 'subscription')) {
+      throw new Error('confirmed_subscription_not_found');
+    }
+    if (newSubscriptionPayment) {
+      const { data: checkoutSession, error: checkoutSessionError } = await admin
+        .from('billing_checkout_sessions')
+        .select('negocio_id, origin_provider_subscription_id, origin_provider_status')
+        .eq('id', checkoutSessionId)
+        .eq('action', 'subscription')
+        .eq('status', 'paid')
+        .maybeSingle();
+      if (checkoutSessionError) throw checkoutSessionError;
+      if (!checkoutSession || checkoutSession.negocio_id !== negocioId) {
+        throw new Error('confirmed_subscription_checkout_mismatch');
+      }
+      if (checkoutSession.origin_provider_status === 'EXPIRED' && checkoutSession.origin_provider_subscription_id) {
+        await reconcileAsaasSubscriptionCharges(admin, negocioId, checkoutSession.origin_provider_subscription_id, undefined, 'worker');
+      }
+    }
+    if (currentSubscription?.negocio_id && currentSubscription.provider_status !== 'DELETED') {
+      await reconcileAsaasSubscriptionCharges(admin, currentSubscription.negocio_id, subscriptionId, undefined, 'worker');
+    }
+  }
+
   const mapped = mapEvent(normalizedEventType, entity);
-  const { error: processError } = await admin.rpc('process_gateway_event', {
+  // The database preserves the confirmed access state for suspended subscriptions;
+  // the provider reconciliation below decides lifecycle changes.
+  const { data: processed, error: processError } = await admin.rpc('process_gateway_event', {
     p_event_id: eventId,
     p_provider: ASAAS_PROVIDER,
     p_provider_event_id: providerEventId,
@@ -368,5 +432,25 @@ export async function processAsaasBillingEvent(
     throw processError;
   }
 
-  return { outcome: 'processed' };
+  if (newSubscriptionPayment && !processed?.ignored) {
+    const linkedNegocioId = String(processed?.negocio_id || '');
+    if (!linkedNegocioId || linkedNegocioId !== negocioId) {
+      throw new Error('confirmed_subscription_business_mismatch');
+    }
+    await reconcileAsaasSubscriptionCharges(admin, linkedNegocioId, subscriptionId, undefined, 'worker');
+  }
+
+  const subscriptionToReconcile = (normalizedEventType.startsWith('SUBSCRIPTION_')
+      || suspendedExistingSubscriptionPayment || newSubscriptionPayment)
+    && subscriptionId && !processed?.ignored
+    ? { negocioId: negocioId || String(processed?.negocio_id || ''), subscriptionId }
+    : undefined;
+  if (subscriptionToReconcile && !subscriptionToReconcile.negocioId) {
+    throw new Error('subscription_reconciliation_business_not_found');
+  }
+  return {
+    outcome: processed?.ignored ? 'ignored' : 'processed',
+    note: processed?.ignored ? String(processed.reason || 'ignored_gateway_event') : undefined,
+    subscriptionToReconcile,
+  };
 }
