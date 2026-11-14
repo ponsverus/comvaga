@@ -1,10 +1,33 @@
 import { createAdminClient } from './supabase.ts';
 
-const DEFAULT_ASAAS_BASE_URL = 'https://api-sandbox.asaas.com/v3';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 type ProviderSyncStatus = Record<string, unknown> | null | undefined;
+
+class AsaasRateLimitError extends Error {
+  readonly retryAfterSeconds: number;
+
+  constructor(message: string, retryAfterSeconds: number) {
+    super(message);
+    this.name = 'AsaasRateLimitError';
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+function rateLimitDelaySeconds(response: Response, detail: string) {
+  const reset = response.headers.get('RateLimit-Reset')?.trim();
+  const resetSeconds = reset && /^\d+(?:\.\d+)?$/.test(reset) ? Number(reset) : NaN;
+  if (Number.isFinite(resetSeconds)) {
+    return Math.min(86_400, Math.max(60, Math.ceil(resetSeconds) + 10));
+  }
+  if (/concorrentes|concurrent/i.test(detail)) return 60;
+  return 43_200;
+}
+
+function retryDelayFor(error: unknown): number | null {
+  return error instanceof AsaasRateLimitError ? error.retryAfterSeconds : null;
+}
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name);
@@ -30,7 +53,7 @@ function centsToReais(cents: number) {
 
 async function callAsaas(path: string, body: Record<string, unknown> | null, method = 'POST') {
   const apiKey = requiredEnv('ASAAS_API_KEY');
-  const baseUrl = (Deno.env.get('ASAAS_BASE_URL') || DEFAULT_ASAAS_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = (requiredEnv('ASAAS_BASE_URL')).replace(/\/+$/, '');
 
   const response = await fetch(`${baseUrl}${path}`, {
     method,
@@ -59,9 +82,11 @@ async function callAsaas(path: string, body: Record<string, unknown> | null, met
         .filter(Boolean)
         .join(' | ')
       : data?.description || data?.message || responseText || JSON.stringify(data);
-    throw new Error(
-      `asaas_subscription_update_failed (${response.status}): ${String(asaasError || '').trim() || 'empty_response'}`,
-    );
+    const message = `asaas_subscription_update_failed (${response.status}): ${String(asaasError || '').trim() || 'empty_response'}`;
+    if (response.status === 429) {
+      throw new AsaasRateLimitError(message, rateLimitDelaySeconds(response, message));
+    }
+    throw new Error(message);
   }
 
   return data;
@@ -82,7 +107,8 @@ export async function updateAsaasSubscriptionValueFromSync(status: ProviderSyncS
   );
   const planCode = asText(status?.provider_sync_target_plan_code);
   const planName = asText(status?.provider_sync_target_plan_name) || planCode;
-  const priceCents = Number(status?.provider_sync_target_price_cents);
+  const rawPriceCents = status?.provider_sync_target_price_cents;
+  const priceCents = rawPriceCents == null ? NaN : Number(rawPriceCents);
 
   if (!subscriptionId) throw new Error('provider_subscription_missing');
   if (!planCode || !Number.isFinite(priceCents) || priceCents < 0) {
@@ -110,14 +136,18 @@ async function reconcileProviderSyncAfterUpdateError(
   const subscriptionId = asText(
     status?.provider_sync_provider_subscription_id || status?.provider_subscription_id,
   );
-  const targetPriceCents = Number(status?.provider_sync_target_price_cents);
-  if (!subscriptionId || !Number.isFinite(targetPriceCents)) return null;
+  const targetPlanCode = asText(status?.provider_sync_target_plan_code);
+  const rawTargetPriceCents = status?.provider_sync_target_price_cents;
+  const targetPriceCents = rawTargetPriceCents == null ? NaN : Number(rawTargetPriceCents);
+  if (!subscriptionId || !targetPlanCode || !Number.isFinite(targetPriceCents)) return null;
 
   const providerSubscription = await getAsaasSubscription(subscriptionId);
   const providerPriceCents = Math.round(Number(providerSubscription?.value) * 100);
-  if (String(providerSubscription?.status || '').toUpperCase() !== 'ACTIVE'
+  if (asText(providerSubscription?.id) !== subscriptionId
+    || String(providerSubscription?.status || '').toUpperCase() !== 'ACTIVE'
     || !Number.isFinite(providerPriceCents)
-    || providerPriceCents !== targetPriceCents) return null;
+    || providerPriceCents !== targetPriceCents
+    || asText(providerSubscription?.externalReference) !== `comvaga-subscription:${targetPlanCode}`) return null;
 
   const { data, error } = await admin.rpc('finish_subscription_provider_sync', {
     p_subscription_id: asText(status?.id || status?.subscription_id),
@@ -176,18 +206,23 @@ export async function runImmediateSubscriptionProviderSync(
   } catch (error) {
     const message = providerSyncErrorMessage(error);
     let retryMessage = message;
-    try {
-      const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, started, source, message);
-      if (reconciledStatus) return { billingStatus: reconciledStatus, providerSyncError: null };
-    } catch (reconciliationError) {
-      const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
-      console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
-      retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
+    let retryAfterSeconds = retryDelayFor(error);
+    if (retryAfterSeconds === null) {
+      try {
+        const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, started, source, message);
+        if (reconciledStatus) return { billingStatus: reconciledStatus, providerSyncError: null };
+      } catch (reconciliationError) {
+        const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
+        console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
+        retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
+        retryAfterSeconds = retryDelayFor(reconciliationError);
+      }
     }
     const { data: retryStatus, error: retryError } = await admin.rpc('retry_subscription_provider_sync', {
       p_subscription_id: subscriptionId,
       p_error: retryMessage,
       p_expected_operation: operation,
+      p_retry_after_seconds: retryAfterSeconds,
     });
     if (retryError) throw retryError;
     return { billingStatus: retryStatus || status, providerSyncError: message };
@@ -233,21 +268,26 @@ export async function processPendingSubscriptionProviderSyncs(
       const message = providerSyncErrorMessage(error);
       console.error(`subscription provider sync ${subscriptionId} failed:`, error);
       let retryMessage = message;
-      try {
-        const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, sync, 'billing_worker_retry', message);
-        if (reconciledStatus) {
-          summary.synced += 1;
-          continue;
+      let retryAfterSeconds = retryDelayFor(error);
+      if (retryAfterSeconds === null) {
+        try {
+          const reconciledStatus = await reconcileProviderSyncAfterUpdateError(admin, sync, 'billing_worker_retry', message);
+          if (reconciledStatus) {
+            summary.synced += 1;
+            continue;
+          }
+        } catch (reconciliationError) {
+          const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
+          console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
+          retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
+          retryAfterSeconds = retryDelayFor(reconciliationError);
         }
-      } catch (reconciliationError) {
-        const reconciliationMessage = providerSyncErrorMessage(reconciliationError, 'provider_sync_reconciliation_failed');
-        console.error(`subscription provider sync ${subscriptionId} reconciliation failed:`, reconciliationError);
-        retryMessage = `${message}; reconciliation: ${reconciliationMessage}`;
       }
       const { data: retryStatus, error: retryError } = await admin.rpc('retry_subscription_provider_sync', {
         p_subscription_id: subscriptionId,
         p_error: retryMessage,
         p_expected_operation: operation,
+        p_retry_after_seconds: retryAfterSeconds,
       });
       if (retryError) {
         console.error(`subscription provider sync ${subscriptionId} retry scheduling failed:`, retryError);
