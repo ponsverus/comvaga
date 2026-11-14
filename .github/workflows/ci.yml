@@ -6,25 +6,67 @@ on:
     branches:
       - main
 
-jobs:
-  ci:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  # Mantém as verificações de qualidade existentes, sem alterações de escopo.
+  build-lint:
+    name: Build e ESLint
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Build project
         run: npm run build
-
       - name: Lint project
         run: npm run lint
+
+  unit:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+
+  components:
+    name: Testes de componentes
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ''
+      VITE_SUPABASE_ANON_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:components
+
+  integration:
+    name: Integração simulada
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ''
+      VITE_SUPABASE_ANON_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration
