@@ -734,7 +734,7 @@ export const ptBR = {
         },
         entrega_deleted: {
           title: 'Serv. excluído',
-          body: 'O serv. foi removido da lista.',
+          body: 'O serv. foi excluído da lista.',
           variant: 'success', screen: 'light', buttonText: 'OK',
         },
         entrega_activated: {
