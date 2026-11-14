@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 import ModalDialog from '../../../components/ModalDialog';
 
 export default function VitrineGallerySection({ items, hasMore = false, loadingMore = false, onLoadMore }) {
@@ -53,24 +54,24 @@ export default function VitrineGallerySection({ items, hasMore = false, loadingM
         overlayClassName="bg-black/95"
         paddingClassName="p-0"
       >
-        <div className="relative flex min-h-dvh w-full items-center justify-center px-4 pb-4 pt-16 sm:px-6 sm:pb-6">
+        <div className="relative h-dvh w-screen overflow-hidden rounded-custom">
           <h2 id="vitrine-gallery-image-title" className="sr-only">Imagem da galeria ampliada</h2>
+          {selectedImage && (
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.alt}
+              className="h-full w-full rounded-custom object-cover"
+            />
+          )}
           <button
             ref={closeButtonRef}
             type="button"
             aria-label="Fechar imagem ampliada"
             onClick={() => setSelectedImage(null)}
-            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center text-4xl leading-none text-white transition-colors hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:right-6 sm:top-6"
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/20 backdrop-blur-sm transition-colors hover:bg-red-500/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 sm:right-6 sm:top-6"
           >
-            ×
+            <X className="h-4 w-4 text-red-400" />
           </button>
-          {selectedImage && (
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.alt}
-              className="max-h-[calc(100dvh-5rem)] max-w-full object-contain"
-            />
-          )}
         </div>
       </ModalDialog>
     </section>
