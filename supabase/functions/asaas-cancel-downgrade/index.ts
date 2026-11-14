@@ -4,6 +4,7 @@ import {
   runImmediateSubscriptionProviderSync,
 } from '../_shared/billing-provider-sync.ts';
 import { createAdminClient, createUserClient } from '../_shared/supabase.ts';
+import { reserveOwnerAsaasAction } from '../_shared/asaas-rate-limit.ts';
 
 function asText(value: unknown) {
   return String(value || '').trim();
@@ -27,6 +28,13 @@ Deno.serve(async (req) => {
     const admin = createAdminClient();
     const { data: authData, error: authError } = await userClient.auth.getUser();
     if (authError || !authData?.user?.id) return jsonResponse({ error: 'not_authenticated' }, 401, req);
+
+    const { data: negocio, error: negocioError } = await admin.from('negocios')
+      .select('owner_id').eq('id', negocioId).maybeSingle();
+    if (negocioError) throw negocioError;
+    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
+    const limited = await reserveOwnerAsaasAction(admin, authData.user.id, 'cancel_downgrade', req);
+    if (limited) return limited;
 
     const { data: cancelStatus, error: cancelError } = await admin.rpc('cancel_business_plan_downgrade', {
       p_negocio_id: negocioId,

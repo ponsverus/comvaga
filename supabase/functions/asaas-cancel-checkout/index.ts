@@ -1,8 +1,8 @@
 import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { createAdminClient, createUserClient } from '../_shared/supabase.ts';
+import { reserveOwnerAsaasAction } from '../_shared/asaas-rate-limit.ts';
 
 const ASAAS_PROVIDER = 'asaas';
-const DEFAULT_ASAAS_BASE_URL = 'https://api-sandbox.asaas.com/v3';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name);
@@ -16,7 +16,7 @@ function asText(value: unknown) {
 
 async function callAsaas(path: string, body: Record<string, unknown>, method = 'POST') {
   const apiKey = requiredEnv('ASAAS_API_KEY');
-  const baseUrl = (Deno.env.get('ASAAS_BASE_URL') || DEFAULT_ASAAS_BASE_URL).replace(/\/+$/, '');
+  const baseUrl = (requiredEnv('ASAAS_BASE_URL')).replace(/\/+$/, '');
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
@@ -79,23 +79,39 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
     }
 
-    const { data: session, error: sessionError } = await admin
+    const now = new Date().toISOString();
+    const { data: sessions, error: sessionError } = await admin
       .from('billing_checkout_sessions')
-      .select('id, status, provider, provider_checkout_id, action, plan_code, expires_at')
+      .select('id, status, provider, provider_checkout_id, action, plan_code, expires_at, updated_at')
       .eq('negocio_id', negocioId)
       .in('action', ['subscription', 'upgrade_proration'])
-      .in('status', ['creating', 'active', 'unknown', 'paid'])
-      .gt('expires_at', new Date().toISOString())
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .in('status', ['active', 'creating', 'unknown'])
+      .gt('expires_at', now);
     if (sessionError) throw sessionError;
-    if (!session) return jsonResponse({ error: 'checkout_not_found' }, 404, req);
-    if (session.status === 'paid') return jsonResponse({ error: 'payment_already_confirmed' }, 409, req);
+    const statusPriority: Record<string, number> = { active: 0, creating: 1, unknown: 2 };
+    const session = (sessions || []).sort((a, b) =>
+      statusPriority[a.status] - statusPriority[b.status]
+      || b.updated_at.localeCompare(a.updated_at)
+    )[0] || null;
+    if (!session) {
+      const { data: paidSession, error: paidError } = await admin
+        .from('billing_checkout_sessions')
+        .select('id')
+        .eq('negocio_id', negocioId)
+        .in('action', ['subscription', 'upgrade_proration'])
+        .eq('status', 'paid')
+        .gt('expires_at', now)
+        .limit(1)
+        .maybeSingle();
+      if (paidError) throw paidError;
+      return jsonResponse({ error: paidSession ? 'payment_already_confirmed' : 'checkout_not_found' }, paidSession ? 409 : 404, req);
+    }
     if (session.status === 'creating' || !session.provider_checkout_id) {
       return jsonResponse({ error: 'checkout_creation_in_progress', retry_after_creation: true }, 409, req);
     }
 
+    const limited = await reserveOwnerAsaasAction(admin, authData.user.id, 'cancel_checkout', req);
+    if (limited) return limited;
     let providerResponse: Record<string, unknown> = { skipped: true, reason: 'provider_not_asaas' };
     if (String(session.provider || '').toLowerCase() === ASAAS_PROVIDER) {
       providerResponse = await callAsaas(`/checkouts/${encodeURIComponent(String(session.provider_checkout_id))}/cancel`, {}, 'POST');
@@ -118,6 +134,7 @@ Deno.serve(async (req) => {
     }, 200, req);
   } catch (error) {
     console.error('asaas-cancel-checkout failed:', error);
-    return jsonResponse({ error: error?.message || 'checkout_cancel_failed' }, 400, req);
+    const message = error?.message || 'checkout_cancel_failed';
+    return jsonResponse({ error: /asaas_checkout_cancel_failed \(429\)/.test(message) ? 'rate_limit_exceeded' : message }, /asaas_checkout_cancel_failed \(429\)/.test(message) ? 429 : 400, req);
   }
 });

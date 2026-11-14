@@ -40,7 +40,7 @@ type ProviderSendError = Error & {
   errorCode?: string;
 };
 
-type AuthEmailLogStatus = 'received' | 'sent' | 'provider_error' | 'invalid_signature' | 'internal_error';
+type AuthEmailLogStatus = 'received' | 'sent' | 'provider_error' | 'internal_error';
 
 type AuthEmailLogInput = {
   requestId: string;
@@ -538,14 +538,6 @@ Deno.serve(async (req) => {
     try {
       payload = webhook.verify(payloadText, headers) as AuthHookPayload;
     } catch {
-      console.error('auth-email invalid signature');
-      await writeAuthEmailLog({
-        requestId,
-        actionType: 'auth',
-        status: 'invalid_signature',
-        errorCode: 'invalid_signature',
-        errorMessage: 'Assinatura inválida.',
-      });
       return jsonResponse({
         error: {
           http_code: 401,

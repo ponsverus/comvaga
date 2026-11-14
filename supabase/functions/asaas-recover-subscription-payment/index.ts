@@ -1,16 +1,10 @@
 import { getCorsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { createAdminClient, createUserClient } from '../_shared/supabase.ts';
+import { reserveOwnerAsaasAction } from '../_shared/asaas-rate-limit.ts';
+import { isDueOpenCharge, reconcileAsaasSubscriptionCharges, todayInSaoPaulo, type AsaasCharge } from '../_shared/asaas-charges.ts';
 
 const ASAAS_PROVIDER = 'asaas';
-const TERMINAL_SUBSCRIPTION_STATUSES = new Set(['INACTIVE', 'EXPIRED', 'CANCELED', 'CANCELLED', 'DELETED']);
 const ALLOWED_INVOICE_HOSTS = new Set(['asaas.com', 'www.asaas.com', 'sandbox.asaas.com']);
-const DEFAULT_ASAAS_BASE_URL = 'https://api-sandbox.asaas.com/v3';
-
-function requiredEnv(name: string) {
-  const value = Deno.env.get(name);
-  if (!value) throw new Error(`missing_${name.toLowerCase()}`);
-  return value;
-}
 
 function text(value: unknown) {
   return String(value || '').trim();
@@ -23,28 +17,6 @@ function safeInvoiceUrl(value: unknown) {
   } catch {
     return null;
   }
-}
-
-async function getOverdueSubscriptionPayments(subscriptionId: string) {
-  const apiKey = requiredEnv('ASAAS_API_KEY');
-  const baseUrl = (Deno.env.get('ASAAS_BASE_URL') || DEFAULT_ASAAS_BASE_URL).replace(/\/+$/, '');
-  const url = new URL(`${baseUrl}/subscriptions/${encodeURIComponent(subscriptionId)}/payments`);
-  url.searchParams.set('status', 'OVERDUE');
-  url.searchParams.set('limit', '100');
-  url.searchParams.set('offset', '0');
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      access_token: apiKey,
-      accept: 'application/json',
-      'User-Agent': 'Comvaga/1.0',
-    },
-    signal: AbortSignal.timeout(15_000),
-  });
-
-  if (!response.ok) throw new Error(`asaas_overdue_payment_lookup_failed_${response.status}`);
-  return await response.json();
 }
 
 Deno.serve(async (req) => {
@@ -71,30 +43,15 @@ Deno.serve(async (req) => {
     });
     if (billingStatusError) throw billingStatusError;
 
-    const currentStatus = text(billingStatus?.status).toLowerCase();
-    const paymentStatus = text(billingStatus?.payment_method_status).toLowerCase();
     const providerSubscriptionId = text(billingStatus?.provider_subscription_id);
-    const providerStatus = text(billingStatus?.provider_status).toUpperCase();
-
-    if (
-      text(billingStatus?.provider).toLowerCase() !== ASAAS_PROVIDER
-      || !providerSubscriptionId
-      || TERMINAL_SUBSCRIPTION_STATUSES.has(providerStatus)
-      || Boolean(billingStatus?.cancellation_scheduled)
-      || !['blocked', 'past_due', 'payment_grace', 'active'].includes(currentStatus)
-      || !['failed', 'expired'].includes(paymentStatus)
-    ) {
+    if (billingStatus?.can_request_subscription_invoice !== true) {
+      if (billingStatus?.provider_sync_pending) {
+        return jsonResponse({ error: 'provider_sync_in_progress' }, 409, req);
+      }
+      if (billingStatus?.plan_change_scheduled) {
+        return jsonResponse({ error: 'plan_downgrade_pending' }, 409, req);
+      }
       return jsonResponse({ error: 'subscription_not_recoverable' }, 409, req);
-    }
-
-    if (billingStatus?.has_active_checkout) {
-      return jsonResponse({ error: 'checkout_in_progress' }, 409, req);
-    }
-    if (billingStatus?.provider_sync_pending) {
-      return jsonResponse({ error: 'provider_sync_in_progress' }, 409, req);
-    }
-    if (billingStatus?.plan_change_scheduled) {
-      return jsonResponse({ error: 'plan_downgrade_pending' }, 409, req);
     }
 
     const { data: subscription, error: subscriptionError } = await admin
@@ -110,31 +67,48 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'subscription_state_changed' }, 409, req);
     }
 
-    const paymentList = await getOverdueSubscriptionPayments(providerSubscriptionId);
-    const overduePayments = Array.isArray(paymentList?.data)
-      ? paymentList.data.filter((payment: Record<string, unknown>) =>
-        text(payment.status).toUpperCase() === 'OVERDUE'
-        && text(payment.subscription) === providerSubscriptionId
-      )
-      : [];
-
-    if (overduePayments.length === 0) {
-      return jsonResponse({ error: 'subscription_overdue_payment_not_found' }, 404, req);
+    const { data: historicalSessions, error: historicalError } = await admin
+      .from('billing_checkout_sessions')
+      .select('origin_provider_subscription_id')
+      .eq('negocio_id', negocioId)
+      .eq('action', 'subscription')
+      .eq('status', 'paid')
+      .eq('origin_provider_status', 'EXPIRED')
+      .limit(11);
+    if (historicalError) throw historicalError;
+    if ((historicalSessions?.length || 0) > 10) throw new Error('subscription_history_requires_support');
+    const subscriptionIds = new Set<string>([providerSubscriptionId]);
+    for (const session of historicalSessions || []) {
+      const originId = text(session.origin_provider_subscription_id);
+      if (originId) subscriptionIds.add(originId);
     }
-    if (overduePayments.length !== 1) {
-      return jsonResponse({ error: 'multiple_overdue_subscription_payments' }, 409, req);
+
+    const limited = await reserveOwnerAsaasAction(admin, authData.user.id, 'recover', req);
+    if (limited) return limited;
+
+    const today = todayInSaoPaulo();
+    const duePayments: AsaasCharge[] = [];
+    for (const subscriptionId of subscriptionIds) {
+      const charges = await reconcileAsaasSubscriptionCharges(admin, negocioId, subscriptionId);
+      duePayments.push(...charges.filter((payment) => isDueOpenCharge(payment, subscriptionId, today)));
+    }
+    duePayments.sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.id.localeCompare(b.id));
+    if (duePayments.length === 0) {
+      return jsonResponse({ error: 'subscription_due_payment_not_found' }, 404, req);
     }
 
-    const payment = overduePayments[0];
+    const payment = duePayments[0];
     const invoiceUrl = safeInvoiceUrl(payment.invoiceUrl);
     if (!invoiceUrl) return jsonResponse({ error: 'subscription_invoice_unavailable' }, 502, req);
 
     return jsonResponse({
       action: 'existing_subscription_payment',
       invoice_url: invoiceUrl,
+      due_charge_count: duePayments.length,
     }, 200, req);
   } catch (error) {
     console.error('asaas-recover-subscription-payment failed:', text(error?.message) || 'recovery_failed');
+    if (/asaas_.*_429/.test(text(error?.message))) return jsonResponse({ error: 'rate_limit_exceeded' }, 429, req);
     return jsonResponse({ error: 'subscription_recovery_unavailable' }, 502, req);
   }
 });

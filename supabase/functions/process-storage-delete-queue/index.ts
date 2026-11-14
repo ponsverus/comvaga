@@ -4,6 +4,19 @@ import { timingSafeTokenMatch } from '../_shared/security.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const CRON_SECRET = Deno.env.get('CRON_SECRET');
+const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const PATH_RULES: Record<string, RegExp> = {
+  avatars: new RegExp(`^${UUID_PATTERN}/avatar-[0-9]+[.]webp$`),
+  logos: new RegExp(`^${UUID_PATTERN}/logo[.]webp$`),
+  galerias: new RegExp(`^${UUID_PATTERN}/${UUID_PATTERN}[.]webp$`),
+};
+const PATH_REFERENCES: Record<string, Array<{ table: string; column: string }>> = {
+  avatars: [
+    { table: 'clientes', column: 'avatar_path' },
+  ],
+  logos: [{ table: 'negocios', column: 'logo_path' }],
+  galerias: [{ table: 'galerias', column: 'path' }],
+};
 
 Deno.serve(async (req: Request) => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -22,6 +35,10 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const removeQueueItem = async (id: string) => {
+    const { error } = await supabase.from('storage_delete_queue').delete().eq('id', id);
+    if (error) throw error;
+  };
 
   const { data: items, error: fetchErr } = await supabase
     .from('storage_delete_queue')
@@ -44,10 +61,37 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const results = { success: 0, failed: 0, errors: [] as string[] };
+  const results = { success: 0, skipped: 0, failed: 0, errors: [] as string[] };
 
   for (const item of items) {
     try {
+      if (!PATH_RULES[item.bucket]?.test(item.path)) {
+        await removeQueueItem(item.id);
+        results.skipped++;
+        console.warn('Entrada invalida descartada da fila de exclusao:', item.bucket, item.path);
+        continue;
+      }
+
+      let inUse = false;
+      for (const reference of PATH_REFERENCES[item.bucket]) {
+        const { data, error } = await supabase
+          .from(reference.table)
+          .select('id')
+          .in(reference.column, [item.path, `${item.bucket}/${item.path}`])
+          .limit(1);
+        if (error) throw error;
+        if (data?.length) {
+          inUse = true;
+          break;
+        }
+      }
+      if (inUse) {
+        await removeQueueItem(item.id);
+        results.skipped++;
+        console.warn('Arquivo ainda referenciado descartado da fila de exclusao:', item.bucket, item.path);
+        continue;
+      }
+
       const { error: storageErr } = await supabase
         .storage
         .from(item.bucket)
@@ -63,16 +107,7 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      const { error: delErr } = await supabase
-        .from('storage_delete_queue')
-        .delete()
-        .eq('id', item.id);
-
-      if (delErr) {
-        results.failed++;
-        results.errors.push(`delete_queue [${item.id}]: ${delErr.message}`);
-        continue;
-      }
+      await removeQueueItem(item.id);
 
       results.success++;
     } catch (e) {
