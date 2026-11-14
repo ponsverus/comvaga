@@ -269,7 +269,6 @@ Deno.serve(async (req: Request) => {
 
   for (const envio of envios) {
     const { ok, result } = await sendEmail(envio.email, envio.subject, envio.html);
-    console.log('OneSignal', event, envio.email, JSON.stringify(result));
     if (!ok) erros.push(JSON.stringify((result as Record<string, unknown>).errors ?? result));
   }
 
