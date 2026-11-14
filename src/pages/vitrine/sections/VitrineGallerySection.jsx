@@ -6,6 +6,7 @@ export default function VitrineGallerySection({ items, hasMore = false, loadingM
   const sentinelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState(null);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -32,6 +33,7 @@ export default function VitrineGallerySection({ items, hasMore = false, loadingM
               aria-label={`Ampliar imagem ${index + 1} da galeria`}
               onClick={(event) => {
                 event.currentTarget.focus();
+                setImageAspectRatio(null);
                 setSelectedImage({ url: item.url, alt: `Imagem ${index + 1} da galeria` });
               }}
               className="mb-px block w-full break-inside-avoid overflow-hidden rounded-custom border border-vborder bg-vcard cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vtext"
@@ -54,13 +56,22 @@ export default function VitrineGallerySection({ items, hasMore = false, loadingM
         overlayClassName="bg-black/95"
         paddingClassName="p-0"
       >
-        <div className="relative h-dvh w-screen overflow-hidden rounded-custom">
+        <div className="relative flex h-dvh w-screen items-center justify-center overflow-hidden">
           <h2 id="vitrine-gallery-image-title" className="sr-only">Imagem da galeria ampliada</h2>
           {selectedImage && (
             <img
               src={selectedImage.url}
               alt={selectedImage.alt}
-              className="h-full w-full rounded-custom object-cover"
+              onLoad={(event) => {
+                const { naturalWidth, naturalHeight } = event.currentTarget;
+                if (naturalWidth > 0 && naturalHeight > 0) {
+                  setImageAspectRatio(naturalWidth / naturalHeight);
+                }
+              }}
+              style={imageAspectRatio
+                ? { width: `min(100vw, ${100 * imageAspectRatio}dvh)` }
+                : undefined}
+              className="block h-auto w-auto max-h-dvh max-w-full rounded-custom object-contain"
             />
           )}
           <button
