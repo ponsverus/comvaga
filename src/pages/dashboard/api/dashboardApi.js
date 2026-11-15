@@ -111,20 +111,6 @@ export async function fetchOfficialDate(rpcNames) {
   };
 }
 
-export async function fetchOwnerBusinessCount(userId) {
-  const { count, error } = await withAuthRetry(
-    () => supabase
-      .from('negocios')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId),
-    6000,
-    'negocios-count'
-  );
-
-  if (error) throw error;
-  return Number(count || 0);
-}
-
 export async function fetchNegocioById(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase
