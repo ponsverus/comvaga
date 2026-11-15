@@ -1,3 +1,4 @@
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { searchHome } from '../../src/utils/searchHome.js';
 import { supabase } from '../../src/supabase.js';
@@ -11,13 +12,13 @@ describe('Pesquisa da Home com RPC simulada', () => {
     expect(supabase.rpc).not.toHaveBeenCalled();
   });
   it('normaliza a pesquisa e envia os dados esperados', async () => {
-    supabase.rpc.mockResolvedValue({ data: [{ id: 'n1', slug: 'studio' }], error: null });
-    expect(await searchHome('  barbearia  ', { limit: 5 })).toEqual([{ id: 'n1', slug: 'studio' }]);
+    supabase.rpc.mockResolvedValue({ data: [{ id: 'n1', slug: 'white' }], error: null });
+    expect(await searchHome('  barbearia  ', { limit: 5 })).toEqual([{ id: 'n1', slug: 'white' }]);
     expect(supabase.rpc).toHaveBeenCalledWith('search_home', { p_term: 'barbearia', p_limit: 5 });
   });
   it('descarta resultados sem slug', async () => {
-    supabase.rpc.mockResolvedValue({ data: [{ id: 'n1', slug: 'ok' }, { id: 'n2' }], error: null });
-    expect(await searchHome('barbearia')).toEqual([{ id: 'n1', slug: 'ok' }]);
+    supabase.rpc.mockResolvedValue({ data: [{ id: 'n1', slug: 'black' }, { id: 'n2' }], error: null });
+    expect(await searchHome('barbearia')).toEqual([{ id: 'n1', slug: 'black' }]);
   });
   it('propaga falha da RPC simulada', async () => {
     supabase.rpc.mockResolvedValue({ data: null, error: new Error('falha simulada') });
