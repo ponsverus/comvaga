@@ -18,7 +18,7 @@ export default function BookingConfirmedModal({
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className={`border rounded-custom max-w-md w-full ${styles.bg}`}>
         <div className="p-8 text-center">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><CalendarIcon className="w-10 h-10 text-green-500" dotOpacity={0} /></div>
+          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><CalendarIcon className="w-10 h-10 text-green-500" /></div>
           <h3 className={`text-2xl font-normal mb-2 ${styles.title}`}>AGENDADO :)</h3>
           <p className="font-normal mb-1">
             {booking.lastSlot?.label && <span className={`font-normal ${styles.hora}`}>{booking.lastSlot.label}</span>}
