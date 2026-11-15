@@ -5,7 +5,6 @@ import { supabase } from '../../src/supabase.js';
 import { invokeProtectedAction } from '../../src/utils/protectedAction.js';
 import { useFeedback } from '../../src/feedback/useFeedback.js';
 
-// Intercepta TODOS os pontos do fluxo que poderiam chamar o backend.
 vi.mock('../../src/supabase.js', () => ({ supabase: { rpc: vi.fn() } }));
 vi.mock('../../src/utils/authSession.js', () => ({ withAuthRetry: vi.fn((request) => request()) }));
 vi.mock('../../src/utils/protectedAction.js', () => ({ invokeProtectedAction: vi.fn() }));
