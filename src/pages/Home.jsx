@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { SearchIcon, ProfessionalIcon } from '../components/icons';
 import SearchEmptyState from '../components/SearchEmptyState';
@@ -10,13 +9,10 @@ import { useStaticSeo } from '../hooks/useStaticSeo.js';
 import HomePublicContent from '../components/HomePublicContent.jsx';
 import { applyStructuredData } from '../utils/structuredData.js';
 import { HOME_SCHEMA_ID, buildHomeStructuredData } from '../utils/homeSeo.js';
-import { withTimeout } from '../utils/withTimeout.js';
-import { withAuthRetry } from '../utils/authSession.js';
 import { getPublicUrl } from '../utils/storage.js';
 import { isRateLimitError } from '../utils/errorUtils.js';
 import { readPublicHomeReviewsSnapshot } from '../utils/publicHomeReviews.js';
-
-const APP_REVIEWS_PAGE_SIZE = 12;
+import { APP_REVIEWS_PAGE_SIZE, fetchAppReviews, fetchAppReviewsHome, createAppReview, getBusinessLogoUrl } from './api/homeApi.js';
 
 function toAppReviewItem(row) {
   return {
@@ -24,53 +20,6 @@ function toAppReviewItem(row) {
     users: { nome: row.nome_publico },
     avatarClienteUrl: getPublicUrl('avatars', row.avatar_path),
   };
-}
-
-async function fetchAppReviews(cursor = null) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_depoimentos_app', {
-      p_limit: APP_REVIEWS_PAGE_SIZE + 1,
-      p_cursor_created_at: cursor?.created_at ?? null,
-      p_cursor_id: cursor?.id ?? null,
-    }),
-    7000,
-    'depoimentos-app'
-  );
-  if (error) throw error;
-  return data || [];
-}
-
-async function fetchAppReviewsHome() {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_depoimentos_app_home'),
-    7000,
-    'depoimentos-app-home'
-  );
-  if (error) throw error;
-  if (!data || !Array.isArray(data.items)) throw new Error('Resposta inválida de depoimentos da Comvaga');
-
-  const count = Number(data.rating_count);
-  const value = data.rating_value == null ? null : Number(data.rating_value);
-  if (!Number.isSafeInteger(count) || count < 0 || count < data.items.length
-    || (count > 0 && (!Number.isFinite(value) || value < 1 || value > 5))
-    || (count === 0 && data.items.length > 0)) {
-    throw new Error('Resumo inválido de depoimentos da Comvaga');
-  }
-  return { items: data.items, rating: count > 0 ? { count, value } : null };
-}
-
-function getBusinessLogoUrl(path) {
-  if (!path) return null;
-  try {
-    const normalizedPath = String(path).trim();
-    if (!normalizedPath || /^https?:\/\//i.test(normalizedPath)) return null;
-
-    const stripped = normalizedPath.replace(/^logos\//, '');
-    const { data } = supabase.storage.from('logos').getPublicUrl(stripped);
-    return data?.publicUrl || null;
-  } catch {
-    return null;
-  }
 }
 
 function SearchBox({
@@ -303,15 +252,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       const consentGranted = await confirm('home.app_review_publish_confirm');
       if (!consentGranted) return;
       setAppReviewSending(true);
-      const { error } = await withAuthRetry(
-        () => supabase.rpc('create_depoimento_app', {
-          p_nota: appReviewNota,
-          p_comentario: comentario || null,
-          p_consentimento: true,
-        }),
-        7000,
-        'enviar-depoimento-app'
-      );
+      const { error } = await createAppReview(appReviewNota, comentario);
       if (error) throw error;
       setAppReviewNota(0);
       setAppReviewTexto('');
