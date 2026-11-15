@@ -10,19 +10,19 @@ describe('SearchEmptyState', () => {
     render(<SearchEmptyState />);
     expect(screen.getByRole('status', { name: 'Nenhum resultado encontrado' })).toBeInTheDocument();
   });
-  it('aceita classe adicional sem perder classe padrão', () => {
+  it('aceita classe adicional sem perder classe original', () => {
     render(<SearchEmptyState className="minha-classe" />);
     expect(screen.getByRole('status')).toHaveClass('minha-classe');
   });
 });
 
 describe('BusinessGroupNotice', () => {
-  it('mostra carregamento e não oferece nova tentativa durante carregamento', () => {
+  it('mostra carregamento e impede nova tentativa durante o processo', () => {
     render(<BusinessGroupNotice status="loading" onRetry={() => {}} />);
     expect(screen.getByRole('status')).toHaveTextContent('Carregando informações');
     expect(screen.queryByRole('button', { name: /tentar novamente/i })).not.toBeInTheDocument();
   });
-  it('permite repetir operação em erro', () => {
+  it('permite nova tentativa em caso de erro', () => {
     const onRetry = vi.fn();
     render(<BusinessGroupNotice status="error" onRetry={onRetry} />);
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -32,15 +32,15 @@ describe('BusinessGroupNotice', () => {
 });
 
 describe('Heart e ReviewStar', () => {
-  it('coração preenchido usa cor atual', () => {
+  it('icone preenchido usa cor atual', () => {
     const { container } = render(<Heart filled size={24} />);
     expect(container.querySelector('svg')).toHaveAttribute('fill', 'currentColor');
   });
-  it('coração vazio não usa preenchimento', () => {
+  it('icone vazio fica sem preenchimento', () => {
     const { container } = render(<Heart />);
     expect(container.querySelector('svg')).toHaveAttribute('fill', 'none');
   });
-  it('estrela possui nome acessível e chama ação ao clicar', () => {
+  it('estrela possui nome acessivel e aciona callback ao clicar', () => {
     const onClick = vi.fn();
     render(<ReviewStar active label="Nota 4" onClick={onClick} />);
     fireEvent.click(screen.getByRole('button', { name: 'Nota 4' }));

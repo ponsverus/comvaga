@@ -4,16 +4,16 @@ import ProfissionalSelect from '../../src/components/ProfissionalSelect.jsx';
 import DatePicker from '../../src/components/DatePicker.jsx';
 
 const profissionais = [
-  { id: 'p1', nome: 'Ana', status: 'ativo', profissao: 'Cabeleireira' },
+  { id: 'p1', nome: 'Ana', status: 'ativo', profissao: 'Barbeiro' },
   { id: 'p2', nome: 'Bruno', status: 'inativo' },
 ];
 
 describe('ProfissionalSelect', () => {
-  it('exibe placeholder quando não há selecionado', () => {
+  it('exibe placeholder sem profissional selecionado', () => {
     render(<ProfissionalSelect value={null} onChange={() => {}} profissionais={profissionais} />);
     expect(screen.getByRole('button', { name: /selecione/i })).toBeInTheDocument();
   });
-  it('filtra profissionais inativos por padrão', () => {
+  it('oculta profissionais inativos automaticamente', () => {
     render(<ProfissionalSelect value={null} onChange={() => {}} profissionais={profissionais} />);
     fireEvent.click(screen.getByRole('button', { name: /selecione/i }));
     expect(screen.getByRole('button', { name: /ana/i })).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe('DatePicker', () => {
     fireEvent.click(screen.getByRole('button', { name: '20' }));
     expect(onChange).toHaveBeenCalledWith('2026-11-20');
   });
-  it('botão hoje retorna a data de referência', () => {
+  it('atalho hoje retorna a data informada', () => {
     const onChange = vi.fn();
     render(<DatePicker value="" todayISO="2026-11-14" onChange={onChange} />);
     fireEvent.click(screen.getByRole('button', { name: /selecionar/i }));

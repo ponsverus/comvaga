@@ -1,10 +1,10 @@
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useVitrineBooking } from '../../src/pages/vitrine/hooks/useVitrineBooking.js';
 import { getPrecoFinalEntrega } from '../../src/pages/vitrine/utils.js';
 import { fetchVitrineEntregaById } from '../../src/pages/vitrine/api/vitrineApi.js';
 
-// Nunca importa o cliente Supabase; serviço remoto substituído por simulação.
 vi.mock('../../src/pages/vitrine/api/vitrineApi.js', () => ({ fetchVitrineEntregaById: vi.fn() }));
 
 const ana = { id: 'p1', nome: 'Ana' };
@@ -16,8 +16,8 @@ function config(overrides = {}) {
     user: { id: 'cliente-1' }, userType: 'client', todayISO: '2026-11-16',
     fetchNowFromDb: vi.fn(), confirmKey: vi.fn().mockResolvedValue(true), alertKey: vi.fn(),
     navigate: vi.fn(), location: { pathname: '/v/teste', key: 'a', state: {} },
-    loading: false, negocio: { id: 'n1' }, nomeNegocioLabel: 'Salão', profissionais: [ana],
-    entregas: [corte, barba], counterPlural: 'serviços', getPrecoFinalEntrega,
+    loading: false, negocio: { id: 'n1' }, nomeNegocioLabel: 'Barbearia', profissionais: [ana],
+    entregas: [corte, barba], counterPlural: 'trabalhos', getPrecoFinalEntrega,
     gerarLinkGoogle: vi.fn().mockReturnValue('https://calendar.google.com/teste'),
     gerarArquivoICS: vi.fn().mockReturnValue({ filename: 'evento.ics', content: 'BEGIN:VCALENDAR' }),
     calendarPlatformMode: 'ics', billingStatus: { booking_allowed: true },
@@ -27,7 +27,7 @@ function config(overrides = {}) {
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('Fluxo simulado de seleção e início do agendamento', () => {
+describe('Fluxo simulado de escolha e abertura do agendamento', () => {
   it('cliente autenticado inicia agendamento sem chamar o banco', async () => {
     const props = config();
     const { result } = renderHook(() => useVitrineBooking(props));
@@ -39,7 +39,7 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(fetchVitrineEntregaById).not.toHaveBeenCalled();
   });
 
-  it('bloqueia agendamento quando plano não permite', async () => {
+  it('impede agendamento quando o plano bloqueia', async () => {
     const props = config({ billingStatus: { booking_allowed: false } });
     const { result } = renderHook(() => useVitrineBooking(props));
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
@@ -56,7 +56,7 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(props.navigate).toHaveBeenCalledWith('/login');
   });
 
-  it('bloqueia uso profissional sem agendamento assistido', async () => {
+  it('impede uso profissional sem agendamento assistido', async () => {
     const props = config({ userType: 'professional' });
     const { result } = renderHook(() => useVitrineBooking(props));
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
@@ -64,7 +64,7 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(props.alertKey).toHaveBeenCalledWith('schedule_only_client', expect.any(String), expect.any(String), expect.any(String));
   });
 
-  it('exige horário oficial quando não informado', async () => {
+  it('busca horario oficial quando ausente', async () => {
     const props = config({ todayISO: null });
     const { result } = renderHook(() => useVitrineBooking(props));
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
@@ -72,7 +72,7 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(result.current.flow.step).toBe('booking');
   });
 
-  it('falha de horário oficial interrompe agendamento', async () => {
+  it('falha ao consultar horario oficial interrompe agendamento', async () => {
     const props = config({ todayISO: null, fetchNowFromDb: vi.fn().mockRejectedValue(new Error('sem horário')) });
     const { result } = renderHook(() => useVitrineBooking(props));
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
@@ -80,16 +80,15 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(props.alertKey).toHaveBeenCalledWith('schedule_time_unavailable');
   });
 
-  it('combina serviços e soma duração e preços promocionais', async () => {
+  it('combina trabalhos e soma tempo e precos promocionais', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleAgendarAgora(ana, [corte, barba]));
     expect(result.current.entregaVirtual).toMatchObject({
-      nome: '2 serviços', duracao_minutos: 50, preco: 120, entrega_ids: ['e1', 'e2'],
+      nome: '2 trabalhos', duracao_minutos: 50, preco: 120, entrega_ids: ['e1', 'e2'],
     });
   });
 
-
-  it('seleciona dois serviços e confirma a seleção para o calendário', async () => {
+  it('escolhe dois trabalhos e confirma para o calendario', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleToggleSelecao(ana, corte));
     await act(async () => result.current.handleToggleSelecao(ana, barba));
@@ -101,14 +100,14 @@ describe('Fluxo simulado de seleção e início do agendamento', () => {
     expect(result.current.hasSelecao).toBe(false);
   });
 
-  it('fecha formulário e volta ao estado inicial', async () => {
+  it('fecha formulario e retorna ao estado inicial', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
     act(() => result.current.closeBooking());
     expect(result.current.flow.step).toBe('idle');
   });
 
-  it('reagendamento usa serviço simulado quando não está no cache', async () => {
+  it('reagendamento busca trabalho simulado fora do cache', async () => {
     fetchVitrineEntregaById.mockResolvedValue(corte);
     const props = config({ entregas: [], location: { pathname: '/v/teste', key: 'rebook', state: { rebook: { profissionalId: 'p1', entregaId: 'e1' } } } });
     const { result } = renderHook(() => useVitrineBooking(props));
