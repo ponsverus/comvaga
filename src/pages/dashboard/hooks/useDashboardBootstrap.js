@@ -14,7 +14,7 @@ import {
 import { fetchOwnerBusinessCount } from '../../../api/negociosApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { isAuthSessionError, signOutLocalSession } from '../../../utils/authSession';
-import { flattenEntregaPages } from '../../../utils/entregas';
+import { buildEntregaPagesByProf, flattenEntregaPages } from '../../../utils/entregas';
 import { ptBR } from '../../../feedback/messages/ptBR';
 
 const AGENDAMENTOS_PAGE_SIZE = 50;
@@ -27,36 +27,6 @@ const PARTNER_DASHBOARD_ACCESS_ERROR = {
   primaryLabel: ptBR.dashboard.partner_dashboard_access_inactive.buttonText,
   primaryAction: 'partner-business-center',
 };
-
-function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
-  const next = {};
-  const grouped = new Map();
-
-  for (const row of rows || []) {
-    if (!row?.profissional_id) continue;
-    if (!grouped.has(row.profissional_id)) grouped.set(row.profissional_id, []);
-    grouped.get(row.profissional_id).push(row);
-  }
-
-  for (const profissionalId of profissionalIds || []) {
-    const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
-    const pageRows = grouped.get(profissionalId) || [];
-    next[profissionalId] = {
-      pages: {
-        0: pageRows.map((row) => {
-          const normalized = { ...row };
-          delete normalized.total_count;
-          return normalized;
-        }),
-      },
-      totalCount: Number(pageRows[0]?.total_count || 0),
-      loadingPage: null,
-      version: previous.version + 1,
-    };
-  }
-
-  return next;
-}
 
 function getLastItem(rows) {
   return Array.isArray(rows) && rows.length ? rows[rows.length - 1] : null;
