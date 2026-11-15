@@ -1,11 +1,10 @@
-
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import ProfissionalSelect from '../../src/components/ProfissionalSelect.jsx';
 import DatePicker from '../../src/components/DatePicker.jsx';
 
 const profissionais = [
-  { id: 'p1', nome: 'Ana', status: 'ativo', profissao: 'Cabeleireira' },
+  { id: 'p1', nome: 'Ana', status: 'ativo', profissao: 'Barbeiro' },
   { id: 'p2', nome: 'Bruno', status: 'inativo' },
 ];
 
