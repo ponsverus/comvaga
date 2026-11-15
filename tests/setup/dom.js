@@ -2,8 +2,6 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-// Falha imediatamente se um teste tentar escapar para rede real.
-// Os testes que usam módulos Supabase DEVEM substituí-los por vi.mock.
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('Acesso externo proibido nos testes do frontend'))));
   vi.stubGlobal('WebSocket', class {
