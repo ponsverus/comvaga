@@ -5,7 +5,6 @@ import { supabase } from '../../src/supabase.js';
 import { invokeProtectedAction } from '../../src/utils/protectedAction.js';
 import { useFeedback } from '../../src/feedback/useFeedback.js';
 
-// Intercepta TODOS os pontos do fluxo que poderiam chamar o backend.
 vi.mock('../../src/supabase.js', () => ({ supabase: { rpc: vi.fn() } }));
 vi.mock('../../src/utils/authSession.js', () => ({ withAuthRetry: vi.fn((request) => request()) }));
 vi.mock('../../src/utils/protectedAction.js', () => ({ invokeProtectedAction: vi.fn() }));
@@ -54,7 +53,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({ inicio: '09:00', fim: '09:30', label: '09:00', dataISO: '2026-11-16' }));
   });
 
-  it('trata falha simulada na confirmação sem declarar sucesso', async () => {
+  it('Trata falha simulada na etapa final sem declarar sucesso', async () => {
     const onConfirm = vi.fn();
     invokeProtectedAction.mockResolvedValue({ data: null, error: new Error('falha simulada') });
     render(<BookingCalendar {...base} onConfirm={onConfirm} />);

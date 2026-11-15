@@ -1,8 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-// Os projetos são independentes: cada job do CI executa somente seu nível.
-// Nenhum projeto carrega VITE_SUPABASE_URL, chaves ou funções do backend.
 const dom = {
   environment: 'jsdom',
   setupFiles: ['./tests/setup/dom.js'],
