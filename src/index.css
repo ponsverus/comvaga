@@ -38,6 +38,7 @@
   --vprimary-text: #000000;
   --vpromo-text:   #4ade80;
   --verror-text:   #f87171;
+  --keyboard-focus-color: #f5f5f5;
 }
 
 .vitrine-light {
@@ -65,6 +66,27 @@
   --verror-text:   #991b1b;
   --color-vpromo:  var(--vpromo-text);
   --color-verror:  var(--verror-text);
+  --keyboard-focus-color: #18181b;
+}
+
+:where(
+  a[href],
+  button,
+  input:not([type="hidden"]),
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"]),
+  [contenteditable="true"]
+):focus-visible {
+  outline: 1px solid var(--keyboard-focus-color);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  :root, .vitrine-light {
+    --keyboard-focus-color: Highlight;
+  }
 }
 
 html, body, #root {
