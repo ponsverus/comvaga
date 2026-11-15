@@ -10,7 +10,7 @@ import {
   fetchVitrineProfissionais,
 } from '../api/vitrineApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
-import { flattenEntregaPages } from '../../../utils/entregas';
+import { buildEntregaPagesByProf, flattenEntregaPages } from '../../../utils/entregas';
 
 const EMPTY_NOW = { ts: null, dow: 0, date: '', source: 'db', minutes: 0 };
 const GALERIA_PAGE_SIZE = 12;
@@ -24,36 +24,6 @@ function getLastItem(rows) {
 function getEntregaCursor(rows) {
   const last = getLastItem(rows);
   return last ? { preco_final: last.preco_final, nome: last.nome, id: last.id } : null;
-}
-
-function buildEntregaPagesByProf(rows, profissionalIds, current = {}) {
-  const next = {};
-  const grouped = new Map();
-
-  for (const row of rows || []) {
-    if (!row?.profissional_id) continue;
-    if (!grouped.has(row.profissional_id)) grouped.set(row.profissional_id, []);
-    grouped.get(row.profissional_id).push(row);
-  }
-
-  for (const profissionalId of profissionalIds || []) {
-    const previous = current[profissionalId] || { pages: {}, totalCount: 0, version: 0 };
-    const pageRows = grouped.get(profissionalId) || [];
-    next[profissionalId] = {
-      pages: {
-        0: pageRows.map((row) => {
-          const normalized = { ...row };
-          delete normalized.total_count;
-          return normalized;
-        }),
-      },
-      totalCount: Number(pageRows[0]?.total_count || 0),
-      loadingPage: null,
-      version: previous.version + 1,
-    };
-  }
-
-  return next;
 }
 
 export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = null, initialBusiness = null }) {
@@ -282,9 +252,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
               setNegocio(freshProfile);
             }
           })
-          .catch(() => {
-            // The server-rendered snapshot remains usable if revalidation fails.
-          });
+          .catch(() => {});
       }
       if (authUserId) {
         fetchBusinessBookingAvailability(negocioData.id)
