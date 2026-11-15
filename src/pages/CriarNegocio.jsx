@@ -4,8 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useFeedback } from '../feedback/useFeedback';
 import { normalizeBrazilPhone } from '../utils/phone';
 import { sleep } from '../utils/async';
-import { fetchOwnerBusinessCount, createOwnerBusiness } from './api/criarNegocioApi.js';
-
+import { createOwnerBusiness } from './api/criarNegocioApi.js';
+import { fetchOwnerBusinessCount } from '../api/negociosApi.js';
 
 function onlyTrim(v) {
   return String(v || '').trim();
@@ -65,10 +65,13 @@ export default function CriarNegocio({ user }) {
     async function loadOwnerBusinessCount() {
       if (!user?.id) return;
 
-      const { count, error } = await fetchOwnerBusinessCount(user.id);
-
-      if (!error && active) {
-        setOwnerBusinessCount(Number(count || 0));
+      try {
+        const count = await fetchOwnerBusinessCount(user.id);
+        if (active) setOwnerBusinessCount(count);
+      } catch (error) {
+        if (active) {
+          console.warn('Houve um erro ao carregar a quantidade de negócios do proprietário:', error);
+        }
       }
     }
 

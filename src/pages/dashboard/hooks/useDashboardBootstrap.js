@@ -6,12 +6,12 @@ import {
   fetchGaleria,
   fetchNegocioById,
   fetchOfficialDate,
-  fetchOwnerBusinessCount,
   fetchOwnerNegocio,
   fetchPartnerNegocioIds,
   fetchProfissionaisComStatus,
   fetchProfissionaisEquipe,
 } from '../api/dashboardApi';
+import { fetchOwnerBusinessCount } from '../../../api/negociosApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { isAuthSessionError, signOutLocalSession } from '../../../utils/authSession';
 import { flattenEntregaPages } from '../../../utils/entregas';
