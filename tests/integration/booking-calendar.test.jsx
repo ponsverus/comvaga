@@ -53,7 +53,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({ inicio: '09:00', fim: '09:30', label: '09:00', dataISO: '2026-11-16' }));
   });
 
-  it('trata falha simulada na confirmação sem declarar sucesso', async () => {
+  it('Trata falha simulada na etapa final sem declarar sucesso', async () => {
     const onConfirm = vi.fn();
     invokeProtectedAction.mockResolvedValue({ data: null, error: new Error('falha simulada') });
     render(<BookingCalendar {...base} onConfirm={onConfirm} />);
