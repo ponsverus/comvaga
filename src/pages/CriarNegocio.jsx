@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../supabase';
-import { withAuthRetry } from '../utils/authSession';
 import { useFeedback } from '../feedback/useFeedback';
 import { normalizeBrazilPhone } from '../utils/phone';
 import { sleep } from '../utils/async';
+import { fetchOwnerBusinessCount, createOwnerBusiness } from './api/criarNegocioApi.js';
 
 
 function onlyTrim(v) {
@@ -66,10 +65,7 @@ export default function CriarNegocio({ user }) {
     async function loadOwnerBusinessCount() {
       if (!user?.id) return;
 
-      const { count, error } = await withAuthRetry(() => supabase
-        .from('negocios')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', user.id), 6000, 'owner-business-count');
+      const { count, error } = await fetchOwnerBusinessCount(user.id);
 
       if (!error && active) {
         setOwnerBusinessCount(Number(count || 0));
@@ -125,19 +121,7 @@ export default function CriarNegocio({ user }) {
     setLoading(true);
 
     try {
-      const { data, error } = await withAuthRetry(() => supabase.rpc('create_owner_business', {
-        p_nome_negocio: nomeNegocio,
-        p_slug: slug,
-        p_telefone: telefone,
-        p_tipo_negocio: tipoNegocio,
-        p_endereco_cep: formData.cep,
-        p_endereco_rua: formData.rua,
-        p_endereco_numero: formData.numero,
-        p_endereco_complemento: formData.complemento,
-        p_endereco_bairro: formData.bairro,
-        p_endereco_cidade: formData.cidade,
-        p_endereco_estado: formData.estado,
-      }), 8000, 'create-owner-business');
+      const { data, error } = await createOwnerBusiness({ nomeNegocio, slug, telefone, tipoNegocio, formData });
 
       if (error) {
         const code = String(error.message || '').split(':')[0].trim();
