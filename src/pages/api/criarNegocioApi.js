@@ -1,13 +1,6 @@
 import { supabase } from '../../supabase';
 import { withAuthRetry } from '../../utils/authSession';
 
-export async function fetchOwnerBusinessCount(userId) {
-  return withAuthRetry(() => supabase
-    .from('negocios')
-    .select('id', { count: 'exact', head: true })
-    .eq('owner_id', userId), 6000, 'owner-business-count');
-}
-
 export async function createOwnerBusiness({ nomeNegocio, slug, telefone, tipoNegocio, formData }) {
   return withAuthRetry(() => supabase.rpc('create_owner_business', {
     p_nome_negocio: nomeNegocio,
