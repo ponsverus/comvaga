@@ -40,6 +40,10 @@ function createItem(payload) {
     : { kind: 'dialog', payload };
 }
 
+function getItemPresentation(item) {
+  return item?.kind === 'messages' ? item.pages[0]?.presentation : item?.payload?.presentation;
+}
+
 export function getFeedbackState() {
   return state;
 }
@@ -51,9 +55,9 @@ export function enqueueFeedback(payload) {
     activeItem = item;
   } else if (item.kind === 'messages') {
     const lastPending = pendingItems[pendingItems.length - 1];
-    if (activeItem.kind === 'messages' && pendingItems.length === 0) {
+    if (activeItem.kind === 'messages' && pendingItems.length === 0 && getItemPresentation(activeItem) === payload.presentation) {
       activeItem.pages.push(payload);
-    } else if (lastPending?.kind === 'messages') {
+    } else if (lastPending?.kind === 'messages' && getItemPresentation(lastPending) === payload.presentation) {
       lastPending.pages.push(payload);
     } else {
       pendingItems.push(item);
@@ -94,4 +98,31 @@ export function dismissFeedback(result) {
 export function subscribeFeedback(listener) {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+export function discardFeedbackByPresentation(presentation) {
+  if (!presentation) return;
+
+  const discarded = [];
+  const removeActive = activeItem && getItemPresentation(activeItem) === presentation;
+  if (removeActive) discarded.push(activeItem);
+
+  const survivors = pendingItems.filter((item) => {
+    if (getItemPresentation(item) !== presentation) return true;
+    discarded.push(item);
+    return false;
+  });
+
+  if (removeActive) activeItem = survivors.shift() || null;
+  pendingItems = survivors;
+
+  if (!discarded.length) return;
+  publish();
+  for (const item of discarded) {
+    const payloads = item.kind === 'messages' ? item.pages : [item.payload];
+    for (const payload of payloads) {
+      if (typeof payload?.__resolve === 'function') payload.__resolve(false);
+      if (typeof payload?.onClose === 'function') payload.onClose();
+    }
+  }
 }
