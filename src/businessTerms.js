@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
-import { withAuthRetry } from './utils/authSession';
+import { withPublicAuthRetry } from './utils/authSession';
 import { businessGroupContext, pendingBusinessGroup, resolveBusinessGroup } from './utils/businessGroupResolution.js';
 
 export function useBusinessGroup(tipoNegocio, publicGroup = null, businessId = null) {
@@ -17,7 +17,7 @@ export function useBusinessGroup(tipoNegocio, publicGroup = null, businessId = n
     let active = true;
     setResolution((previous) => pendingBusinessGroup(context, previous));
     resolveBusinessGroup(context, async (type) => {
-      const { data, error } = await withAuthRetry(
+      const { data, error } = await withPublicAuthRetry(
         () => supabase.rpc('tipo_negocio_grupo', { p_tipo: type }),
         6000,
         'grupo-do-negocio'
