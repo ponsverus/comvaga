@@ -1,12 +1,11 @@
 import { supabase } from '../../supabase';
-import { withTimeout } from '../../utils/withTimeout.js';
-import { withAuthRetry } from '../../utils/authSession.js';
+import { withAuthRetry, withPublicAuthRetry } from '../../utils/authSession.js';
 
 export const APP_REVIEWS_PAGE_SIZE = 12;
 
 export async function fetchAppReviews(cursor = null) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_depoimentos_app', {
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_depoimentos_app', {
       p_limit: APP_REVIEWS_PAGE_SIZE + 1,
       p_cursor_created_at: cursor?.created_at ?? null,
       p_cursor_id: cursor?.id ?? null,
@@ -19,8 +18,8 @@ export async function fetchAppReviews(cursor = null) {
 }
 
 export async function fetchAppReviewsHome() {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_depoimentos_app_home'),
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_depoimentos_app_home'),
     7000,
     'depoimentos-app-home'
   );
