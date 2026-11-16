@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { sleep } from './async';
+import { withAuthRetry } from './authSession';
 
 export const isValidType = (t) => t === 'client' || t === 'professional';
 const isValidOnboardingStatus = (s) => s === 'pending' || s === 'completed';
@@ -31,7 +32,11 @@ function normalizeProfessionalRole(value) {
 }
 
 export async function fetchUserAccessProfile() {
-  const { data, error } = await supabase.rpc('get_user_access_profile');
+  const { data, error } = await withAuthRetry(
+    () => supabase.rpc('get_user_access_profile'),
+    7000,
+    'user-access-profile'
+  );
   if (error) {
     const profileError = new Error('user_access_profile_unavailable');
     profileError.cause = error;
