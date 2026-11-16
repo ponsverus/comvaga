@@ -4,7 +4,13 @@ import { CalendarIcon } from '../../../components/icons';
 import ModalDialog from '../../../components/ModalDialog';
 import { getPrecoFinalEntrega } from '../utils';
 
-export function AlertModal({ open, onClose, title, body, buttonText, isLight }) {
+function secondaryActionClass(isLight) {
+  return isLight
+    ? 'bg-vcard2 border-vborder text-vsub hover:border-vprimary hover:text-vtext'
+    : 'bg-dark-200 border-gray-800 text-gray-200';
+}
+
+export function AlertModal({ open, onClose, title, body, buttonText, isLight, isPaged = false, hasNext = false, hasPrevious = false, onNext, onPrevious }) {
   const titleId = useId();
   const bodyId = useId();
   const primaryRef = useRef(null);
@@ -13,6 +19,7 @@ export function AlertModal({ open, onClose, title, body, buttonText, isLight }) 
   const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
   const closeCl = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-400 hover:text-white';
   const btnCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
+  const previousCl = secondaryActionClass(isLight);
 
   return (
     <ModalDialog open={open} onDismiss={onClose} labelledBy={titleId} describedBy={body ? bodyId : undefined} initialFocusRef={primaryRef} focusKey={`${title}\n${body}`}>
@@ -22,9 +29,16 @@ export function AlertModal({ open, onClose, title, body, buttonText, isLight }) 
           <button type="button" onClick={onClose} aria-label="Fechar aviso" className={closeCl}><X className="w-6 h-6" /></button>
         </div>
         {body && <p id={bodyId} className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
-        <button ref={primaryRef} type="button" onClick={onClose} className={`mt-5 w-full py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
-          {buttonText || 'OK'}
-        </button>
+        <div className={isPaged ? 'mt-5 flex gap-3' : 'mt-5'}>
+          {isPaged && hasPrevious ? (
+            <button type="button" onClick={onPrevious} className={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${previousCl}`}>
+              ANTERIOR
+            </button>
+          ) : null}
+          <button ref={primaryRef} type="button" onClick={isPaged && hasNext ? onNext : onClose} className={`${isPaged ? 'flex-1' : 'w-full'} py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
+            {isPaged ? (hasNext ? 'PRÓXIMA' : 'OK') : (buttonText || 'OK')}
+          </button>
+        </div>
       </div>
     </ModalDialog>
   );
@@ -38,7 +52,7 @@ export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmTe
   const titleCl = isLight ? 'text-vtext' : 'text-white';
   const bodyCl = isLight ? 'text-vsub' : 'text-gray-300';
   const closeCl = isLight ? 'text-vmuted hover:text-vtext' : 'text-gray-400 hover:text-white';
-  const cancelCl = isLight ? 'bg-vcard2 border-vborder text-vsub hover:border-vprimary hover:text-vtext' : 'bg-dark-200 border-gray-800 text-gray-200';
+  const cancelCl = secondaryActionClass(isLight);
   const confirmCl = isLight ? 'bg-vprimary text-vprimary-text hover:opacity-90' : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
 
   return (

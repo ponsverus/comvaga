@@ -1,10 +1,12 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import { ptBR } from './messages/ptBR.js';
 import {
   dismissFeedback,
   enqueueFeedback,
   navigateFeedback,
+  getFeedbackState,
+  subscribeFeedback,
 } from './feedbackStore';
 
 function getByPath(obj, path) {
@@ -41,6 +43,10 @@ function buildPayloadFromKey(key, params) {
     title: interpolate(base.title, params),
     body: interpolate(base.body, params),
   };
+}
+
+export function useFeedbackState() {
+  return useSyncExternalStore(subscribeFeedback, getFeedbackState, getFeedbackState);
 }
 
 export function useFeedback() {
@@ -86,6 +92,14 @@ export function useFeedback() {
     enqueueFeedback({ ...payload, type: payload?.type || 'message' });
   }, []);
 
+  const confirmCustom = useCallback((payload) => new Promise((resolve) => {
+    enqueueFeedback({
+      ...payload,
+      type: 'confirm',
+      __resolve: resolve,
+    });
+  }), []);
+
   const next = useCallback(() => navigateFeedback('next'), []);
   const previous = useCallback(() => navigateFeedback('previous'), []);
 
@@ -94,7 +108,7 @@ export function useFeedback() {
   }, []);
 
   return useMemo(
-    () => ({ showMessage, confirm, prompt, showCustom, close, next, previous }),
-    [showMessage, confirm, prompt, showCustom, close, next, previous]
+    () => ({ showMessage, confirm, confirmCustom, prompt, showCustom, close, next, previous }),
+    [showMessage, confirm, confirmCustom, prompt, showCustom, close, next, previous]
   );
 }
