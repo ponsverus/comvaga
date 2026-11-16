@@ -16,7 +16,7 @@ export default function FeedbackProvider({ children }) {
     <>
       {children}
       <FullScreenMessage
-        open={st.open}
+        open={st.open && st.payload?.presentation !== 'vitrine'}
         payload={st.payload}
         hasNext={st.hasNext}
         hasPrevious={st.hasPrevious}
