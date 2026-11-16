@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Info } from 'lucide-react';
 import { AlertIcon } from '../../components/icons';
 import ModalDialog from '../../components/ModalDialog';
+import FeedbackPaginationActions from './FeedbackPaginationActions';
 
 const toneByVariant = {
   success: {
@@ -80,18 +81,6 @@ export default function FullScreenMessageView({
     : 'border-gray-700 text-gray-300 hover:border-primary hover:text-primary';
 
   const closeWithPrimary = () => {
-    if (isPaged) {
-      if (hasNext) {
-        onNext?.();
-        return;
-      }
-      onClose?.(true);
-      return;
-    }
-    if (isConfirm) {
-      onClose?.(true);
-      return;
-    }
     if (isPrompt) {
       onClose?.(promptValue);
       return;
@@ -157,25 +146,16 @@ export default function FullScreenMessageView({
         ) : null}
 
         {isPaged ? (
-          <div className="flex gap-3">
-            {hasPrevious ? (
-              <button
-                type="button"
-                onClick={onPrevious}
-                className={`h-11 flex-1 rounded-button border px-5 text-xs font-normal uppercase opacity-70 transition-colors ${secondaryClass}`}
-              >
-                VOLTAR
-              </button>
-            ) : null}
-            <button
-              ref={initialFocusRef}
-              type="button"
-              onClick={closeWithPrimary}
-              className={`h-11 flex-1 rounded-button px-5 text-xs font-normal uppercase ${tone.buttonClass}`}
-            >
-              {hasNext ? 'PRÓXIMA' : 'OK'}
-            </button>
-          </div>
+          <FeedbackPaginationActions
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+            onPrevious={onPrevious}
+            onNext={onNext}
+            onFinish={closeWithPrimary}
+            primaryButtonRef={initialFocusRef}
+            previousButtonClassName={`h-11 flex-1 rounded-button border px-5 text-xs font-normal uppercase opacity-70 transition-colors ${secondaryClass}`}
+            primaryButtonClassName={`h-11 flex-1 rounded-button px-5 text-xs font-normal uppercase ${tone.buttonClass}`}
+          />
         ) : (
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             {(isConfirm || isPrompt) ? (

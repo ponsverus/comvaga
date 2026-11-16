@@ -2,6 +2,7 @@ import { useId, useRef } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { CalendarIcon } from '../../../components/icons';
 import ModalDialog from '../../../components/ModalDialog';
+import FeedbackPaginationActions from '../../../feedback/ui/FeedbackPaginationActions';
 import { getPrecoFinalEntrega } from '../utils';
 
 function secondaryActionClass(isLight) {
@@ -29,16 +30,25 @@ export function AlertModal({ open, onClose, title, body, buttonText, isLight, is
           <button type="button" onClick={onClose} aria-label="Fechar aviso" className={closeCl}><X className="w-6 h-6" /></button>
         </div>
         {body && <p id={bodyId} className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
-        <div className={isPaged ? 'mt-5 flex gap-3' : 'mt-5'}>
-          {isPaged && hasPrevious ? (
-            <button type="button" onClick={onPrevious} className={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${previousCl}`}>
-              ANTERIOR
+        {isPaged ? (
+          <FeedbackPaginationActions
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+            onPrevious={onPrevious}
+            onNext={onNext}
+            onFinish={onClose}
+            primaryButtonRef={primaryRef}
+            containerClassName="mt-5 flex gap-3"
+            previousButtonClassName={`flex-1 py-3 border rounded-button uppercase font-normal transition-colors ${previousCl}`}
+            primaryButtonClassName={`flex-1 py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}
+          />
+        ) : (
+          <div className="mt-5">
+            <button ref={primaryRef} type="button" onClick={onClose} className={`w-full py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
+              {buttonText || 'OK'}
             </button>
-          ) : null}
-          <button ref={primaryRef} type="button" onClick={isPaged && hasNext ? onNext : onClose} className={`${isPaged ? 'flex-1' : 'w-full'} py-3 rounded-button uppercase font-normal transition-colors ${btnCl}`}>
-            {isPaged ? (hasNext ? 'PRÓXIMA' : 'OK') : (buttonText || 'OK')}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </ModalDialog>
   );
