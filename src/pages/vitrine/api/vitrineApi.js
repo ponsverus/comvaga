@@ -1,6 +1,5 @@
 import { supabase } from '../../../supabase';
-import { withTimeout } from '../../../utils/withTimeout';
-import { withAuthRetry } from '../../../utils/authSession';
+import { withAuthRetry, withPublicAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
 import { fetchOfficialDatePayload } from '../../../utils/officialDate';
 
@@ -9,7 +8,7 @@ export { getPublicUrl } from '../../../utils/storage';
 export async function fetchOfficialDate(rpcSequence) {
   const { payload, rpcName } = await fetchOfficialDatePayload(
     rpcSequence,
-    (name) => withTimeout(supabase.rpc(name), 6000, `data-oficial:${name}`)
+    (name) => withPublicAuthRetry(() => supabase.rpc(name), 6000, `data-oficial:${name}`)
   );
 
   return {
@@ -22,8 +21,8 @@ export async function fetchOfficialDate(rpcSequence) {
 }
 
 export async function fetchVitrineNegocioBySlug(slug) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_public_business_profile', { p_slug: slug }),
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_public_business_profile', { p_slug: slug }),
     7000,
     'negocio'
   );
@@ -32,8 +31,8 @@ export async function fetchVitrineNegocioBySlug(slug) {
 }
 
 export async function fetchVitrineProfissionais(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_profissionais_vitrine', { p_negocio_id: negocioId }),
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_profissionais_vitrine', { p_negocio_id: negocioId }),
     7000,
     'profissionais'
   );
@@ -42,8 +41,8 @@ export async function fetchVitrineProfissionais(negocioId) {
 }
 
 export async function fetchBusinessBookingAvailability(negocioId) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_business_booking_availability', { p_negocio_id: negocioId }),
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_business_booking_availability', { p_negocio_id: negocioId }),
     7000,
     'booking-availability'
   );
@@ -61,8 +60,8 @@ function normalizeEntregaPageRows(rows) {
 
 export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, cursor = null } = {}) {
   if (!profissionalId) return { rows: [], totalCount: 0 };
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_entregas_vitrine_paginadas', {
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_entregas_vitrine_paginadas', {
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
       p_cursor_preco_final: cursor?.preco_final ?? null,
@@ -83,8 +82,8 @@ export async function fetchVitrineEntregasFirstPages(negocioId, profissionalIds,
   const ids = Array.isArray(profissionalIds) ? profissionalIds.filter(Boolean) : [];
   if (!negocioId || !ids.length) return [];
 
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_entregas_vitrine_primeiras_paginas', {
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_entregas_vitrine_primeiras_paginas', {
       p_negocio_id: negocioId,
       p_profissional_ids: ids,
       p_limit: Math.max(1, Number(limit) || 1),
@@ -98,8 +97,8 @@ export async function fetchVitrineEntregasFirstPages(negocioId, profissionalIds,
 
 export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   if (!entregaId || !profissionalId) return null;
-  const { data, error } = await withTimeout(
-    supabase
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase
       .from('entregas')
       .select('id, negocio_id, profissional_id, nome, duracao_minutos, preco, preco_promocional, ativo')
       .eq('id', entregaId)
@@ -123,8 +122,8 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
 }
 
 export async function fetchVitrineGaleria(negocioId, { limit = null, cursor = null } = {}) {
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_galerias_vitrine', {
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_galerias_vitrine', {
       p_negocio_id: negocioId,
       p_limit: limit == null ? null : Math.max(1, Number(limit) || 1),
       p_cursor_ordem: cursor?.ordem ?? null,
@@ -146,8 +145,8 @@ export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor 
     params.p_cursor_id = cursor.id;
   }
 
-  const { data, error } = await withTimeout(
-    supabase.rpc('get_depoimentos_vitrine', params),
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('get_depoimentos_vitrine', params),
     7000,
     'depoimentos'
   );

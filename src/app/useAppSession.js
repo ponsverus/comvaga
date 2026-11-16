@@ -50,7 +50,8 @@ async function getUserProfileRobust(authUser) {
       if (profile) return profile;
       if (i < delays.length - 1) await sleep(delays[i]);
     } catch (e) {
-      if (isProfileRateLimitError(e) || e?.message === 'invalid_user_access_profile_contract') throw e;
+      if (isAuthSessionError(e) || isProfileRateLimitError(e)
+        || e?.message === 'invalid_user_access_profile_contract') throw e;
       lastErr = e;
       if (i < delays.length - 1) await sleep(delays[i]);
     }

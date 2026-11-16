@@ -18,15 +18,21 @@ function errorChainHas(error, predicate, depth = 0) {
 
 export function isAuthSessionError(error) {
   const hasStatus401 = errorChainHas(error, (item) => Number(item?.status) === 401);
-  const hasKnownCode = errorChainHas(error, (item) => (
-    item?.code === 'PGRST301'
-    || item?.code === 'PGRST303'
-  ));
   const text = errorChainText(error).toLowerCase();
   const hasSpecificAuthText = /\b(?:jwt\s+(?:expired|invalid)|invalid\s+jwt|token\s+is\s+expired|not\s+authenticated)\b/.test(text)
     || /\b(?:refresh\s+token|session)[\s_-]+(?:not\s+found|expired|invalid|revoked)\b/.test(text);
 
-  return hasStatus401 || hasKnownCode || hasSpecificAuthText;
+  return hasStatus401 || isRejectedJwtError(error) || hasSpecificAuthText || error?.code === 'not_authenticated';
+}
+
+function isRejectedJwtError(error) {
+  return errorChainHas(error, (item) => item?.code === 'PGRST301' || item?.code === 'PGRST303');
+}
+
+function isRejectedRefreshToken(error) {
+  return errorChainHas(error, (item) => (
+    item?.code === 'refresh_token_not_found' || item?.code === 'refresh_token_already_used'
+  ));
 }
 
 function authSessionError(message, cause = null) {
@@ -60,7 +66,19 @@ export async function refreshCurrentSession(currentSession = null) {
       }
       throw authSessionError('not_authenticated', error);
     }
-    if (error) throw authSessionError('auth_session_refresh_failed', error);
+    if (error) {
+      if (isRejectedRefreshToken(error)) {
+        const latestSession = await getCurrentSession().catch(() => null);
+        if (latestSession?.user?.id === session.user.id
+          && latestSession.access_token !== session.access_token) {
+          return latestSession;
+        }
+        if (latestSession?.access_token === session.access_token) {
+          await signOutLocalSession();
+        }
+      }
+      throw authSessionError('auth_session_refresh_failed', error);
+    }
 
     const freshSession = data?.session || null;
     if (!freshSession?.access_token || !freshSession?.user?.id) {
@@ -86,10 +104,23 @@ export async function withAuthRetry(requestFactory, ms = 7000, label = 'auth-req
   return result;
 }
 
-export async function signOutLocalSession() {
-  try {
-    await supabase.auth.signOut({ scope: 'local' });
-  } catch {
-    await supabase.auth.signOut();
+export async function withPublicAuthRetry(requestFactory, ms = 7000, label = 'public-request') {
+  const result = await withTimeout(requestFactory(), ms, label);
+  if (!isRejectedJwtError(result?.error)) return result;
+
+  const session = await getCurrentSession();
+  if (session) {
+    try {
+      await refreshCurrentSession(session);
+    } catch (error) {
+      if (error?.code !== 'not_authenticated' && !isRejectedRefreshToken(error)) throw error;
+      if (await getCurrentSession()) throw error;
+    }
   }
+
+  return withTimeout(requestFactory(), ms, `${label}:auth-retry`);
+}
+
+export async function signOutLocalSession() {
+  await supabase.auth.signOut({ scope: 'local' });
 }
