@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
+import { withPublicAuthRetry } from '../utils/authSession';
 import { ptBR } from '../feedback/messages/ptBR';
 import { useFeedback } from '../feedback/useFeedback';
 import { getParceiroCadastroAlert } from '../utils/friendlyErrors';
@@ -64,9 +65,11 @@ export default function CadastroParceiro({ onLogin, beginAuthFlow, endAuthFlow }
     const authFlowId = beginAuthFlow();
 
     try {
-      const { data: emailStatus, error: emailStatusErr } = await supabase.rpc('check_signup_email_availability', {
-        p_email: emailClean,
-      });
+      const { data: emailStatus, error: emailStatusErr } = await withPublicAuthRetry(
+        () => supabase.rpc('check_signup_email_availability', { p_email: emailClean }),
+        7000,
+        'signup-email-availability'
+      );
 
       if (emailStatusErr) throw emailStatusErr;
       if (emailStatus?.available === false) {
