@@ -23,7 +23,10 @@ import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, b
 import { applyBusinessStructuredData } from '../utils/businessSeo.js';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import BusinessGroupNotice from '../components/BusinessGroupNotice';
-import { AlertModal, ConfirmModal, SelectionBar } from './vitrine/components/VitrineOverlays';
+import { SelectionBar } from './vitrine/components/VitrineOverlays';
+import VitrineFeedbackOverlay from './vitrine/components/VitrineFeedbackOverlay';
+import { useFeedback } from '../feedback/useFeedback';
+import { discardFeedbackByPresentation } from '../feedback/feedbackStore';
 import {
   formatDateBR,
   getDowFromDateSP,
@@ -81,39 +84,39 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   const emptyListMsg = ptBR?.vitrine?.business?.empty_list?.[businessGroup] ?? ':(';
   const loadMoreErrorMsg = ptBR?.vitrine?.business?.load_more_error?.[businessGroup] ?? 'Erro ao carregar mais itens. Tente novamente.';
 
-  const [nativeAlertOpen, setNativeAlertOpen] = useState(false);
-  const [nativeAlertData, setNativeAlertData] = useState({ title: '', body: '', buttonText: 'OK' });
-  const [nativeConfirmOpen, setNativeConfirmOpen] = useState(false);
-  const [nativeConfirmData, setNativeConfirmData] = useState({ title: '', body: '', confirmText: 'CONFIRMAR', cancelText: 'CANCELAR' });
-  const confirmResolverRef = useRef(null);
+  const { showCustom, confirmCustom } = useFeedback();
+  const feedbackMountedRef = useRef(false);
+
+  useEffect(() => {
+    feedbackMountedRef.current = true;
+    return () => {
+      feedbackMountedRef.current = false;
+      discardFeedbackByPresentation('vitrine');
+    };
+  }, [slug]);
 
   const [depoimentoNota, setDepoimentoNota] = useState(0);
   const [depoimentoTexto, setDepoimentoTexto] = useState('');
   const reviewFormRef = useRef(null);
 
-  const closeAlert = () => setNativeAlertOpen(false);
-
-  const openAlert = ({ title, body, buttonText }) => {
-    setNativeAlertData({
+  const openAlert = useCallback(({ title, body, buttonText }) => {
+    if (!feedbackMountedRef.current) return;
+    showCustom({
+      presentation: 'vitrine',
       title: title || getMsg('generic_title', 'Aviso'),
       body: body || '',
       buttonText: buttonText || 'OK',
     });
-    setNativeAlertOpen(true);
-  };
+  }, [getMsg, showCustom]);
 
-  const alertKey = (key, fallbackTitle, fallbackBody, fallbackBtn = 'OK') => {
+  const alertKey = useCallback((key, fallbackTitle, fallbackBody, fallbackBtn = 'OK') => {
     const m = vitrineMsgs?.[key];
-    if (m && typeof m === 'object') {
-      openAlert({
-        title: m.title || fallbackTitle || getMsg('generic_title', 'Aviso'),
-        body: m.body || fallbackBody || '',
-        buttonText: m.buttonText || fallbackBtn || 'OK',
-      });
-      return;
-    }
-    openAlert({ title: fallbackTitle || getMsg('generic_title', 'Aviso'), body: fallbackBody || '', buttonText: fallbackBtn || 'OK' });
-  };
+    openAlert({
+      title: m?.title || fallbackTitle || getMsg('generic_title', 'Aviso'),
+      body: m?.body || fallbackBody || '',
+      buttonText: m?.buttonText || fallbackBtn || 'OK',
+    });
+  }, [getMsg, openAlert, vitrineMsgs]);
 
   const handleEntregasPageError = () => {
     openAlert({
@@ -127,26 +130,17 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     alertKey('depoimentos_load_more_error', 'Erro ao carregar', 'Erro ao carregar mais depoimentos. Tente novamente.', 'OK');
   };
 
-  const confirmKey = (key, fallbackTitle, fallbackBody, fallbackConfirm = 'CONFIRMAR', fallbackCancel = 'CANCELAR') => (
-    new Promise((resolve) => {
-      confirmResolverRef.current = resolve;
-      const m = vitrineMsgs?.[key];
-      setNativeConfirmData({
-        title: (m && m.title) ? m.title : (fallbackTitle || getMsg('generic_title', 'Confirmar')),
-        body: (m && m.body) ? m.body : (fallbackBody || ''),
-        confirmText: (m && m.confirmText) ? m.confirmText : fallbackConfirm,
-        cancelText: (m && m.cancelText) ? m.cancelText : fallbackCancel,
-      });
-      setNativeConfirmOpen(true);
-    })
-  );
-
-  const closeConfirm = (value) => {
-    setNativeConfirmOpen(false);
-    const r = confirmResolverRef.current;
-    confirmResolverRef.current = null;
-    if (typeof r === 'function') r(!!value);
-  };
+  const confirmKey = useCallback((key, fallbackTitle, fallbackBody, fallbackConfirm = 'CONFIRMAR', fallbackCancel = 'CANCELAR') => {
+    if (!feedbackMountedRef.current) return Promise.resolve(false);
+    const m = vitrineMsgs?.[key];
+    return confirmCustom({
+      presentation: 'vitrine',
+      title: m?.title || fallbackTitle || getMsg('generic_title', 'Confirmar'),
+      body: m?.body || fallbackBody || '',
+      confirmText: m?.confirmText || fallbackConfirm,
+      cancelText: m?.cancelText || fallbackCancel,
+    });
+  }, [confirmCustom, getMsg, vitrineMsgs]);
 
   const isProfessional = user && userType === 'professional';
   const calendarPlatformMode = useMemo(() => getCalendarPlatformMode(), []);
@@ -341,20 +335,21 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     });
   }, [negocio, entregas]);
 
-  if (loading && initial) return <PublicBusinessPreview business={initial} />;
-  if (loading) return (<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div>);
-  if (error) return (<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div>);
-  if (!negocio) return <NotFound />;
+  const feedbackOverlay = <VitrineFeedbackOverlay isLight={isLight} />;
+
+  if (loading && initial) return <>{feedbackOverlay}<PublicBusinessPreview business={initial} /></>;
+  if (loading) return <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div></>;
+  if (error) return <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div></>;
+  if (!negocio) return <>{feedbackOverlay}<NotFound /></>;
   if (!businessGroup) return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center p-4">
       <BusinessGroupNotice status={businessGroupStatus} onRetry={retryBusinessGroup} />
-    </div>
+    </div></>
   );
 
   return (
     <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}${hasSelecao ? ' pb-[72px]' : ''}`}>
-      <AlertModal open={nativeAlertOpen} onClose={closeAlert} title={nativeAlertData.title} body={nativeAlertData.body} buttonText={nativeAlertData.buttonText} isLight={isLight} />
-      <ConfirmModal open={nativeConfirmOpen} onCancel={() => closeConfirm(false)} onConfirm={() => closeConfirm(true)} title={nativeConfirmData.title} body={nativeConfirmData.body} confirmText={nativeConfirmData.confirmText} cancelText={nativeConfirmData.cancelText} isLight={isLight} />
+      {feedbackOverlay}
 
       <VitrineTopSection
         header={{
