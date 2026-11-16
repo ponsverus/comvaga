@@ -35,11 +35,17 @@ export async function readAsaasSubscriptionDetails(subscriptionId: string) {
   return result.body;
 }
 
+export class AsaasObservationUnavailable extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AsaasObservationUnavailable';
+  }
+}
+
 export async function readCurrentSubscription(subscriptionId: string, customerId: string | null) {
   const result = await asaasGet(`/subscriptions/${encodeURIComponent(subscriptionId)}`);
   if (result.status !== 404) return subscriptionState(result.body, subscriptionId);
 
-  // A 404 also means that the key cannot access this ID. Confirm deletion by ID.
   if (!customerId) throw new Error('asaas_subscription_not_found_unconfirmed');
   for (let offset = 0; offset < 1000; offset += 100) {
     const page = await asaasGet(
@@ -88,11 +94,15 @@ export async function reconcileAsaasSubscriptionState(
     nextState = 'DELETED';
     source = 'asaas_webhook_deleted';
   } else {
-    nextState = await readCurrentSubscription(subscriptionId, current.provider_customer_id || null);
-    if (requiresSecondObservation(current.provider_status, nextState)) {
-      await new Promise((resolve) => setTimeout(resolve, CONFIRMATION_PAUSE_MS));
-      const secondState = await readCurrentSubscription(subscriptionId, current.provider_customer_id || null);
-      if (secondState !== nextState) throw new Error('asaas_subscription_state_inconclusive');
+    try {
+      nextState = await readCurrentSubscription(subscriptionId, current.provider_customer_id || null);
+      if (requiresSecondObservation(current.provider_status, nextState)) {
+        await new Promise((resolve) => setTimeout(resolve, CONFIRMATION_PAUSE_MS));
+        const secondState = await readCurrentSubscription(subscriptionId, current.provider_customer_id || null);
+        if (secondState !== nextState) throw new Error('asaas_subscription_state_inconclusive');
+      }
+    } catch (error) {
+      throw new AsaasObservationUnavailable(error instanceof Error ? error.message : String(error));
     }
     if (options.eventType?.startsWith('SUBSCRIPTION_') && options.attemptCount === 1
       && eventSubscription.status
@@ -114,7 +124,6 @@ export async function reconcileAsaasSubscriptionState(
   if (applied?.result === 'applied') return nextState;
   if (applied?.result === 'unchanged_deleted') return 'DELETED';
   if (applied?.result === 'revision_conflict') {
-    // A concurrent observation won. Do not immediately retry an older read.
     throw new Error('asaas_subscription_reconciliation_concurrent_update');
   }
   throw new Error(`asaas_subscription_reconciliation_${String(applied?.result || 'failed')}`);
