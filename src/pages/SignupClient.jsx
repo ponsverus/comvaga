@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
+import { withPublicAuthRetry } from '../utils/authSession';
 import { useFeedback } from '../feedback/useFeedback';
 import { UserIcon } from '../components/icons';
 import { fetchProfileTypeWithRetry } from '../utils/profileAccess';
@@ -52,9 +53,11 @@ export default function SignupClient({ onLogin, beginAuthFlow, endAuthFlow }) {
       if (!email.includes('@')) { showMessage('signupClient.email_invalid'); return; }
       if (password.length < 7) { showMessage('signupClient.password_too_short'); return; }
 
-      const { data: emailStatus, error: emailStatusError } = await supabase.rpc('check_signup_email_availability', {
-        p_email: email,
-      });
+      const { data: emailStatus, error: emailStatusError } = await withPublicAuthRetry(
+        () => supabase.rpc('check_signup_email_availability', { p_email: email }),
+        7000,
+        'signup-email-availability'
+      );
 
       if (emailStatusError) throw emailStatusError;
       if (emailStatus?.available === false) {

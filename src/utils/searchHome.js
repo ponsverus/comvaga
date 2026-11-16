@@ -1,12 +1,12 @@
 import { supabase } from '../supabase';
-import { withTimeout } from './withTimeout';
+import { withPublicAuthRetry } from './authSession';
 
 export async function searchHome(term, { limit = 10, timeoutMs = 6000 } = {}) {
   const clean = String(term || '').trim();
   if (clean.length < 3) return [];
 
-  const { data, error } = await withTimeout(
-    supabase.rpc('search_home', {
+  const { data, error } = await withPublicAuthRetry(
+    () => supabase.rpc('search_home', {
       p_term: clean,
       p_limit: Math.max(1, Number(limit) || 1),
     }),

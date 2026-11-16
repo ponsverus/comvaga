@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { supabase } from '../../../supabase';
+import { withAuthRetry } from '../../../utils/authSession';
 import { ptBR } from '../../../feedback/messages/ptBR';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
@@ -262,7 +263,11 @@ export default function BookingsSection({
     const types = JSON.parse(typesKey);
     Promise.all(types.map((type) => {
       if (!typeRequests.current.has(type)) {
-        typeRequests.current.set(type, supabase.rpc('tipo_negocio_grupo', { p_tipo: type })
+        typeRequests.current.set(type, withAuthRetry(
+          () => supabase.rpc('tipo_negocio_grupo', { p_tipo: type }),
+          6000,
+          'grupo-do-negocio'
+        )
           .then(({ data, error }) => {
             if (error) throw error;
             if (!['servicos', 'consultas', 'aulas'].includes(data)) throw new Error('Grupo de atendimento desconhecido');
