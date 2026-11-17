@@ -72,7 +72,6 @@ export function useBookingConfirmation({
         dataISO: selectedDay,
       });
     } catch (error) {
-      // An older confirmation response must not enqueue an alert for a closed calendar.
       if (!mountedRef.current) return;
       const msg = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
       const limited = isRateLimitError(error);
