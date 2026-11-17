@@ -99,10 +99,11 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   const [depoimentoTexto, setDepoimentoTexto] = useState('');
   const reviewFormRef = useRef(null);
 
-  const openAlert = useCallback(({ title, body, buttonText }) => {
+  const openAlert = useCallback(({ title, body, buttonText, variant }) => {
     if (!feedbackMountedRef.current) return;
     showCustom({
       presentation: 'vitrine',
+      variant,
       title: title || getMsg('generic_title', 'Aviso'),
       body: body || '',
       buttonText: buttonText || 'OK',
@@ -449,6 +450,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
           onConfirm={handleBookingConfirm}
           onClose={closeBooking}
           temaAtivo={temaAtivo}
+          onAlert={openAlert}
         />
       )}
 
