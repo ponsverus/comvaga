@@ -18,6 +18,7 @@ export default function HomePublicContent({
   resultadosBusca,
   setResultadosBusca,
   buscando,
+  searchFailed,
   plansSectionRef,
   isLogged,
   loggedAreaLink,
@@ -37,6 +38,7 @@ export default function HomePublicContent({
         resultadosBusca={resultadosBusca}
         setResultadosBusca={setResultadosBusca}
         buscando={buscando}
+        searchFailed={searchFailed}
       />
       <HomeHeroSection />
       <HomeHowItWorksSection />
