@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { ptBR } from '../feedback/messages/ptBR.js';
-import { useFeedback } from '../feedback/useFeedback';
 import { getFeedbackState } from '../feedback/feedbackStore';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
-import { useBookingSlots, useBookingConfirmation } from './booking/useBookingCalendar.js';
+import { useBookingSlots } from './booking/useBookingSlots.js';
+import { useBookingConfirmation } from './booking/useBookingConfirmation.js';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -48,8 +48,8 @@ export default function BookingCalendar({
   assistedClienteId = null,
   assistedBooking = false,
   temaAtivo = 'dark',
+  onAlert,
 }) {
-  const feedback = useFeedback();
   const isLight = temaAtivo === 'light';
   const today = parseISO(todayISO);
   const [viewYear,  setViewYear]  = useState(today?.year  ?? new Date().getFullYear());
@@ -58,10 +58,10 @@ export default function BookingCalendar({
     selectedDay, selectedSlot, horariosHot, horariosAll, showAll, setShowAll,
     slotsLoading, slotsError, slotsRef, resumeRef, fetchSlots,
     handleSelectDay, handleSelectSlot,
-  } = useBookingSlots({ profissional, entrega, todayISO, todayValid: Boolean(today), feedback });
+  } = useBookingSlots({ profissional, entrega, todayISO, todayValid: Boolean(today), onAlert });
   const { confirming, handleConfirm } = useBookingConfirmation({
     profissional, entrega, selectedDay, selectedSlot, actorUserId, negocioId,
-    assistedBooking, assistedClienteId, temaAtivo, onConfirm, fetchSlots, feedback,
+    assistedBooking, assistedClienteId, onConfirm, fetchSlots, onAlert,
   });
   const [retryingOfficialTime, setRetryingOfficialTime] = useState(false);
 
