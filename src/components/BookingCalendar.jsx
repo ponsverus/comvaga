@@ -1,484 +1,345 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import NotFound from './NotFound';
-import BookingCalendar from '../components/BookingCalendar';
-import AppFooter from '../components/AppFooter';
-import { ptBR } from '../feedback/messages/ptBR';
-import { useBusinessGroup } from '../businessTerms';
-import { getPublicUrl } from './vitrine/api/vitrineApi';
-import { isRateLimitError } from '../utils/errorUtils';
-import { NOW_RPC_SEQUENCE } from '../utils/officialDate';
-import { useVitrineBootstrap } from './vitrine/hooks/useVitrineBootstrap';
-import { useVitrineBooking } from './vitrine/hooks/useVitrineBooking';
-import { useVitrineInteractions } from './vitrine/hooks/useVitrineInteractions';
-import { useVitrinePresentation, resolveInstagram, resolveFacebook } from './vitrine/hooks/useVitrinePresentation';
-import BookingConfirmedModal from './vitrine/components/BookingConfirmedModal';
-import VitrineDepoimentosSection from './vitrine/sections/VitrineDepoimentosSection';
-import VitrineEntregasSection from './vitrine/sections/VitrineEntregasSection';
-import VitrineGallerySection from './vitrine/sections/VitrineGallerySection';
-import VitrineProfessionalsSection from './vitrine/sections/VitrineProfessionalsSection.js';
-import VitrineTopSection from './vitrine/sections/VitrineTopSection.js';
-import { applyMetadata, applyBusinessMetadataWithImage, buildBusinessMetadata, businessLogoUrl } from '../utils/seoMetadata.js';
-import { applyBusinessStructuredData } from '../utils/businessSeo.js';
-import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
-import BusinessGroupNotice from '../components/BusinessGroupNotice';
-import { SelectionBar } from './vitrine/components/VitrineOverlays';
-import VitrineFeedbackOverlay from './vitrine/components/VitrineFeedbackOverlay';
-import { useFeedback } from '../feedback/useFeedback';
-import { discardFeedbackByPresentation } from '../feedback/feedbackStore';
-import {
-  formatDateBR,
-  getDowFromDateSP,
-  getCalendarPlatformMode,
-  gerarLinkGoogle,
-  gerarArquivoICS,
-  getPrecoFinalEntrega,
-  sanitizeTel,
-} from './vitrine/utils';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { ptBR } from '../feedback/messages/ptBR.js';
+import { getFeedbackState } from '../feedback/feedbackStore';
+import { CheckIcon } from './icons';
+import { ZapIcon } from '../components/icons';
+import { useBookingSlots } from './booking/useBookingSlots.js';
+import { useBookingConfirmation } from './booking/useBookingConfirmation.js';
 
-export default function Vitrine({ user, userType, professionalRole = null, onLogout, initialBusiness = null }) {
-  const { slug } = useParams();
-  const initial = initialBusiness?.slug === slug ? initialBusiness : null;
-  const navigate = useNavigate();
-  const location = useLocation();
-  const vitrineMsgs = useMemo(() => ptBR?.vitrine || {}, []);
-  const getMsg = useCallback((key, fallback) => vitrineMsgs?.[key] || fallback, [vitrineMsgs]);
+function parseISO(iso) {
+  if (!iso) return null;
+  const [y, m, d] = String(iso).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return { year: y, month: m, day: d };
+}
 
+function toISO(year, month, day) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function daysInMonth(y, m)  { return new Date(y, m, 0).getDate(); }
+function firstDow(y, m)     { return new Date(y, m - 1, 1).getDay(); }
+function isoLt(a, b)        { return String(a) < String(b); }
+function isoEq(a, b)        { return String(a) === String(b); }
+function getDiasTrabalho(profissional) {
+  if (Array.isArray(profissional?.horarios) && profissional.horarios.length) {
+    return profissional.horarios
+      .filter((h) => h?.ativo !== false)
+      .map((h) => Number(h.dia_semana))
+      .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+  }
+  return [1, 2, 3, 4, 5];
+}
+
+const MONTH_NAMES   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const WEEKDAY_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+export default function BookingCalendar({
+  profissional,
+  entrega,
+  todayISO,
+  officialTimeUnavailable = false,
+  onRetryOfficialTime,
+  onConfirm,
+  onClose,
+  negocioId,
+  actorUserId,
+  assistedClienteId = null,
+  assistedBooking = false,
+  temaAtivo = 'dark',
+  onAlert,
+}) {
+  const isLight = temaAtivo === 'light';
+  const today = parseISO(todayISO);
+  const [viewYear,  setViewYear]  = useState(today?.year  ?? new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(today?.month ?? new Date().getMonth() + 1);
   const {
-    negocio,
-    profissionais,
-    entregas,
-    entregaPagesByProf,
-    depoimentos,
-    depoimentosHasMore,
-    depoimentosLoadingMore,
-    galeriaItems,
-    galeriaHasMore,
-    galeriaLoadingMore,
-    billingStatus,
-    loading,
-    error,
-    serverNow,
-    clockUnavailable,
-    fetchNowFromDb,
-    refreshDepoimentos,
-    loadMoreDepoimentos,
-    loadMoreGaleria,
-    loadEntregasPage,
-    loadVitrine,
-  } = useVitrineBootstrap({
-    slug,
-    rpcSequence: NOW_RPC_SEQUENCE,
-    getMsg,
-    authUserId: user?.id || null,
-    initialBusiness: initial,
+    selectedDay, selectedSlot, horariosHot, horariosAll, showAll, setShowAll,
+    slotsLoading, slotsError, slotsRef, resumeRef, fetchSlots,
+    handleSelectDay, handleSelectSlot,
+  } = useBookingSlots({ profissional, entrega, todayISO, todayValid: Boolean(today), onAlert });
+  const { confirming, handleConfirm } = useBookingConfirmation({
+    profissional, entrega, selectedDay, selectedSlot, actorUserId, negocioId,
+    assistedBooking, assistedClienteId, onConfirm, fetchSlots, onAlert,
   });
+  const [retryingOfficialTime, setRetryingOfficialTime] = useState(false);
 
-  const { group: businessGroup, status: businessGroupStatus, retry: retryBusinessGroup } =
-    useBusinessGroup(negocio?.tipo_negocio, negocio?.business_group, negocio?.id);
-  const bizV = vitrineMsgs?.business || {};
-  const sectionTitle = bizV?.section_title?.[businessGroup] ?? '';
-  const counterSingular = ptBR?.vitrine?.business?.counter_singular?.[businessGroup] ?? '';
-  const counterPlural = ptBR?.vitrine?.business?.counter_plural?.[businessGroup] ?? '';
-  const emptyListMsg = ptBR?.vitrine?.business?.empty_list?.[businessGroup] ?? ':(';
-  const loadMoreErrorMsg = ptBR?.vitrine?.business?.load_more_error?.[businessGroup] ?? 'Erro ao carregar mais itens. Tente novamente.';
-
-  const { showCustom, confirmCustom } = useFeedback();
-  const feedbackMountedRef = useRef(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    feedbackMountedRef.current = true;
-    return () => {
-      feedbackMountedRef.current = false;
-      discardFeedbackByPresentation('vitrine');
-    };
-  }, [slug]);
-
-  const [depoimentoNota, setDepoimentoNota] = useState(0);
-  const [depoimentoTexto, setDepoimentoTexto] = useState('');
-  const reviewFormRef = useRef(null);
-
-  const openAlert = useCallback(({ title, body, buttonText, variant }) => {
-    if (!feedbackMountedRef.current) return;
-    showCustom({
-      presentation: 'vitrine',
-      variant,
-      title: title || getMsg('generic_title', 'Aviso'),
-      body: body || '',
-      buttonText: buttonText || 'OK',
-    });
-  }, [getMsg, showCustom]);
-
-  const alertKey = useCallback((key, fallbackTitle, fallbackBody, fallbackBtn = 'OK') => {
-    const m = vitrineMsgs?.[key];
-    openAlert({
-      title: m?.title || fallbackTitle || getMsg('generic_title', 'Aviso'),
-      body: m?.body || fallbackBody || '',
-      buttonText: m?.buttonText || fallbackBtn || 'OK',
-    });
-  }, [getMsg, openAlert, vitrineMsgs]);
-
-  const handleEntregasPageError = () => {
-    openAlert({
-      title: 'Erro ao carregar',
-      body: loadMoreErrorMsg,
-      buttonText: 'OK',
-    });
-  };
-
-  const handleDepoimentosLoadMoreError = () => {
-    alertKey('depoimentos_load_more_error', 'Erro ao carregar', 'Erro ao carregar mais depoimentos. Tente novamente.', 'OK');
-  };
-
-  const confirmKey = useCallback((key, fallbackTitle, fallbackBody, fallbackConfirm = 'CONFIRMAR', fallbackCancel = 'CANCELAR') => {
-    if (!feedbackMountedRef.current) return Promise.resolve(false);
-    const m = vitrineMsgs?.[key];
-    return confirmCustom({
-      presentation: 'vitrine',
-      title: m?.title || fallbackTitle || getMsg('generic_title', 'Confirmar'),
-      body: m?.body || fallbackBody || '',
-      confirmText: m?.confirmText || fallbackConfirm,
-      cancelText: m?.cancelText || fallbackCancel,
-    });
-  }, [confirmCustom, getMsg, vitrineMsgs]);
-
-  const isProfessional = user && userType === 'professional';
-  const calendarPlatformMode = useMemo(() => getCalendarPlatformMode(), []);
-
-  const {
-    isFavorito,
-    favoritoLoading,
-    depoimentoLoading,
-    checkFavorito,
-    toggleFavorito: toggleFavoritoState,
-    enviarDepoimento: enviarDepoimentoState,
-  } = useVitrineInteractions({
-    user,
-    userType,
-    negocioId: negocio?.id,
-    depoimentoNota,
-    depoimentoTexto,
-    refreshDepoimentos,
-  });
+    function handle(e) {
+      if (confirming || getFeedbackState().open) return;
+      if (containerRef.current && !containerRef.current.contains(e.target)) onClose?.();
+    }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [onClose, confirming]);
 
   useEffect(() => {
-    if (user && negocio?.id) checkFavorito();
-  }, [checkFavorito, negocio?.id, user]);
+    const parsedToday = parseISO(todayISO);
+    if (!parsedToday) return;
+    setViewYear(parsedToday.year);
+    setViewMonth(parsedToday.month);
+  }, [todayISO]);
 
-  const toggleFavorito = async () => {
-    if (!user) {
-      alertKey('favorite_need_login', 'Login necessário', 'Faça login para favoritar.', 'ENTENDI');
-      return;
-    }
-    if (!userType) {
-      alertKey('profile_unconfirmed');
-      return;
-    }
-    if (userType !== 'client') {
-      alertKey('favorite_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode favoritar negócios.', 'ENTENDI');
-      return;
-    }
-    if (!negocio?.id) {
-      alertKey('favorite_invalid_business', 'Negócio inválido', 'Negócio inválido.', 'ENTENDI');
-      return;
-    }
+  const handleRetryOfficialTime = async () => {
+    if (!onRetryOfficialTime || retryingOfficialTime) return;
+    setRetryingOfficialTime(true);
     try {
-      await toggleFavoritoState();
+      await onRetryOfficialTime();
     } catch {
-      alertKey('favorite_toggle_error', 'Erro', 'Erro ao favoritar. Tente novamente.', 'OK');
+    } finally {
+      setRetryingOfficialTime(false);
     }
   };
 
-  const abrirDepoimento = async () => {
-    if (!user) {
-      const ok = await confirmKey(
-        'depoimento_need_login_confirm',
-        'Login necessário',
-        'Você precisa fazer login para deixar um depoimento. Deseja fazer login agora?',
-        'IR PARA LOGIN',
-        'MAIS TARDE'
-      );
-      if (ok) navigate('/login');
-      return;
-    }
-    if (!userType) {
-      alertKey('profile_unconfirmed');
-      return;
-    }
-    if (userType !== 'client') {
-      alertKey('depoimento_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode deixar depoimentos.', 'ENTENDI');
-      return;
-    }
-    setDepoimentoNota(0);
-    setDepoimentoTexto('');
-    reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+  function prevMonth() { if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12); } else setViewMonth(m => m - 1); }
+  function nextMonth() { if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1); } else setViewMonth(m => m + 1); }
 
-  const enviarDepoimento = async () => {
-    if (!user) {
-      const ok = await confirmKey(
-        'depoimento_need_login_confirm',
-        'Login necessário',
-        'Você precisa fazer login para deixar um depoimento. Deseja fazer login agora?',
-        'IR PARA LOGIN',
-        'MAIS TARDE'
-      );
-      if (ok) navigate('/login');
-      return;
-    }
-    if (!userType) {
-      alertKey('profile_unconfirmed');
-      return;
-    }
-    if (userType !== 'client') {
-      alertKey('depoimento_only_client', 'Acesso exclusivo', 'Apenas CLIENTE pode deixar depoimentos.', 'ENTENDI');
-      return;
-    }
-    if (!negocio?.id) {
-      alertKey('depoimento_invalid_business', 'Negócio inválido', 'Negócio inválido.', 'ENTENDI');
-      return;
-    }
-    if (!Number.isInteger(depoimentoNota) || depoimentoNota < 1 || depoimentoNota > 5) return;
-    try {
-      const ok = await enviarDepoimentoState();
-      if (!ok) return;
-      setDepoimentoNota(0);
-      setDepoimentoTexto('');
-      alertKey('depoimento_sent', 'Depoimento registrado', 'Seu depoimento foi entregue com sucesso!', 'OK');
-    } catch (e) {
-      if (isRateLimitError(e)) {
-        alertKey('depoimento_rate_limit', 'Limite de depoimentos atingido', 'Você já enviou muitos depoimentos hoje.\n\nTente novamente amanhã.', 'ENTENDI');
-        return;
-      }
-      console.error('Vitrine review send error:', e);
-      openAlert({
-        title: getMsg('depoimento_send_error_title', 'Erro ao enviar depoimento'),
-        body: getMsg('depoimento_send_error_body', 'Tente novamente em instantes.'),
-        buttonText: getMsg('common_ok', 'ENTENDI'),
-      });
-    }
-  };
+  const canGoPrev    = !(viewYear === today?.year && viewMonth === today?.month);
+  const diasTrabalho = getDiasTrabalho(profissional);
+  const valorExibido = entrega?.preco_promocional
+    ? Number(entrega.preco_promocional).toFixed(2)
+    : Number(entrega?.preco ?? 0).toFixed(2);
 
-  const nomeNegocioLabel = String(negocio?.nome || '').trim() || 'NEGÓCIO';
-  const {
-    flow,
-    hasSelecao,
-    entregasSelecionadas,
-    entregaVirtual,
-    calendarActionConfig,
-    handleConfirmarSelecao,
-    handleLimparSelecao,
-    handleBookingConfirm,
-    closeBooking,
-    bookingSectionState,
-  } = useVitrineBooking({
-    user,
-    userType,
-    todayISO: serverNow.date,
-    fetchNowFromDb,
-    confirmKey,
-    alertKey,
-    navigate,
-    location,
-    loading,
-    negocio,
-    nomeNegocioLabel,
-    profissionais,
-    entregas,
-    counterPlural,
-    getPrecoFinalEntrega,
-    gerarLinkGoogle,
-    gerarArquivoICS,
-    calendarPlatformMode,
-    billingStatus,
-  });
+  const totalDays = daysInMonth(viewYear, viewMonth);
+  const startDow  = firstDow(viewYear, viewMonth);
+  const cells     = [...Array(startDow).fill(null), ...Array.from({ length: totalDays }, (_, i) => i + 1)];
 
-  const {
-    logoUrl,
-    instagramUrl,
-    facebookUrl,
-    depoimentosView,
-    profissionaisView,
-    entregaCards,
-    galeriaView,
-    mediaDepoimentos,
-    temaAtivo,
-    isLight,
-    styles,
-  } = useVitrinePresentation({
-    negocio,
-    profissionais,
-    entregas,
-    entregaPagesByProf,
-    depoimentos,
-    galeriaItems,
-    isProfessional,
-    isFavorito,
-    depoimentoNota,
-    serverNow,
-    getPublicUrl,
-    getPrecoFinalEntrega,
-    getDowFromDateSP,
-    resolveInstagram,
-    resolveFacebook,
-  });
-
-  useEffect(() => {
-    if (!negocio?.nome) return;
-    const candidate = businessLogoUrl(negocio.logo_path, import.meta.env.VITE_SUPABASE_URL);
-    return applyBusinessMetadataWithImage(buildBusinessMetadata(negocio, entregas, candidate), candidate, {
-      applyMetadata: (metadata) => {
-        const restoreMetadata = applyMetadata(metadata);
-        const removeSchema = applyBusinessStructuredData(negocio, metadata.image);
-        return () => { restoreMetadata(); removeSchema(); };
-      },
-    });
-  }, [negocio, entregas]);
-
-  const feedbackOverlay = <VitrineFeedbackOverlay isLight={isLight} />;
-
-  if (loading && initial) return <>{feedbackOverlay}<PublicBusinessPreview business={initial} /></>;
-  if (loading) return <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-primary text-2xl font-normal animate-pulse">CARREGANDO...</div></div></>;
-  if (error) return <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center p-4"><div className="max-w-md w-full bg-dark-100 border border-red-500/40 rounded-custom p-8 text-center"><AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" /><h1 className="text-2xl font-normal text-white mb-2">Houve um erro ao carregar</h1><p className="text-gray-400 mb-6">{error}</p><button type="button" onClick={loadVitrine} className="w-full px-6 py-3 bg-primary/20 border border-primary/50 text-primary rounded-button font-normal uppercase">Tentar novamente</button></div></div></>;
-  if (!negocio) return <>{feedbackOverlay}<NotFound /></>;
-  if (!businessGroup) return (
-    <>{feedbackOverlay}<div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <BusinessGroupNotice status={businessGroupStatus} onRetry={retryBusinessGroup} />
-    </div></>
-  );
+  const containerBg     = isLight ? 'bg-white border-gray-200'           : 'bg-dark-100 border-gray-800';
+  const headerBorder    = isLight ? 'border-gray-200'                    : 'border-gray-800';
+  const labelColor      = isLight ? 'text-gray-500'                      : 'text-gray-500';
+  const titleColor      = isLight ? 'text-gray-900'                      : 'text-white';
+  const subtitleColor   = isLight ? 'text-gray-500'                      : 'text-gray-400';
+  const subMutedColor   = isLight ? 'text-gray-400'                      : 'text-gray-600';
+  const closeBtn        = isLight ? 'text-gray-400 hover:text-gray-700 hover:bg-gray-100' : 'text-gray-500 hover:text-white hover:bg-dark-200';
+  const navBtn          = isLight ? 'hover:bg-gray-100 text-gray-400 hover:text-gray-700' : 'hover:bg-dark-200 text-gray-400 hover:text-white';
+  const monthColor      = isLight ? 'text-gray-900'                      : 'text-white';
+  const weekdayColor    = isLight ? 'text-gray-400'                      : 'text-gray-500';
+  const dayDisabled     = isLight ? 'text-gray-300 cursor-not-allowed'   : 'text-gray-700 cursor-not-allowed';
+  const dayNormal       = isLight ? 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' : 'text-gray-300 hover:bg-dark-200 hover:text-white';
+  const dayToday        = isLight ? 'text-gray-900 font-bold'            : 'text-primary';
+  const loadingColor    = isLight ? 'text-gray-400'                      : 'text-gray-500';
+  const slotsErrorClass = isLight ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300';
+  const showMoreBtn     = isLight ? 'border-gray-300 bg-gray-50 text-gray-600 hover:border-gray-400 hover:text-gray-800' : 'border-gray-700 bg-dark-200 text-gray-300 hover:border-gray-500 hover:text-white';
+  const confirmBtnClass = isLight
+    ? 'bg-gray-900 text-white hover:bg-gray-700'
+    : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
 
   return (
-    <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}${hasSelecao ? ' pb-[72px]' : ''}`}>
-      {feedbackOverlay}
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div
+        ref={containerRef}
+        className={`border rounded-custom w-full max-w-md max-h-[92vh] overflow-y-auto ${containerBg}`}
+      >
+        <div className={`flex items-center justify-between px-6 pt-6 pb-4 border-b ${headerBorder}`}>
+          <div className="min-w-0">
+            <div className={`text-xs uppercase tracking-wide ${labelColor}`}>Agendamento</div>
+            <div className={`font-normal truncate ${titleColor}`}>{entrega?.nome}</div>
+            <div className={`text-xs mt-0.5 ${subtitleColor}`}>
+              <span className="uppercase">{profissional?.nome}</span>
+              {entrega?.duracao_minutos && <span className={`ml-2 ${subMutedColor}`}>• {entrega.duracao_minutos} MIN</span>}
+              <span className="ml-2 text-vpromo">• R$ {valorExibido}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`shrink-0 ml-4 p-1.5 rounded-button transition-colors ${closeBtn}`}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-      <VitrineTopSection
-        header={{
-          backClass: styles.headerVoltar,
-          depoimentoBtn: styles.depoimentoBtn,
-          favoritoBtn: styles.favoritoBtn,
-          isFavorito,
-          favoritoLoading,
-          isProfessional,
-          heroBg: styles.heroBg,
-        }}
-        business={{
-          negocio,
-          logoUrl,
-          mediaDepoimentos,
-          isLight,
-          mediaColor: styles.mediaColor,
-          addrClass: styles.addrClass,
-          telClass: styles.telClass,
-          socialIconCl: styles.socialIconCl,
-          instagramUrl,
-          facebookUrl,
-        }}
-        actions={{
-          onBack: () => navigate(-1),
-          onAbrirDepoimento: abrirDepoimento,
-          onToggleFavorito: toggleFavorito,
-          sanitizeTel,
-        }}
-      />
+        <div className="px-6 py-5 space-y-6">
+          {!todayISO && (
+            <div className={`flex flex-col items-center justify-center gap-2 border rounded-button p-3 text-sm font-normal text-center ${slotsErrorClass}`}>
+              <span>{officialTimeUnavailable ? ptBR.vitrine.schedule_time_unavailable.body : 'Sincronizando horário oficial...'}</span>
+              {officialTimeUnavailable && onRetryOfficialTime && (
+                <button
+                  type="button"
+                  onClick={handleRetryOfficialTime}
+                  disabled={retryingOfficialTime}
+                  className="font-normal uppercase text-primary hover:opacity-80 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {retryingOfficialTime
+                    ? ptBR.vitrine.schedule_time_unavailable.retryingButtonText
+                    : ptBR.vitrine.schedule_time_unavailable.retryButtonText}
+                </button>
+              )}
+            </div>
+          )}
 
-      <VitrineProfessionalsSection
-        cards={profissionaisView}
-        counterSingular={counterSingular}
-        counterPlural={counterPlural}
-      />
+          {todayISO && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={prevMonth}
+                disabled={!canGoPrev}
+                className={`p-1.5 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtn}`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className={`text-sm font-normal uppercase tracking-wide select-none ${monthColor}`}>
+                {MONTH_NAMES[viewMonth - 1]} {viewYear}
+              </span>
+              <button
+                type="button"
+                onClick={nextMonth}
+                className={`p-1.5 rounded transition-colors ${navBtn}`}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
 
-      <VitrineEntregasSection
-        cards={entregaCards}
-        sectionTitle={sectionTitle}
-        emptyListMsg={emptyListMsg}
-        counterSingular={counterSingular}
-        counterPlural={counterPlural}
-        onLoadPage={loadEntregasPage}
-        onLoadPageError={handleEntregasPageError}
-        booking={{
-          ...bookingSectionState,
-          isProfessional: isProfessional && !bookingSectionState.isAssistedBooking,
-          isLight,
-        }}
-      />
+            <div className="grid grid-cols-7 mb-1">
+              {WEEKDAY_SHORT.map((l, i) => (
+                <div key={i} className={`text-center text-[10px] uppercase py-1 select-none ${weekdayColor}`}>{l}</div>
+              ))}
+            </div>
 
-      <VitrineGallerySection
-        items={galeriaView}
-        hasMore={galeriaHasMore}
-        loadingMore={galeriaLoadingMore}
-        onLoadMore={loadMoreGaleria}
-      />
+            <div className="grid grid-cols-7 gap-y-1">
+              {cells.map((day, i) => {
+                if (day === null) return <div key={`e-${i}`} />;
+                const iso        = toISO(viewYear, viewMonth, day);
+                const dow        = (startDow + day - 1) % 7;
+                const isPast     = isoLt(iso, todayISO);
+                const isToday    = isoEq(iso, todayISO);
+                const isWorkday  = diasTrabalho.includes(dow);
+                const isSelected = selectedDay && isoEq(iso, selectedDay);
+                const isDisabled = isPast || !isWorkday;
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && handleSelectDay(iso)}
+                    className={[
+                      'h-9 w-9 mx-auto flex items-center justify-center text-sm font-normal transition-colors select-none rounded-full',
+                      isSelected
+                        ? 'bg-vprimary text-vprimary-text'
+                        : isToday && !isDisabled
+                          ? dayToday
+                          : isDisabled
+                            ? dayDisabled
+                            : dayNormal,
+                    ].join(' ')}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          )}
 
-      <VitrineDepoimentosSection
-        isProfessional={isProfessional}
-        depoimentos={depoimentosView}
-        nomeNegocioLabel={nomeNegocioLabel}
-        isLight={isLight}
-        reviewRef={reviewFormRef}
-        reviewState={{
-          nota: depoimentoNota,
-          texto: depoimentoTexto,
-          loading: depoimentoLoading,
-        }}
-        reviewActions={{
-          setNota: setDepoimentoNota,
-          setTexto: setDepoimentoTexto,
-          onEnviar: enviarDepoimento,
-        }}
-        pagination={{
-          hasMore: depoimentosHasMore,
-          loadingMore: depoimentosLoadingMore,
-          onLoadMore: loadMoreDepoimentos,
-          onLoadMoreError: handleDepoimentosLoadMoreError,
-        }}
-      />
+          {todayISO && selectedDay && (
+            <div ref={slotsRef}>
+              {slotsLoading && (
+                <div className={`flex items-center justify-center py-8 ${loadingColor}`}>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <span className="text-sm">BUSCANDO HORÁRIOS...</span>
+                </div>
+              )}
 
-      <SelectionBar itens={entregasSelecionadas} counterSingular={counterSingular} counterPlural={counterPlural} onConfirm={handleConfirmarSelecao} onClear={handleLimparSelecao} isLight={isLight} />
+              {!slotsLoading && !slotsError && horariosAll.length > 0 && (() => {
+                const hotHoras      = new Set(horariosHot.map(h => h.hora));
+                const horariosExtra = horariosAll.filter(h => !hotHoras.has(h.hora));
+                return (
+                  <div>
+                    {horariosHot.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                          {horariosHot.map((h, i) => (
+                            <SlotButton key={`hot-${i}`} slot={h} isSelected={selectedSlot?.hora === h.hora} onClick={handleSelectSlot} isLight={isLight} />
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowAll(v => !v)}
+                          className={`w-full py-2.5 rounded-full border text-sm font-normal uppercase transition-colors ${showMoreBtn}`}
+                        >
+                          {showAll ? 'Ocultar horários' : 'Ver mais horários'}
+                        </button>
+                        {showAll && horariosExtra.length > 0 && (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+                            {horariosExtra.map((h, i) => (
+                              <SlotButton key={`extra-${i}`} slot={h} isSelected={selectedSlot?.hora === h.hora} onClick={handleSelectSlot} isLight={isLight} />
+                            ))}
+                          </div>
+                        )}
+                        {showAll && horariosExtra.length === 0 && (
+                          <p className={`text-center text-xs mt-3 ${isLight ? 'text-gray-400' : 'text-gray-600'}`}>ESCOLHA ACIMA</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {horariosAll.map((h, i) => (
+                          <SlotButton key={`all-${i}`} slot={h} isSelected={selectedSlot?.hora === h.hora} onClick={handleSelectSlot} isLight={isLight} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
-      {flow.step === 'booking' && entregaVirtual && (
-        <BookingCalendar
-          profissional={flow.profissional}
-          entrega={entregaVirtual}
-          todayISO={serverNow.date}
-          officialTimeUnavailable={clockUnavailable}
-          onRetryOfficialTime={fetchNowFromDb}
-          negocioId={negocio.id}
-          actorUserId={user?.id}
-          assistedClienteId={bookingSectionState.isAssistedBooking ? bookingSectionState.assistedClienteId : null}
-          assistedBooking={bookingSectionState.isAssistedBooking}
-          onConfirm={handleBookingConfirm}
-          onClose={closeBooking}
-          temaAtivo={temaAtivo}
-          onAlert={openAlert}
-        />
-      )}
-
-      <BookingConfirmedModal
-        open={flow.step === 'confirmado'}
-        booking={flow}
-        styles={{
-          bg: styles.confirmadoBg,
-          title: styles.confirmadoTitle,
-          hora: styles.confirmadoHora,
-          data: styles.confirmadoData,
-          sub: styles.confirmadoSub,
-          actionBtn: styles.confirmadoAgBtn,
-          box: isLight ? 'bg-[#f8f2eb] border-[#ccb59f]' : 'bg-white/5 border-white/10',
-          hint: isLight ? 'text-[#9a6c4c]' : 'text-[#c7b19c]',
-          secondaryBtn: isLight ? 'border-[#c6a98d] text-[#4a2f1d] hover:bg-[#ead9c9]' : 'border-white/15 text-white hover:bg-white/8',
-        }}
-        calendarActionConfig={calendarActionConfig}
-        formatDateBR={formatDateBR}
-        onClose={closeBooking}
-        navigate={navigate}
-        assistedBooking={bookingSectionState.isAssistedBooking}
-        assistedReturnTo={bookingSectionState.assistedReturnTo}
-        negocioId={negocio.id}
-      />
-
-
-      <AppFooter userType={userType} professionalRole={professionalRole} onLogout={onLogout} />
+          {todayISO && selectedSlot && (
+            <div ref={resumeRef}>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={confirming}
+                className={`w-full py-3 rounded-button font-normal uppercase disabled:opacity-60 flex items-center justify-center gap-2 transition-colors ${confirmBtnClass}`}
+              >
+                {confirming
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirmando...</>
+                  : <><CheckIcon className="w-4 h-4" /> Confirmar agendamento</>
+                }
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function SlotButton({ slot, isSelected, onClick, isLight }) {
+  const baseSelected  = 'bg-vprimary text-vprimary-text border-vprimary';
+  const baseRaio      = isLight
+    ? 'bg-gray-50 border-gray-300 hover:border-gray-900 text-gray-800'
+    : 'bg-dark-200 border-gray-800 hover:border-primary text-white';
+  const baseHeat      = isLight
+    ? 'bg-gray-50 border-gray-900/40 text-gray-900 hover:bg-gray-100'
+    : 'bg-dark-200 border-primary/40 text-primary hover:bg-primary/10';
+  const baseNormal    = isLight
+    ? 'bg-white border-gray-200 hover:border-gray-500 text-gray-700'
+    : 'bg-dark-200 border-gray-800 hover:border-primary text-gray-300';
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(slot)}
+      className={[
+        'relative min-h-9 rounded-full border py-2 text-sm uppercase font-normal text-center transition-colors',
+        slot.isRaio && !isSelected ? 'pl-4 pr-7' : 'px-4',
+        isSelected
+          ? baseSelected
+          : slot.isRaio
+            ? baseRaio
+            : slot.isHeat
+              ? baseHeat
+              : baseNormal,
+      ].join(' ')}
+    >
+      {slot.isRaio && !isSelected && (
+        <ZapIcon strokeWidth={1.5} className={`absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 ${isLight ? 'text-gray-700' : 'text-primary'}`} />
+      )}
+      <span className="tabular-nums normal-case">{slot.hora}</span>
+    </button>
   );
 }
