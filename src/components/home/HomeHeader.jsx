@@ -9,6 +9,7 @@ export default function HomeHeader({
   resultadosBusca,
   setResultadosBusca,
   buscando,
+  searchFailed,
 }) {
   return (
     <>
@@ -53,6 +54,7 @@ export default function HomeHeader({
                 resultadosBusca={resultadosBusca}
                 setResultadosBusca={setResultadosBusca}
                 buscando={buscando}
+                searchFailed={searchFailed}
               />
             </div>
           </div>
