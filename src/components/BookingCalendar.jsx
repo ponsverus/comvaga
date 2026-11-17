@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
-import { FunctionsFetchError, FunctionsRelayError } from '@supabase/supabase-js';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import { useFeedback } from '../feedback/useFeedback';
 import { getFeedbackState } from '../feedback/feedbackStore';
-import { supabase } from '../supabase';
 import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
-import { withAuthRetry } from '../utils/authSession';
-import { invokeProtectedAction } from '../utils/protectedAction';
-import { isRateLimitError } from '../utils/errorUtils';
+import { useBookingSlots, useBookingConfirmation } from './booking/useBookingCalendar.js';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -26,7 +22,6 @@ function daysInMonth(y, m)  { return new Date(y, m, 0).getDate(); }
 function firstDow(y, m)     { return new Date(y, m - 1, 1).getDay(); }
 function isoLt(a, b)        { return String(a) < String(b); }
 function isoEq(a, b)        { return String(a) === String(b); }
-function timeToMin(t)       { if (!t) return 0; const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); }
 function getDiasTrabalho(profissional) {
   if (Array.isArray(profissional?.horarios) && profissional.horarios.length) {
     return profissional.horarios
@@ -35,20 +30,6 @@ function getDiasTrabalho(profissional) {
       .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
   }
   return [1, 2, 3, 4, 5];
-}
-
-function isConnectionError(error) {
-  const cause = error?.cause;
-  const raw = `${error?.code || ''} ${error?.message || ''} ${cause?.code || ''} ${cause?.message || ''}`.toLowerCase();
-
-  return error instanceof FunctionsFetchError
-    || error instanceof FunctionsRelayError
-    || cause instanceof FunctionsFetchError
-    || cause instanceof FunctionsRelayError
-    || raw.includes('request_timeout')
-    || raw.includes('timeout')
-    || raw.includes('failed to fetch')
-    || raw.includes('networkerror');
 }
 
 const MONTH_NAMES   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -70,32 +51,21 @@ export default function BookingCalendar({
 }) {
   const feedback = useFeedback();
   const isLight = temaAtivo === 'light';
-  const entregaIds = Array.isArray(entrega?.entrega_ids) && entrega.entrega_ids.length
-    ? entrega.entrega_ids.filter(Boolean)
-    : [entrega?.id].filter(Boolean);
-
   const today = parseISO(todayISO);
-
   const [viewYear,  setViewYear]  = useState(today?.year  ?? new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(today?.month ?? new Date().getMonth() + 1);
-
-  const [selectedDay,  setSelectedDay]  = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-
-  const [horariosHot,  setHorariosHot]  = useState([]);
-  const [horariosAll,  setHorariosAll]  = useState([]);
-  const [showAll,      setShowAll]      = useState(false);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [slotsError,   setSlotsError]   = useState(null);
-
-  const [confirming,   setConfirming]   = useState(false);
+  const {
+    selectedDay, selectedSlot, horariosHot, horariosAll, showAll, setShowAll,
+    slotsLoading, slotsError, slotsRef, resumeRef, fetchSlots,
+    handleSelectDay, handleSelectSlot,
+  } = useBookingSlots({ profissional, entrega, todayISO, todayValid: Boolean(today), feedback });
+  const { confirming, handleConfirm } = useBookingConfirmation({
+    profissional, entrega, selectedDay, selectedSlot, actorUserId, negocioId,
+    assistedBooking, assistedClienteId, temaAtivo, onConfirm, fetchSlots, feedback,
+  });
   const [retryingOfficialTime, setRetryingOfficialTime] = useState(false);
 
   const containerRef = useRef(null);
-  const slotsRef     = useRef(null);
-  const resumeRef    = useRef(null);
-  const selectedDayRef = useRef(null);
-  const slotsRequestRef = useRef(0);
 
   useEffect(() => {
     function handle(e) {
@@ -111,98 +81,7 @@ export default function BookingCalendar({
     if (!parsedToday) return;
     setViewYear(parsedToday.year);
     setViewMonth(parsedToday.month);
-
-    if (selectedDayRef.current && isoLt(selectedDayRef.current, todayISO)) {
-      selectedDayRef.current = null;
-      slotsRequestRef.current += 1;
-      setSelectedDay(null);
-      setSelectedSlot(null);
-      setHorariosHot([]);
-      setHorariosAll([]);
-      setShowAll(false);
-      setSlotsError(null);
-      setSlotsLoading(false);
-    }
   }, [todayISO]);
-
-  const fetchSlots = useCallback(async (dayISO) => {
-    if (!profissional?.id || !entrega?.duracao_minutos || !dayISO) return;
-
-    const requestId = slotsRequestRef.current + 1;
-    slotsRequestRef.current = requestId;
-    const canApply = () => slotsRequestRef.current === requestId && selectedDayRef.current === dayISO;
-
-    setSlotsLoading(true);
-    setSlotsError(null);
-    setHorariosHot([]);
-    setHorariosAll([]);
-    setShowAll(false);
-    setSelectedSlot(null);
-
-    try {
-      const dur = Number(entrega.duracao_minutos);
-
-      const { data, error } = await withAuthRetry(
-        () => supabase.rpc('rpc_get_slots_v4', {
-          p_profissional_id: profissional.id,
-          p_dia:             dayISO,
-          p_entrega_min:     dur,
-          p_margem_min:      5,
-          p_modo:            'todos',
-        }),
-        7000,
-        'booking-slots'
-      );
-      if (error) throw error;
-      if (!canApply()) return;
-
-      const list = (data || []).map(s => ({
-        hora:           String(s.label || '').slice(0, 5),
-        isHeat:         !!s.is_heat,
-        isRaio:         !!s.is_raio,
-        horario_inicio: s.horario_inicio || null,
-        horario_fim:    s.horario_fim    || null,
-      }));
-
-      const rank = h => h.isRaio ? 3 : h.isHeat ? 2 : 1;
-      const uniq = new Map();
-      for (const h of list) {
-        if (!h.hora) continue;
-        if (!uniq.has(h.hora) || rank(h) > rank(uniq.get(h.hora))) uniq.set(h.hora, h);
-      }
-      const final = [...uniq.values()].sort((a, b) => timeToMin(a.hora) - timeToMin(b.hora));
-      const hot   = final.filter(h => h.isHeat || h.isRaio);
-
-      setHorariosAll(final);
-      setHorariosHot(hot);
-
-      if (!final.length) {
-        const message = ptBR.vitrine.schedule_errors.no_slots;
-        setSlotsError(message);
-        feedback.showCustom({ title: 'Horários', body: message, variant: 'warning', screen: 'dark', buttonText: 'OK' });
-      }
-
-      setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
-    } catch {
-      if (!canApply()) return;
-      const message = ptBR.vitrine.schedule_errors.slots_load_error;
-      setSlotsError(message);
-      feedback.showCustom({ title: 'Horários', body: message, variant: 'danger', screen: 'dark', buttonText: 'OK' });
-    } finally {
-      if (canApply()) setSlotsLoading(false);
-    }
-  }, [feedback, profissional?.id, entrega?.duracao_minutos]);
-
-  const handleSelectDay = iso => {
-    selectedDayRef.current = iso;
-    setSelectedDay(iso);
-    fetchSlots(iso);
-  };
-
-  const handleSelectSlot = slot => {
-    setSelectedSlot(slot);
-    setTimeout(() => resumeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
-  };
 
   const handleRetryOfficialTime = async () => {
     if (!onRetryOfficialTime || retryingOfficialTime) return;
@@ -210,96 +89,8 @@ export default function BookingCalendar({
     try {
       await onRetryOfficialTime();
     } catch {
-      // O aviso permanece visível para permitir outra tentativa.
     } finally {
       setRetryingOfficialTime(false);
-    }
-  };
-
-  const handleConfirm = async () => {
-    const clienteIdAssistido = assistedBooking ? assistedClienteId : null;
-    if (!selectedSlot || !selectedDay || !actorUserId || !negocioId) return;
-    if (assistedBooking && !clienteIdAssistido) return;
-
-    setConfirming(true);
-    try {
-      const isMultiplo = entregaIds.length > 1;
-      const bookingRequest = () => isMultiplo
-        ? invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamentos_multiplos_assistido' : 'rpc_criar_agendamentos_multiplos', {
-            ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
-            p_negocio_id:      negocioId,
-            p_profissional_id: profissional.id,
-            p_entrega_ids:     entregaIds,
-            p_data:            selectedDay,
-            p_horario_inicio:  selectedSlot.hora,
-          })
-        : invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamento_assistido' : 'rpc_criar_agendamento', {
-            ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
-            p_negocio_id:      negocioId,
-            p_profissional_id: profissional.id,
-            p_entrega_id:      entregaIds[0],
-            p_data:            selectedDay,
-            p_horario_inicio:  selectedSlot.hora,
-          });
-      const { data, error } = await withAuthRetry(
-        bookingRequest,
-        8000,
-        'booking-confirm'
-      );
-
-      if (error) throw error;
-
-      const rows = Array.isArray(data) ? data : (data ? [data] : []);
-      const primeiroResultado = rows[0];
-      const ultimoResultado = rows[rows.length - 1];
-
-      onConfirm?.({
-        inicio:  primeiroResultado?.inicio ?? selectedSlot.hora,
-        fim:     ultimoResultado?.fim ?? null,
-        label:   selectedSlot.hora,
-        dataISO: selectedDay,
-      });
-    } catch (e) {
-      const msg     = `${e?.code || ''} ${e?.message || ''} ${e?.details || ''} ${e?.hint || ''}`.toLowerCase();
-      const limited = isRateLimitError(e);
-      const notAllowed = msg.includes('acao_nao_permitida');
-      const connectionFailed = isConnectionError(e);
-      const scheduleBlocked = msg.includes('blocked');
-      const expired = msg.includes('agendamento_horario_expirado')
-        || msg.includes('horario_expirado');
-      const overlap = msg.includes('conflito')
-        || msg.includes('pausa')
-        || msg.includes('overlap')
-        || msg.includes('sobrepos')
-        || msg.includes('exclusion')
-        || String(e?.code || '') === '23P01';
-      let errorMessage;
-      if (scheduleBlocked) {
-        errorMessage = ptBR.vitrine.schedule_errors.plan_blocked;
-      } else if (limited) {
-        errorMessage = ptBR.vitrine.schedule_errors.rate_limit;
-      } else if (expired) {
-        errorMessage = ptBR.vitrine.schedule_errors.slot_expired;
-        fetchSlots(selectedDay);
-      } else if (overlap) {
-        errorMessage = ptBR.vitrine.schedule_errors.slot_conflict;
-        fetchSlots(selectedDay);
-      } else if (notAllowed) {
-        errorMessage = ptBR.vitrine.schedule_errors.not_allowed;
-      } else if (connectionFailed) {
-        errorMessage = ptBR.vitrine.schedule_errors.connection;
-      } else {
-        errorMessage = ptBR.vitrine.schedule_errors.unexpected;
-      }
-      feedback.showCustom({
-        title: 'Agendamento',
-        body: errorMessage,
-        variant: expired || overlap || limited ? 'warning' : 'danger',
-        screen: isLight ? 'light' : 'dark',
-        buttonText: 'OK',
-      });
-    } finally {
-      setConfirming(false);
     }
   };
 
