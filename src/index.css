@@ -148,6 +148,28 @@ body {
 .home-tag-problem { animation: home-tag-problem 1.2s ease-out 3; }
 .home-tag-solved  { animation: home-tag-solved 1.2s ease-out 3; }
 
+@keyframes promo-booking-wiggle {
+  0%, 25%, 100% { transform: translateX(0) rotate(0); }
+  5%, 15% { transform: translateX(-2px) rotate(-1deg); }
+  10%, 20% { transform: translateX(2px) rotate(1deg); }
+}
+
+@keyframes promo-booking-standard {
+  0%, 65% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes promo-booking-drop {
+  0%, 65% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.promo-booking-cta { animation: promo-booking-wiggle 3.2s ease-in-out infinite; }
+.promo-booking-label { display: inline-grid; }
+.promo-booking-label span { grid-area: 1 / 1; }
+.promo-booking-standard { animation: promo-booking-standard 1.4s ease-in-out both; }
+.promo-booking-drop { animation: promo-booking-drop 1.4s ease-in-out both; }
+
 ::-webkit-scrollbar       { width: 8px; }
 ::-webkit-scrollbar-track { background: #111; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -195,9 +217,15 @@ body {
   .animate-marquee-sync,
   .search-empty-face,
   .home-tag-problem,
-  .home-tag-solved {
+  .home-tag-solved,
+  .promo-booking-cta,
+  .promo-booking-standard,
+  .promo-booking-drop {
     animation: none;
   }
+
+  .promo-booking-standard { opacity: 1; }
+  .promo-booking-drop { display: none; }
 }
 
 .vitrine-selection-bar {
