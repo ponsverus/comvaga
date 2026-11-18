@@ -166,6 +166,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     instagram: '',
     facebook: '',
     tema: 'dark',
+    anuncio: '',
   });
 
   const [notifAgendamentos, setNotifAgendamentos] = useState(0);
@@ -192,6 +193,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
       instagram: negocio.instagram || '',
       facebook: negocio.facebook || '',
       tema: negocio.tema || 'dark',
+      anuncio: negocio.anuncio || '',
     });
   }, [negocio]);
 

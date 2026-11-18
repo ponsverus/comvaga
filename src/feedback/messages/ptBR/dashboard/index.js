@@ -89,6 +89,7 @@ export const dashboard = {
   business_phone_invalid: negocio.business_phone_invalid,
   business_seo_too_long: negocio.business_seo_too_long,
   business_description_too_long: negocio.business_description_too_long,
+  business_announcement_too_long: negocio.business_announcement_too_long,
   gallery_invalid_format: negocio.gallery_invalid_format,
   gallery_too_large: negocio.gallery_too_large,
   gallery_upload_error: negocio.gallery_upload_error,

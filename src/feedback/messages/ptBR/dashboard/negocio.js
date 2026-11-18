@@ -99,6 +99,13 @@ export const negocio = {
     screen: 'dark',
     buttonText: 'OK',
   },
+  business_announcement_too_long: {
+    title: 'Anúncio muito longo',
+    body: 'Escreva uma frase de até 30 caracteres para o anúncio da Vitrine.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
 
   gallery_invalid_format: {
     title: 'Formato inválido',

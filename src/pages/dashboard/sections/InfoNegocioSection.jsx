@@ -172,6 +172,26 @@ export default function InfoNegocioSection({
         </span>
       </div>
 
+      <InfoRow label="ANÚNCIO" action={businessFieldAction('anuncio')}>
+        <input
+          type="text"
+          value={formInfo.anuncio || ''}
+          onChange={(e) => setFormInfo((prev) => ({
+            ...prev,
+            anuncio: Array.from(e.target.value).slice(0, 30).join(''),
+          }))}
+          readOnly={!isEditing('anuncio')}
+          className={`${inputClass} ${inputStateClass(isEditing('anuncio'))}`}
+          aria-label="Anúncio da Vitrine"
+          placeholder="Frase de até 30 caracteres"
+        />
+        {isEditing('anuncio') && (
+          <div className="text-right text-[11px] text-gray-500">
+            {Array.from(formInfo.anuncio || '').length}/30
+          </div>
+        )}
+      </InfoRow>
+
       <InfoRow label="NEGÓCIO" action={businessFieldAction('nome')}>
         <input
           value={formInfo.nome}

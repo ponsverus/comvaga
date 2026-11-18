@@ -210,6 +210,11 @@ body {
   animation: marquee-sync 40s linear infinite;
 }
 
+.animate-marquee-sync > div {
+  min-width: 100vw;
+  justify-content: space-between;
+}
+
 .announcement-bar-marquee:hover .animate-marquee-sync { animation-play-state: paused; }
 
 @media (prefers-reduced-motion: reduce) {
