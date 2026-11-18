@@ -293,6 +293,20 @@ export const signupProfessional = {
     screen: 'dark',
     buttonText: 'OK',
   },
+  address_neighborhood_required: {
+    title: 'Bairro obrigatório',
+    body: 'Informe o bairro onde o negócio está localizado para completar o cadastro e continuar.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  address_zip_required: {
+    title: 'CEP obrigatório',
+    body: 'Informe o CEP do negócio para completar o cadastro e continuar.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
   address_city_required: {
     title: 'Endere. incompleto',
     body: 'Informe a cidade.',
