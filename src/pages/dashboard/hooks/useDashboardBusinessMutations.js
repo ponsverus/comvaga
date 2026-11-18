@@ -128,6 +128,11 @@ export function useDashboardBusinessMutations({
         await uiAlert('dashboard.business_description_too_long', 'error');
         return false;
       }
+      const anuncio = String(formInfo.anuncio || '').trim();
+      if (Array.from(anuncio).length > 30) {
+        await uiAlert('dashboard.business_announcement_too_long', 'error');
+        return false;
+      }
       const seoTitle = normalizeSeoText(formInfo.meta_title);
       const seoDescription = normalizeSeoText(formInfo.meta_description);
       if (Array.from(seoTitle).length > SEO_TITLE_LIMIT || Array.from(seoDescription).length > SEO_DESCRIPTION_LIMIT) {
@@ -139,6 +144,7 @@ export function useDashboardBusinessMutations({
         meta_title: seoTitle || null,
         meta_description: seoDescription || null,
         descricao,
+        anuncio: anuncio || null,
         telefone: telefone || null,
         cep: onlyDigits(formInfo.cep) || null,
         rua: cleanText(formInfo.rua) || null,
