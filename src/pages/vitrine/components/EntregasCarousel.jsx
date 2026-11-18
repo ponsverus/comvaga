@@ -11,8 +11,10 @@ function EntregaButtons({
   entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
+  onAgendarClick,
   onToggleSelecao,
   isLight,
+  animarPromocao,
 }) {
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
   const isSelecionado = selecionadas.some((item) => item.id === entrega.id);
@@ -46,9 +48,14 @@ function EntregaButtons({
     <div className="flex gap-2 mt-3">
       <button
         type="button"
-        onClick={() => !agendarDesabilitado && onAgendarAgora(profissional, [entrega])}
+        onClick={() => {
+          if (agendarDesabilitado) return;
+          onAgendarClick?.(entrega.id);
+          onAgendarAgora(profissional, [entrega]);
+        }}
         disabled={agendarDesabilitado}
-        className={`flex-1 py-2.5 rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-1.5 ${agendarClass}`}
+        aria-label={`Agendar ${entrega.nome}`}
+        className={`flex-1 py-2.5 rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-1.5 ${agendarClass} ${animarPromocao ? 'promo-booking-cta' : ''}`}
       >
         <CalendarIcon
           className={[
@@ -56,7 +63,12 @@ function EntregaButtons({
             agendarDesabilitado ? 'opacity-40' : 'opacity-90',
           ].join(' ')}
         />
-        Agendar
+        {animarPromocao ? (
+          <span className="promo-booking-label" aria-hidden="true">
+            <span className="promo-booking-standard">Agendar</span>
+            <span className="promo-booking-drop">Baixou</span>
+          </span>
+        ) : 'Agendar'}
       </button>
       <button
         type="button"
@@ -92,26 +104,39 @@ function EntregaCard({
   entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
+  onAgendarClick,
   onToggleSelecao,
   isLight,
+  promocaoEncerrada,
 }) {
+  const cardRef = useRef(null);
+  const [visivel, setVisivel] = useState(false);
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
   const preco = Number(entrega.preco ?? 0);
   const promo = Number(entrega.preco_promocional ?? 0);
   const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
   const precoFinal = Number(entrega.preco_final ?? 0);
+  const animarPromocao = temPromo && visivel && !promocaoEncerrada && !isProfessional && selecionadas.length === 0;
+
+  useEffect(() => {
+    const node = cardRef.current;
+    if (!temPromo || promocaoEncerrada || !node || typeof IntersectionObserver === 'undefined') return undefined;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setVisivel(entry.intersectionRatio >= 0.6);
+    }, { threshold: 0.6 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [temPromo, promocaoEncerrada]);
 
   return (
-    <div className="bg-vcard2 border border-vborder rounded-custom p-4">
+    <div ref={cardRef} className="bg-vcard2 border border-vborder rounded-custom p-4">
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex items-center rounded-full border border-vborder bg-transparent px-3 py-1 text-xs text-vmuted font-normal shrink-0">
           {entrega.duracao_minutos} MIN
         </span>
         {temPromo ? (
-          <div className="flex items-baseline gap-2 shrink-0">
-            <span className="text-xs text-red-500 line-through">R$ {preco.toFixed(2)}</span>
-            <span className="font-normal text-base text-vpromo">R$ {precoFinal.toFixed(2)}</span>
-          </div>
+          <div className="font-normal text-base text-vpromo shrink-0">R$ {precoFinal.toFixed(2)}</div>
         ) : (
           <div className="text-vprimary font-normal text-base shrink-0">R$ {precoFinal.toFixed(2)}</div>
         )}
@@ -124,8 +149,10 @@ function EntregaCard({
         entregasSelecionadas={selecionadas}
         isProfessional={isProfessional}
         onAgendarAgora={onAgendarAgora}
+        onAgendarClick={temPromo ? onAgendarClick : undefined}
         onToggleSelecao={onToggleSelecao}
         isLight={isLight}
+        animarPromocao={animarPromocao}
       />
     </div>
   );
@@ -153,10 +180,19 @@ export default function EntregasCarousel({
   const [exibindo, setExibindo] = useState(0);
   const [animando, setAnimando] = useState(false);
   const [loadingTargetPage, setLoadingTargetPage] = useState(null);
+  const [promocoesEncerradas, setPromocoesEncerradas] = useState(() => new Set());
   const touchStartX = useRef(null);
   const animationTimeoutRef = useRef(null);
   const listaSegura = Array.isArray(lista) ? lista : [];
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
+  const encerrarPromocao = (id) => {
+    setPromocoesEncerradas((anteriores) => {
+      if (anteriores.has(id)) return anteriores;
+      const atualizadas = new Set(anteriores);
+      atualizadas.add(id);
+      return atualizadas;
+    });
+  };
   const totalItens = Number.isFinite(Number(totalCount)) ? Number(totalCount) : listaSegura.length;
   const totalPaginas = Math.ceil(totalItens / ENTREGAS_POR_PAGINA);
   const getPageItems = (pageIndex) => {
@@ -274,8 +310,10 @@ export default function EntregasCarousel({
                 entregasSelecionadas={selecionadas}
                 isProfessional={isProfessional}
                 onAgendarAgora={onAgendarAgora}
+                onAgendarClick={encerrarPromocao}
                 onToggleSelecao={onToggleSelecao}
                 isLight={isLight}
+                promocaoEncerrada={promocoesEncerradas.has(item.id)}
               />
             ))}
           </div>
@@ -292,8 +330,10 @@ export default function EntregasCarousel({
               entregasSelecionadas={selecionadas}
               isProfessional={isProfessional}
               onAgendarAgora={onAgendarAgora}
+              onAgendarClick={encerrarPromocao}
               onToggleSelecao={onToggleSelecao}
               isLight={isLight}
+              promocaoEncerrada={promocoesEncerradas.has(item.id)}
             />
           ))}
         </div>
