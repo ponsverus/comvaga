@@ -68,16 +68,17 @@ function StarChar({ size = 18, className = "" }) {
 	}, "★");
 }
 export default function VitrineTopSection({ header, business, actions }) {
-	return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bg-primary overflow-hidden relative h-10 flex items-center" }, /* @__PURE__ */ React.createElement("div", { className: "announcement-bar-marquee flex whitespace-nowrap" }, /* @__PURE__ */ React.createElement("div", { className: "flex animate-marquee-sync" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center shrink-0" }, [...Array(20)].map((_, i) => /* @__PURE__ */ React.createElement("div", {
+	const announcement = String(business.negocio.anuncio || "").trim() || "COMVAGA";
+	return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "bg-primary overflow-hidden relative h-10 flex items-center" }, /* @__PURE__ */ React.createElement("span", { className: "sr-only" }, announcement), /* @__PURE__ */ React.createElement("div", { className: "announcement-bar-marquee flex whitespace-nowrap", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("div", { className: "flex animate-marquee-sync" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center shrink-0" }, [...Array(20)].map((_, i) => /* @__PURE__ */ React.createElement("div", {
 		key: `a-${i}`,
 		className: "flex items-center"
-	}, /* @__PURE__ */ React.createElement("span", { className: "text-black font-normal text-sm uppercase mx-4" }, "COMVAGA"), /* @__PURE__ */ React.createElement("span", { className: "text-black text-sm" }, "•")))), /* @__PURE__ */ React.createElement("div", {
+	}, /* @__PURE__ */ React.createElement("span", { className: "text-black font-normal text-sm uppercase mx-4" }, announcement), /* @__PURE__ */ React.createElement("span", { className: "text-black text-sm" }, "•")))), /* @__PURE__ */ React.createElement("div", {
 		className: "flex items-center shrink-0",
 		"aria-hidden": "true"
 	}, [...Array(20)].map((_, i) => /* @__PURE__ */ React.createElement("div", {
 		key: `b-${i}`,
 		className: "flex items-center"
-	}, /* @__PURE__ */ React.createElement("span", { className: "text-black font-normal text-sm uppercase mx-4" }, "COMVAGA"), /* @__PURE__ */ React.createElement("span", { className: "text-black text-sm" }, "•"))))))), /* @__PURE__ */ React.createElement("header", { className: "bg-vcard border-b border-vborder sticky top-0 z-40" }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement("button", {
+	}, /* @__PURE__ */ React.createElement("span", { className: "text-black font-normal text-sm uppercase mx-4" }, announcement), /* @__PURE__ */ React.createElement("span", { className: "text-black text-sm" }, "•"))))))), /* @__PURE__ */ React.createElement("header", { className: "bg-vcard border-b border-vborder sticky top-0 z-40" }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React.createElement("button", {
 		type: "button",
 		onClick: actions.onBack,
 		className: `flex items-center gap-2 transition-colors uppercase ${header.backClass}`
