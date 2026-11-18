@@ -1,0 +1,46 @@
+export const parceiroCadastro = {
+  nome_required:        { body: 'Informe seu nome para continuar.', variant: 'erro' },
+  email_invalid:        { body: 'Informe um e-mail válido para continuar.', variant: 'erro' },
+  senha_too_short:      { body: 'A senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+  email_registered_unknown: { body: 'Este e-mail já está vinculado a uma conta existente. Acesse sua conta ou use outro e-mail.', variant: 'erro' },
+  email_check_rate_limit: { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
+  access_unavailable:   { body: 'Erro ao solicitar acesso com este e-mail. Acesse sua conta de parceiro ou fale com o responsável pelo negócio.', variant: 'erro' },
+  account_create_error: { body: 'Erro ao criar sua conta agora. Tente novamente.', variant: 'erro' },
+  owner_cannot_request_partner_access: { body: 'Esta conta já gerencia este negócio. Acesse pela área profissional.', variant: 'erro' },
+  unexpected_error:     { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
+  success_title:        'Confirme seu e-mail',
+  success_body:         'Enviamos um link para seu e-mail.\nClique no link para concluir o seu cadastro de parceria.',
+};
+
+export const parceiroLogin = {
+  email_invalid:                  { body: 'Informe um e-mail válido para continuar.', variant: 'erro' },
+  senha_too_short:                { body: 'A senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+  credentials_invalid:            { body: 'E-mail ou senha incorretos.', variant: 'erro' },
+  email_not_confirmed:            { body: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada e spam.', variant: 'aviso' },
+  rate_limit_exceeded:            { body: 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.', variant: 'aviso' },
+  auth_error:                     { body: 'Erro ao autenticar agora. Tente novamente.', variant: 'erro' },
+  profile_access_unavailable:     { body: 'Ocorreu um erro ao confirmar seu perfil. Tente novamente em alguns segundos.', variant: 'erro' },
+  profile_not_ready:              { body: 'Estamos com dificuldades para confirmar seu perfil de acesso. Aguarde alguns instantes e tente entrar novamente. Se o problema continuar, entre em contato com o suporte.', variant: 'aviso' },
+  not_partner:                    { body: 'Este login pertence a outro tipo de conta para este negócio.', variant: 'erro' },
+  unexpected_error:               { body: 'Ocorreu um erro inesperado. Tente novamente.', variant: 'erro' },
+  reset_email_required:           { body: 'Digite seu e-mail antes de solicitar o resgate de senha.', variant: 'aviso' },
+  reset_sent:                     { body: 'Link enviado. Confira sua caixa de entrada para redefinir a senha.', variant: 'sucesso' },
+  reset_error:                    { body: 'Erro ao enviar o link agora. Tente novamente.', variant: 'erro' },
+  recovery_password_too_short:    { body: 'A nova senha deve ter pelo menos 7 caracteres.', variant: 'erro' },
+  recovery_password_mismatch:     { body: 'As senhas divergem. Revise e tente novamente.', variant: 'erro' },
+  recovery_password_same_as_old:  { body: 'Use uma senha diferente da senha atual.', variant: 'aviso' },
+  recovery_password_updated:      { body: 'Senha atualizada com sucesso. Acesse sua conta com a nova senha.', variant: 'sucesso' },
+  recovery_password_update_error: { body: 'Erro ao atualizar a senha agora. Tente novamente.', variant: 'erro' },
+};
+
+export const partnerBusinessCenter = {
+  load_error: 'Erro ao carregar seus negócios.',
+  search_error: 'Erro ao pesquisar negócios.',
+  request_pending_approval: 'Pedido enviado. Aguarde o aval do responsável pelo negócio.',
+  request_active: 'Parceria ativa. Você já pode acessar o dashboard deste negócio.',
+  access_inactive: 'Este vínculo está inativo ou excluído neste negócio.',
+  owner_cannot_request_partner_access: 'Parcerias indisponíveis para contas administradoras.',
+  plan_professional_limit_reached: 'Este negócio já atingiu o limite de profissionais do plano atual.',
+  future_plan_professional_limit_reached: 'Este negócio tem um downgrade agendado e já atingiu o limite de profissionais do plano futuro.',
+  request_error: 'Erro ao solicitar parceria.',
+};
