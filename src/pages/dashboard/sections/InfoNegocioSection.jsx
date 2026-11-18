@@ -37,13 +37,13 @@ const iconButtonClass = 'inline-flex shrink-0 items-center justify-center p-1 te
 const maskedPrivateValue = '••••••••';
 const aboutFields = [
   'descricao',
-  'endereco_cep',
-  'endereco_bairro',
-  'endereco_rua',
-  'endereco_numero',
-  'endereco_complemento',
-  'endereco_cidade',
-  'endereco_estado',
+  'cep',
+  'bairro',
+  'rua',
+  'numero',
+  'complemento',
+  'cidade',
+  'estado',
 ];
 
 function normalizedFieldValue(value) {
@@ -223,19 +223,19 @@ export default function InfoNegocioSection({
             <div className="-mx-4 mt-3 border-t border-gray-800 sm:-mx-6">
               <SplitRow>
                 <SplitField label="CEP" divider>
-                  {addressTextInput('endereco_cep')}
+                  {addressTextInput('cep')}
                 </SplitField>
                 <SplitField label="BAIRRO">
-                  {addressTextInput('endereco_bairro')}
+                  {addressTextInput('bairro')}
                 </SplitField>
               </SplitRow>
 
               <SplitRow>
                 <SplitField label="RUA" divider>
-                  {addressTextInput('endereco_rua')}
+                  {addressTextInput('rua')}
                 </SplitField>
                 <SplitField label="NÚMERO">
-                  {addressTextInput('endereco_numero')}
+                  {addressTextInput('numero')}
                 </SplitField>
               </SplitRow>
 
@@ -243,19 +243,19 @@ export default function InfoNegocioSection({
                 <div className="flex items-center gap-3">
                   <label className="w-[62px] shrink-0 text-[14px] leading-5 text-gray-500">COMPL.</label>
                   <div className="min-w-0 flex-1">
-                    {addressTextInput('endereco_complemento', 'OPCIONAL')}
+                    {addressTextInput('complemento', 'OPCIONAL')}
                   </div>
                 </div>
               </div>
 
               <SplitRow last>
                 <SplitField label="CIDADE" divider>
-                  {addressTextInput('endereco_cidade')}
+                  {addressTextInput('cidade')}
                 </SplitField>
                 <SplitField label="ESTADO">
                   <input
-                    value={formInfo.endereco_estado || ''}
-                    onChange={(e) => setFormInfo((prev) => ({ ...prev, endereco_estado: e.target.value.toUpperCase() }))}
+                    value={formInfo.estado || ''}
+                    onChange={(e) => setFormInfo((prev) => ({ ...prev, estado: e.target.value.toUpperCase() }))}
                     readOnly={!isEditing('sobre')}
                     className={`${inputClass} truncate uppercase ${inputStateClass(isEditing('sobre'))}`}
                     maxLength={2}
