@@ -31,7 +31,7 @@ test('grupo: recusa grupo externo desconhecido', async () => {
   await assert.rejects(resolveBusinessGroup(businessGroupContext('Outro', null, 'n1'), async () => 'inventado'), /desconhecido/);
 });
 test('SEO: normaliza espaços', () => assert.equal(normalizeSeoText(' A\n  B \t C '), 'A B C'));
-test('SEO: usa título do negócio', () => assert.match(buildBusinessSeo({ nome: 'Studio X', tipo_negocio: 'barbearia', endereco_cidade: 'São Paulo' }).title, /Studio X/));
+test('SEO: usa título do negócio', () => assert.match(buildBusinessSeo({ nome: 'Studio X', tipo_negocio: 'barbearia', cidade: 'São Paulo' }).title, /Studio X/));
 test('SEO: limita tamanho', () => {
   const { title, description } = buildBusinessSeo({ nome: 'A'.repeat(120), descricao: 'B'.repeat(200) });
   assert.ok(Array.from(title).length <= SEO_TITLE_LIMIT);
