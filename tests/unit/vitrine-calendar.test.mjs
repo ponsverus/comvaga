@@ -6,14 +6,15 @@ import {
 } from '../../src/pages/vitrine/utils.js';
 
 const evento = { titulo: 'Corte, barba', dataISO: '2026-11-16', inicioHHMM: '09:00', duracaoMin: 45, detalhes: 'Linha 1\nLinha 2', local: 'Rua A; 10' };
+
 test('vitrine: data brasileira', () => assert.equal(formatDateBR('2026-11-16'), '16.11.2026'));
-test('vitrine: dia da semana em São Paulo', () => assert.equal(getDowFromDateSP('2026-11-16'), 1));
-test('vitrine: dia inválido retorna null', () => assert.equal(getDowFromDateSP('16/11/2026'), null));
-test('vitrine: preço promocional', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 30 }), 30));
-test('vitrine: promoção inválida não altera preço', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 65 }), 50));
+test('vitrine: dia da semana em Campinas', () => assert.equal(getDowFromDateSP('2026-11-16'), 1));
+test('vitrine: data fora do formato esperado retorna null', () => assert.equal(getDowFromDateSP('16/11/2026'), null));
+test('vitrine: valor promocional menor prevalece', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 30 }), 30));
+test('vitrine: valor promocional maior conserva o original', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 65 }), 50));
 test('vitrine: remove caracteres externos de telefone', () => assert.equal(sanitizeTel(' +55 (31) 99999-8888 '), '+5531999998888'));
 test('vitrine: plataforma de desktop seleciona ICS', () => assert.equal(getCalendarPlatformMode(), 'ics'));
-test('Google Agenda: codifica descrição e horário UTC', () => {
+test('Google Agenda: codifica detalhes e horário UTC', () => {
   const link = new URL(gerarLinkGoogle(evento));
   assert.equal(link.hostname, 'calendar.google.com');
   assert.equal(link.searchParams.get('text'), 'Corte, barba');
@@ -29,7 +30,7 @@ test('ICS: inclui horários, escape e identificador estável', () => {
   assert.match(file.content, /LOCATION:Rua A\\; 10/);
   assert.match(file.content, /UID:cliente-001-/);
 });
-test('ICS: respeita horário de término explícito', () => {
+test('ICS: respeita horário final informado', () => {
   const file = gerarArquivoICS({ ...evento, fimHHMM: '10:00' });
   assert.match(file.content, /DTEND:20261116T130000Z/);
 });
