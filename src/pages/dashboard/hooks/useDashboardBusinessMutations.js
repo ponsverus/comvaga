@@ -128,7 +128,7 @@ export function useDashboardBusinessMutations({
         await uiAlert('dashboard.business_description_too_long', 'error');
         return false;
       }
-      const anuncio = String(formInfo.anuncio || '').trim();
+      const anuncio = String(formInfo.anuncio || '').trim().toUpperCase();
       if (Array.from(anuncio).length > 30) {
         await uiAlert('dashboard.business_announcement_too_long', 'error');
         return false;
