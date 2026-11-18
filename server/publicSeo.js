@@ -64,7 +64,6 @@ export function seoProxyHeaders(req, scope, env = process.env) {
     return {};
   }
   if (!/^[a-f0-9]{64}$/.test(secret)) throw new Error('Invalid SEO proxy configuration');
-  // Trust platform headers on Vercel, and the actual socket during local development.
   const ip = env.VERCEL === '1'
     ? req?.headers?.['x-vercel-forwarded-for'] || req?.headers?.['x-forwarded-for']
     : req?.socket?.remoteAddress;
@@ -147,10 +146,9 @@ export async function serveVitrine(req, res, options = {}) {
       return;
     }
     if (requestedSlug !== slug) {
-      // Exclude the internal rewrite parameter so the canonical URL cannot redirect again.
       url.searchParams.delete('slug');
       res.setHeader('Location', `/v/${slug}${url.search}`);
-      send(req, res, 308, 'text/plain', 'Redirecionando para o endereço oficial da vitrine.', 300);
+      send(req, res, 308, 'text/plain', 'Estamos direcionando você para a vitrine correta.', 300);
       return;
     }
     const env = options.env || process.env;
