@@ -185,7 +185,7 @@ export function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, 
         const { data, error } = await withAuthRetry(
           () => supabase
             .from('negocios')
-            .select('id, nome, slug, logo_path, tipo_negocio, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado')
+            .select('id, nome, slug, logo_path, tipo_negocio, cep, rua, numero, complemento, bairro, cidade, estado')
             .eq('owner_id', user.id)
             .order('created_at', { ascending: true }),
           7000,
