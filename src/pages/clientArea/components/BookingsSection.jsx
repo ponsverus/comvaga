@@ -270,7 +270,7 @@ export default function BookingsSection({
         )
           .then(({ data, error }) => {
             if (error) throw error;
-            if (!['servicos', 'consultas', 'aulas'].includes(data)) throw new Error('Grupo de atendimento desconhecido');
+            if (!['servs', 'consultas', 'aulas'].includes(data)) throw new Error('Grupo de atendimento desconhecido');
             return [type, data];
           }).catch((error) => {
             typeRequests.current.delete(type);
@@ -294,7 +294,7 @@ export default function BookingsSection({
     setSharingId(booking.id);
     try {
       const negocio = booking.profissionais?.negocios;
-      const group = groupsByType[negocio?.tipo_negocio] || 'servicos';
+      const group = groupsByType[negocio?.tipo_negocio] || 'servs';
       const file = createHistoryPdfFile(renderer, {
         filename: `agendamento-${booking.id}.pdf`,
         fields: [

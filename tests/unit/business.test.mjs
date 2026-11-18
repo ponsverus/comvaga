@@ -13,7 +13,7 @@ test('entregas: remove IDs repetidos entre profissionais', () => {
   assert.deepEqual(flattenEntregaPages({ a: { pages: { 1: [{ id: 1 }] } }, b: { pages: { 1: [{ id: 1 }, { id: 2 }] } } }).map(x => x.id), [1, 2]);
 });
 test('entregas: ignora sem id', () => assert.deepEqual(flattenEntregaPages({ a: { pages: { 1: [{ nome: 'sem id' }] } } }), []));
-test('grupo: usa categoria base quando tipo ausente', () => assert.equal(businessGroupContext('', null, 'n1').group, 'servicos'));
+test('grupo: usa categoria base quando tipo ausente', () => assert.equal(businessGroupContext('', null, 'n1').group, 'servs'));
 test('grupo: reconhece consultas', () => assert.equal(businessGroupContext('Consultorio', 'consultas', 'n1').group, 'consultas'));
 test('grupo: desconhecido permanece aguardando resposta', () => assert.equal(pendingBusinessGroup(businessGroupContext('Outro', 'invalido', 'n2')).status, 'loading'));
 test('grupo: conserva grupo anterior somente com chave igual', () => {
@@ -23,15 +23,15 @@ test('grupo: conserva grupo anterior somente com chave igual', () => {
 });
 test('grupo: resolve com callback sem grupo informado', async () => {
   const ctx = businessGroupContext('Barbearia', null, 'n1');
-  const result = await resolveBusinessGroup(ctx, async () => 'servicos');
-  assert.equal(result.group, 'servicos');
+  const result = await resolveBusinessGroup(ctx, async () => 'servs');
+  assert.equal(result.group, 'servs');
   assert.equal(result.status, 'ready');
 });
 test('grupo: recusa grupo externo desconhecido', async () => {
   await assert.rejects(resolveBusinessGroup(businessGroupContext('Outro', null, 'n1'), async () => 'inventado'), /desconhecido/);
 });
 test('SEO: compacta caracteres em branco', () => assert.equal(normalizeSeoText(' A\n  B \t C '), 'A B C'));
-test('SEO: usa nome comercial', () => assert.match(buildBusinessSeo({ nome: 'Studio X', tipo_negocio: 'barbearia', endereco_cidade: 'Campinas' }).title, /Studio X/));
+test('SEO: usa nome comercial', () => assert.match(buildBusinessSeo({ nome: 'Studio X', tipo_negocio: 'barbearia', cidade: 'Campinas' }).title, /Studio X/));
 test('SEO: limita tamanho', () => {
   const { title, description } = buildBusinessSeo({ nome: 'A'.repeat(120), descricao: 'B'.repeat(200) });
   assert.ok(Array.from(title).length <= SEO_TITLE_LIMIT);

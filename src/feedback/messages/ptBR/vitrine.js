@@ -68,27 +68,27 @@ export const vitrine = {
 
   business: {
     section_title: {
-      servicos:  'Servs',
+      servs:  'Servs',
       consultas: 'Consultas',
       aulas:     'Aulas',
     },
     counter_singular: {
-      servicos:  'SERV.',
+      servs:  'SERV.',
       consultas: 'CONSULTA',
       aulas:     'AULA',
     },
     counter_plural: {
-      servicos:  'SERVS',
+      servs:  'SERVS',
       consultas: 'CONSULTAS',
       aulas:     'AULAS',
     },
     empty_list: {
-      servicos:  ':(',
+      servs:  ':(',
       consultas: 'Sem consultas para este profissional.',
       aulas:     'Sem aulas para este profissional.',
     },
     load_more_error: {
-      servicos:  'Erro ao carregar mais servs. Tente novamente.',
+      servs:  'Erro ao carregar mais servs. Tente novamente.',
       consultas: 'Erro ao carregar mais consultas. Tente novamente.',
       aulas:     'Erro ao carregar mais aulas. Tente novamente.',
     },

@@ -1,11 +1,11 @@
-const GROUPS = new Set(['servicos', 'consultas', 'aulas']);
+const GROUPS = new Set(['servs', 'consultas', 'aulas']);
 
 export function businessGroupContext(tipoNegocio, publicGroup, businessId) {
   const type = typeof tipoNegocio === 'string' ? tipoNegocio.trim() : '';
   return {
     key: JSON.stringify([businessId || null, type]),
     type,
-    group: !type ? 'servicos' : GROUPS.has(publicGroup) ? publicGroup : null,
+    group: !type ? 'servs' : GROUPS.has(publicGroup) ? publicGroup : null,
   };
 }
 
