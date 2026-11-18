@@ -1,0 +1,378 @@
+export const cobranca = {
+  billing_checkout_success: {
+    title: 'Aguardando processamento',
+    body: 'Recebemos o retorno do checkout. Seu plano será atualizado assim que o Asaas processar o pagamento.',
+    variant: 'info',
+    screen: 'light',
+    buttonText: 'OK',
+  },
+  billing_checkout_cancel: {
+    title: 'Checkout cancelado',
+    body: 'Checkout cancelado. Você pode tentar novamente.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_expired: {
+    title: 'Checkout expirado',
+    body: 'Checkout expirado. Gere um novo link de pagamento.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_cancel_confirm: {
+    title: 'Cancelar plano?',
+    body:
+      'Se houver período pago vigente, o acesso permanece liberado até o fim do ciclo.\n' +
+      'Depois disso, o sistema bloqueará novos agendamentos até que um novo plano seja contratado e ativado.',
+    variant: 'warning',
+    screen: 'dark',
+    confirmText: 'CANCELAR PLANO',
+    cancelText: 'VOLTAR',
+    buttonText: 'CANCELAR PLANO',
+  },
+  billing_cancel_checkout_confirm: {
+    title: 'Cancelar pagamento pendente?',
+    body: 'O checkout pendente será cancelado, liberando a escolha dos planos novamente.',
+    variant: 'warning',
+    screen: 'dark',
+    confirmText: 'CANCELAR PAGAMENTO',
+    cancelText: 'VOLTAR',
+    buttonText: 'CANCELAR PAGAMENTO',
+  },
+  billing_existing_subscription_recovery: {
+    title: 'Assinatura atual precisa ser regularizada',
+    body: 'A assinatura anterior permanece ativa no gateway. De modo a evitar pagamento duplicado, mantemos a abertura de um novo plano suspensa. Favor regularizar a conta atual ou contatar o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_subscription_reconciliation_pending: {
+    title: 'Verificando assinatura',
+    body: 'Um processo relacionado à assinatura está em andamento ou pendente. Aguarde e tente novamente. Caso persista, contate o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_charge_reconciliation_pending: {
+    title: 'Verificando faturas',
+    body: 'Houve um erro ao confirmar todas as faturas desta assinatura no gateway. Aguarde alguns instantes e tente novamente. Se o problema persistir, entre em contato com o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_subscription_suspended_with_debt: {
+    title: 'Assinatura suspensa',
+    body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga no card do plano. Após quitar todas, você poderá reativar o plano. O acesso pago vigente continua válido até o fim do período.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_subscription_expired_with_debt: {
+    title: 'Assinatura expirada',
+    body: 'Há faturas em aberto nesta assinatura. Pague a mais antiga no card do plano. Após quitar todas, você poderá renovar o plano. O acesso pago vigente continua válido até o fim do período.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_reactivation_pending: {
+    title: 'Reativando sua assinatura',
+    body: 'Estamos reativando seu plano junto ao Asaas. Atualize o painel em instantes. A vitrine só será liberada quando houver período pago válido.',
+    variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+  },
+  billing_reactivation_invoice_conflict: {
+    title: 'Próxima fatura precisa de conferência',
+    body: 'Já existe uma fatura futura ou a data do próximo pagamento permanece incerta. Contate o suporte para evitar duplicidade de valores.',
+    variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+  },
+  billing_reactivation_awaiting_payment: {
+    title: 'Assinatura reativada',
+    body: 'A recorrência foi reativada. A vitrine continua bloqueada até o Asaas confirmar o pagamento do novo período. Se a fatura tardar a aparecer, atualize o painel em instantes.',
+    variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+  },
+  billing_reactivation_success: {
+    title: 'Assinatura reativada',
+    body: 'A recorrência foi reativada. O acesso segue o período já pago e as próximas faturas passam a vir pelo Asaas.',
+    variant: 'success', screen: 'dark', buttonText: 'ENTENDI',
+  },
+  billing_reactivation_error: {
+    title: 'Falha ao reativar',
+    body: 'O retorno do Asaas segue pendente. Atualize o painel e tente novamente; persistindo o problema, contate o suporte.',
+    variant: 'warning', screen: 'dark', buttonText: 'ENTENDI',
+  },
+  billing_new_checkout_debt_open: {
+    title: 'Pagamento pendente',
+    body: 'Há faturas em aberto. Pague a mais antiga no card do seu plano antes de abrir outro pagamento. Todas as faturas devidas precisam ser quitadas; se a assinatura estiver suspensa ou expirada, reative ou renove o plano depois.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_recovery_invoice_not_found: {
+    title: 'Fatura em aberto indisponível',
+    body: 'Houve um erro ao abrir a fatura em aberto com vencimento até hoje nesta assinatura. Atualize o status em instantes ou contate o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_cancel_wait: {
+    title: 'Checkout sendo preparado',
+    body: 'A abertura do checkout ainda está sendo confirmada pelo Asaas. Aguarde alguns instantes e tente cancelar novamente',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_cancel_error: {
+    title: 'Erro ao cancelar pagamento',
+    body: 'Houve uma falha ao cancelar o pagamento pendente. Tente novamente em instantes.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_checkout_cancel_gateway_error: {
+    title: 'Erro no cancelamento',
+    body: 'O gateway de pagamento falhou em confirmar o cancelamento do checkout. Tente novamente em instantes.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_checkout_payment_confirmed: {
+    title: 'Pagamento confirmado',
+    body: 'Esse pagamento já foi confirmado, tornando o cancelamento indisponível neste estágio.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_not_found: {
+    title: 'Pagamento indisponível',
+    body: 'Nenhum pagamento pendente foi encontrado para este negócio.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_plan_movement_pending: {
+    title: 'Troca em andamento',
+    body: 'Conclua ou cancele a troca de plano em andamento antes de iniciar outra.',
+    variant: 'info',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_cancel_downgrade_confirm: {
+    title: 'Cancelar downgrade?',
+    body: 'A troca agendada será removida e o valor do plano atual será mantido no próximo faturamento.',
+    variant: 'warning',
+    screen: 'dark',
+    confirmText: 'CANCELAR DOWNGRADE',
+    cancelText: 'VOLTAR',
+    buttonText: 'CANCELAR DOWNGRADE',
+  },
+  billing_cancel_downgrade_error: {
+    title: 'Erro ao cancelar downgrade',
+    body: 'Houve uma falha ao cancelar a troca agendada. Tente novamente em instantes.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_cancel_downgrade_unavailable: {
+    title: 'Downgrade indisponível',
+    body: 'Nenhum downgrade agendado consta neste negócio para cancelar.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_provider_sync_in_progress: {
+    title: 'Atualizando dados',
+    body: 'Aguarde alguns instantes e tente novamente.',
+    variant: 'info',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_provider_sync_pending_header: {
+    body: 'PAGAMENTO EM AJUSTE. AGUARDE PARA MUDAR O PLANO.',
+  },
+  billing_provider_sync_retry_header: {
+    body: 'PAGAMENTO AGUARDANDO NOVA TENTATIVA.',
+  },
+  billing_provider_sync_failed_header: {
+    body: 'ERRO NO PAGAMENTO. FALAR COM O SUPORTE NO RODAPÉ.',
+  },
+  billing_pending_plan_change_scheduled_header: {
+    body: 'A TROCA PARA {plan} ESTÁ AGENDADA PARA {date}',
+  },
+  billing_pending_plan_change_continues_header: {
+    body: 'A TROCA PARA {plan} CONTINUA AGENDADA.',
+  },
+  billing_canceled_access_until_header: {
+    body: 'CANCELADO. ACESSO LIBERADO ATÉ {date}',
+  },
+  billing_canceled_header: {
+    body: 'CANCELADO. ACESSO LIBERADO ATÉ.',
+  },
+  billing_canceled_expired_header: {
+    body: 'PLANO CANCELADO. ESCOLHA E CONTINUE.',
+  },
+  billing_inactive_debt_header: {
+    body: 'ASSINATURA SUSPENSA. QUITE OS DÉBITOS PARA REATIVAR.',
+  },
+  billing_inactive_paid_header: {
+    body: 'ASSINATURA SUSPENSA. ACESSO PAGO ATÉ {date}',
+  },
+  billing_inactive_header: {
+    body: 'ASSINATURA SUSPENSA. REATIVE O PLANO PARA VOLTAR',
+  },
+  billing_expired_debt_header: {
+    body: 'ASSINATURA EXPIRADA. QUITE OS DÉBITOS PARA RENOVAR.',
+  },
+  billing_expired_paid_header: {
+    body: 'ASSINATURA EXPIRADA. ACESSO PAGO ATÉ {date}',
+  },
+  billing_expired_header: {
+    body: 'ASSINATURA EXPIRADA. RENOVE O PLANO PARA VOLTAR',
+  },
+  billing_reactivation_pending_header: {
+    body: 'REATIVANDO ASSINATURA. AGUARDE O RETORNO DO ASAAS',
+  },
+  billing_reactivation_awaiting_payment_header: {
+    body: 'ASSINATURA REATIVADA. AGUARDE O PROCESSAMENTO.',
+  },
+  billing_blocked_header: {
+    body: 'AGENDA BLOQUEADA. REGULARIZE O PAGAMENTO.',
+  },
+  billing_blocked_never_paid_header: {
+    body: 'AGENDA BLOQUEADA. ADICIONE UM PAGAMENTO.',
+  },
+  billing_past_due_header: {
+    body: 'FATURA VENCIDA. REGULARIZE O PAGAMENTO.',
+  },
+  billing_payment_failed_header: {
+    body: 'FALHA NO PAGAMENTO. TENTE NOVAMENTE.',
+  },
+  billing_trial_ended_header: {
+    body: 'TESTE ENCERRADO. ADICIONE UM PAGAMENTO.',
+  },
+  billing_block_countdown_header: {
+    body: 'BLOQUEIO EM {days} {dayLabel}.',
+  },
+  billing_day_singular_header: {
+    body: 'DIA',
+  },
+  billing_day_plural_header: {
+    body: 'DIAS',
+  },
+  billing_trial_total_header: {
+    body: ' DE {days} {dayLabel}',
+  },
+  billing_trial_active_header: {
+    body: 'TESTE GRÁTIS ATIVO. FALTAM {days} {dayLabel}{total}.',
+  },
+  billing_plans_load_error: {
+    title: 'Erro ao carregar planos',
+    body: 'Erro ao carregar os planos agora.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_checkout_timeout: {
+    title: 'Checkout demorou demais',
+    body: 'O tempo de resposta expirou. O checkout pode estar em andamento; aguarde e verifique o status antes de tentar novamente.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_reconciliation_pending: {
+    title: 'Checkout em conferência',
+    body: 'Houve um erro ao verificar o status do checkout anterior. Estamos checando os dados para evitar debito duplicado. Aguarde antes de tentar novamente.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_record_pending: {
+    title: 'Registro do checkout em conferência',
+    body: 'O sistema de pagamento criou o checkout, porem o seu registro no sistema permanece pendente de validar. Aguarde antes de tentar novamente.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_conflict: {
+    title: 'Checkout em andamento para outro plano',
+    body: 'Já existe um processo de checkout em andamento para outro plano. Aguarde ele ser concluído ou expirar antes de tentar um plano diferente.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_in_progress: {
+    title: 'Checkout sendo preparado',
+    body: 'O processamento deste checkout já está em andamento. Aguarde alguns instantes e clique novamente para abrir o mesmo link.',
+    variant: 'info',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_checkout_error: {
+    title: 'Erro no checkout',
+    body: 'Houve um erro ao abrir o checkout do pagamento agora.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_checkout_provider_rejected: {
+    title: 'Checkout fechado',
+    body: 'O sistema de pagamento recusou a abertura deste checkout. Seu plano permanece o mesmo. Tente novamente mais tarde ou contate o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_upgrade_provider_rejected: {
+    title: 'Troca recusada',
+    body: 'O sistema de pagamento recusou a troca da assinatura. Seu plano permanece como esta. Tente novamente mais tarde ou contate o suporte.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_plan_change_error: {
+    title: 'Erro ao trocar plano',
+    body: 'Houve uma falha durante a troca de plano.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_cancel_not_cancelable: {
+    title: 'Cancelamento indisponível',
+    body: 'O estado atual deste plano impede o cancelamento.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_cancel_debt_open: {
+    title: 'Débito em aberto',
+    body: 'Quite os débitos com vencimento até hoje antes de cancelar o plano.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_cancel_gateway_error: {
+    title: 'Erro no cancelamento',
+    body: 'O cancelamento da assinatura falhou no gateway de pagamento. Tente novamente em instantes.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_cancel_timeout: {
+    title: 'Cancelamento demorou demais',
+    body: 'O cancelamento demorou demais. Tente novamente em instantes.',
+    variant: 'warning',
+    screen: 'dark',
+    buttonText: 'ENTENDI',
+  },
+  billing_cancel_error: {
+    title: 'Erro ao cancelar',
+    body: 'Houve uma falha durante o cancelamento do plano.',
+    variant: 'danger',
+    screen: 'dark',
+    buttonText: 'OK',
+  },
+  billing_status_load_error_inline: {
+    body: 'HOUVE UM ERRO AO VERIFICAR O PAGAMENTO AGORA.',
+  },
+  billing_status_retry_action: {
+    body: 'TENTAR DE NOVO',
+  },
+};
