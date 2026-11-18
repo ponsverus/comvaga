@@ -7,7 +7,7 @@ const TEXT_FIELDS = [
   'logo_path', 'tema', 'endereco', 'cep', 'rua', 'numero', 'complemento',
   'bairro', 'cidade', 'estado', 'meta_title', 'meta_description',
 ];
-const GROUPS = new Set(['servicos', 'consultas', 'aulas']);
+const GROUPS = new Set(['servs', 'consultas', 'aulas']);
 
 function previewAvatarUrl(prof, supabaseUrl) {
   try {
@@ -58,7 +58,7 @@ function previewProfessionals(value, supabaseUrl) {
 export function publicBusinessSnapshot(value, image = DEFAULT_SEO_IMAGE, supabaseUrl = null) {
   if (!value || typeof value !== 'object' || !VALID_BUSINESS_SLUG.test(value.slug || '')) return null;
   const business = Object.fromEntries(TEXT_FIELDS.map((key) => [key, typeof value[key] === 'string' ? value[key] : null]));
-  business.business_group = GROUPS.has(value.business_group) ? value.business_group : 'servicos';
+  business.business_group = GROUPS.has(value.business_group) ? value.business_group : 'servs';
   business.seo_image = typeof image === 'string' && /^https:\/\//.test(image) ? image : DEFAULT_SEO_IMAGE;
   business.seo_services = [...new Set((Array.isArray(value.seo_services) ? value.seo_services : [])
     .filter((item) => item?.ativo === true && !item.excluido_em && !item.motivo_excluido)
