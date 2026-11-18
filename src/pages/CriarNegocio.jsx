@@ -95,10 +95,10 @@ export default function CriarNegocio({ user }) {
   const validarEndereco = () => {
     if (!onlyTrim(formData.rua)) return 'signupProfessional.address_street_required';
     if (!onlyTrim(formData.numero)) return 'signupProfessional.address_number_required';
-    if (!onlyTrim(formData.bairro)) return 'signupProfessional.address_format_invalid';
+    if (!onlyTrim(formData.bairro)) return 'signupProfessional.address_neighborhood_required';
     if (!onlyTrim(formData.cidade)) return 'signupProfessional.address_city_required';
     if (!onlyTrim(formData.estado)) return 'signupProfessional.address_state_required';
-    if (!onlyTrim(formData.cep)) return 'signupProfessional.address_format_invalid';
+    if (!onlyTrim(formData.cep)) return 'signupProfessional.address_zip_required';
     return null;
   };
 
