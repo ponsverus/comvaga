@@ -37,8 +37,8 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
   const name = String(business?.nome || '').trim();
   if (!name || !VALID_BUSINESS_SLUG.test(business?.slug || '')) return null;
   const url = `${PUBLIC_ORIGIN}/v/${business.slug}`;
-  const street = String(business.endereco_rua || '').trim();
-  const city = String(business.endereco_cidade || '').trim();
+  const street = String(business.rua || '').trim();
+  const city = String(business.cidade || '').trim();
   const hasAddress = Boolean(street && city && business.endereco?.trim());
   const entity = {
     '@type': hasAddress ? 'LocalBusiness' : 'Organization',
@@ -53,13 +53,13 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
   if (hasAddress) {
     entity.address = {
       '@type': 'PostalAddress',
-      streetAddress: [street, business.endereco_numero, business.endereco_complemento]
+      streetAddress: [street, business.numero, business.complemento]
         .filter((part) => typeof part === 'string' && part.trim()).map((part) => part.trim()).join(', '),
       addressLocality: city,
       addressCountry: 'BR',
     };
-    if (business.endereco_estado?.trim()) entity.address.addressRegion = business.endereco_estado.trim();
-    const postalCode = formatBrazilianPostalCode(business.endereco_cep);
+    if (business.estado?.trim()) entity.address.addressRegion = business.estado.trim();
+    const postalCode = formatBrazilianPostalCode(business.cep);
     if (postalCode) entity.address.postalCode = postalCode;
   }
   return { '@context': 'https://schema.org', '@type': 'WebPage', '@id': `${url}#webpage`, url, name, mainEntity: entity };

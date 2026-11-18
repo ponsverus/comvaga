@@ -4,11 +4,11 @@ import { LogOut, Plus } from 'lucide-react';
 import { getPublicUrl } from '../utils/storage';
 
 function formatBusinessAddress(negocio) {
-  const rua = String(negocio?.endereco_rua || '').trim();
-  const numero = String(negocio?.endereco_numero || '').trim();
-  const bairro = String(negocio?.endereco_bairro || '').trim();
-  const cidade = String(negocio?.endereco_cidade || '').trim();
-  const estado = String(negocio?.endereco_estado || '').trim().toUpperCase();
+  const rua = String(negocio?.rua || '').trim();
+  const numero = String(negocio?.numero || '').trim();
+  const bairro = String(negocio?.bairro || '').trim();
+  const cidade = String(negocio?.cidade || '').trim();
+  const estado = String(negocio?.estado || '').trim().toUpperCase();
 
   return [
     rua && numero ? `${rua}, ${numero}` : rua,

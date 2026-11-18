@@ -18,13 +18,13 @@ function negocioEnderecoFields(negocio) {
     return { rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '' };
   }
   return {
-    rua: onlyTrim(negocio.endereco_rua),
-    numero: onlyTrim(negocio.endereco_numero),
-    bairro: onlyTrim(negocio.endereco_bairro),
-    cidade: onlyTrim(negocio.endereco_cidade),
-    estado: onlyTrim(negocio.endereco_estado),
-    cep: onlyTrim(negocio.endereco_cep),
-    complemento: onlyTrim(negocio.endereco_complemento),
+    rua: onlyTrim(negocio.rua),
+    numero: onlyTrim(negocio.numero),
+    bairro: onlyTrim(negocio.bairro),
+    cidade: onlyTrim(negocio.cidade),
+    estado: onlyTrim(negocio.estado),
+    cep: onlyTrim(negocio.cep),
+    complemento: onlyTrim(negocio.complemento),
   };
 }
 
@@ -97,7 +97,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
           ),
           withAuthRetry(
             () => supabase.from('negocios')
-              .select('id, nome, slug, tipo_negocio, telefone, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_estado, created_at')
+              .select('id, nome, slug, tipo_negocio, telefone, cep, rua, numero, complemento, bairro, cidade, estado, created_at')
               .eq('owner_id', user.id)
               .order('created_at', { ascending: true }),
             6000,
@@ -225,13 +225,13 @@ export default function SignupProfessionalResume({ user, onLogin }) {
           p_slug: slug,
           p_telefone: telefone,
           p_tipo_negocio: tipoNegocio,
-          p_endereco_cep: formData.cep,
-          p_endereco_rua: formData.rua,
-          p_endereco_numero: formData.numero,
-          p_endereco_complemento: formData.complemento,
-          p_endereco_bairro: formData.bairro,
-          p_endereco_cidade: formData.cidade,
-          p_endereco_estado: formData.estado,
+          p_cep: formData.cep,
+          p_rua: formData.rua,
+          p_numero: formData.numero,
+          p_complemento: formData.complemento,
+          p_bairro: formData.bairro,
+          p_cidade: formData.cidade,
+          p_estado: formData.estado,
         }),
         8000,
         'complete-owner-onboarding'
