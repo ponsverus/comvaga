@@ -207,53 +207,53 @@ export const negocio = {
   business: {
 
     tab_title: {
-      servicos:  'SERVS',
+      servs:  'SERVS',
       consultas: 'Consultas',
       aulas:     'Aulas',
     },
 
     button_add: {
-      servicos:  'ADD SERV.',
+      servs:  'ADD SERV.',
       consultas: 'CONSULTA',
       aulas:     'AULA',
     },
 
     modal_new: {
-      servicos:  'NOVO SERV.',
+      servs:  'NOVO SERV.',
       consultas: 'NOVA CONSULTA',
       aulas:     'NOVA AULA',
     },
 
     modal_edit: {
-      servicos:  'EDITAR SERV.',
+      servs:  'EDITAR SERV.',
       consultas: 'EDITAR CONSULTA',
       aulas:     'EDITAR AULA',
     },
 
     item_singular: {
-      servicos:  'Serv.',
+      servs:  'Serv.',
       consultas: 'Consulta',
       aulas:     'Aula',
     },
 
     counter_singular: {
-      servicos:  'SERV.',
+      servs:  'SERV.',
       consultas: 'CONSULTA',
       aulas:     'AULA',
     },
     counter_plural: {
-      servicos:  'SERVS',
+      servs:  'SERVS',
       consultas: 'CONSULTAS',
       aulas:     'AULAS',
     },
 
     empty_list: {
-      servicos:  ':(',
+      servs:  ':(',
       consultas: 'Sem consultas para este profissional.',
       aulas:     'Sem aulas para este profissional.',
     },
 
-    servicos: {
+    servs: {
       entrega_created: {
         title: 'Serv. criado',
         body: 'O novo serv. já está disponível para agendamento.',
