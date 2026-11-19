@@ -42,6 +42,6 @@ export function buildBusinessSeo(negocio, entregas = []) {
   }
   return {
     title: shorten(normalizeSeoText(negocio?.meta_title) || automaticTitle, SEO_TITLE_LIMIT),
-    description: shorten(normalizeSeoText(negocio?.meta_description) || normalizeSeoText(negocio?.descricao) || automaticDescription, SEO_DESCRIPTION_LIMIT),
+    description: shorten(normalizeSeoText(negocio?.meta_description) || normalizeSeoText(negocio?.sobre) || automaticDescription, SEO_DESCRIPTION_LIMIT),
   };
 }
