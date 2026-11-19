@@ -3,7 +3,7 @@ import { ChevronRight, X } from 'lucide-react';
 import { CalendarIcon } from '../../../components/icons';
 import ModalDialog from '../../../components/ModalDialog';
 import FeedbackPaginationActions from '../../../feedback/ui/FeedbackPaginationActions';
-import { getPrecoFinalEntrega } from '../utils';
+import { getValorFinalEntrega } from '../utils';
 
 function secondaryActionClass(isLight) {
   return isLight
@@ -86,7 +86,7 @@ export function SelectionBar({ itens, counterSingular, counterPlural, onConfirm,
   const qtd = itens.length;
   if (qtd === 0) return null;
   const durTotal = itens.reduce((sum, x) => sum + Number(x.duracao_minutos || 0), 0);
-  const valTotal = itens.reduce((sum, x) => sum + getPrecoFinalEntrega(x), 0);
+  const valTotal = itens.reduce((sum, x) => sum + getValorFinalEntrega(x), 0);
   const label = qtd === 1 ? counterSingular : counterPlural;
   const textMain = isLight ? 'text-vtext' : 'text-white';
   const textSub = isLight ? 'text-vsub' : 'text-gray-500';
