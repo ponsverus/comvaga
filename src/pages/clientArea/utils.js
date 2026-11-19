@@ -14,21 +14,21 @@ export const moneyBR = (v) => {
   return n.toFixed(2).replace('.', ',');
 };
 
-export const getPrecoFinalEntrega = (e) => {
-  const preco = Number(e?.preco ?? 0);
-  const promoRaw = e?.preco_promocional;
+export const getValorFinalEntrega = (e) => {
+  const valor = Number(e?.valor ?? 0);
+  const promoRaw = e?.valor_promocional;
   const promo = (promoRaw == null || promoRaw === '') ? 0 : Number(promoRaw);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
-  return temPromo ? promo : preco;
+  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
+  return temPromo ? promo : valor;
 };
 
 export const getValorAgendamento = (a) => {
-  const raw = a?.preco_final;
+  const raw = a?.valor_final;
   if (raw != null && raw !== '') {
     const frozen = Number(raw);
     if (Number.isFinite(frozen) && frozen >= 0) return frozen;
   }
-  return getPrecoFinalEntrega(a?.entregas);
+  return getValorFinalEntrega(a?.entregas);
 };
 
 export const mergeById = (current, incoming) => {
