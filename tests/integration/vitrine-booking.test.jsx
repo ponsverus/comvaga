@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useVitrineBooking } from '../../src/pages/vitrine/hooks/useVitrineBooking.js';
@@ -90,14 +89,14 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
 
   it('escolhe dois trabalhos e confirma para o calendario', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
-    await act(async () => result.current.handleToggleSelecao(ana, corte));
-    await act(async () => result.current.handleToggleSelecao(ana, barba));
-    expect(result.current.hasSelecao).toBe(true);
+    await act(async () => result.current.handleAlternarEntregaSelecionada(ana, corte));
+    await act(async () => result.current.handleAlternarEntregaSelecionada(ana, barba));
+    expect(result.current.temEntregasSelecionadas).toBe(true);
     expect(result.current.entregasSelecionadas.map((item) => item.id)).toEqual(['e1', 'e2']);
-    act(() => result.current.handleConfirmarSelecao());
+    act(() => result.current.handleConfirmarEntregasSelecionadas());
     expect(result.current.flow.step).toBe('booking');
     expect(result.current.entregaVirtual).toMatchObject({ tempo_minutos: 50, valor: 120 });
-    expect(result.current.hasSelecao).toBe(false);
+    expect(result.current.temEntregasSelecionadas).toBe(false);
   });
 
   it('fecha formulario e retorna ao estado inicial', async () => {
