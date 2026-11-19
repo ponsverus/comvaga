@@ -160,12 +160,12 @@ export function useVitrineBooking({
   const entregaVirtual = useMemo(() => {
     if (!flow.entregasSelecionadas?.length) return null;
     const primeiraEntrega = flow.entregasSelecionadas[0];
-    const durTotal = flow.entregasSelecionadas.reduce((sum, item) => sum + Number(item?.tempo_minutos || 0), 0);
+    const tempoTotalMinutos = flow.entregasSelecionadas.reduce((sum, item) => sum + Number(item?.tempo_minutos || 0), 0);
     const valTotal = flow.entregasSelecionadas.reduce((sum, item) => sum + getValorFinalEntrega(item), 0);
     return {
       id: primeiraEntrega.id,
       nome: flow.entregasSelecionadas.length === 1 ? primeiraEntrega.nome : `${flow.entregasSelecionadas.length} ${counterPlural}`,
-      tempo_minutos: durTotal,
+      tempo_minutos: tempoTotalMinutos,
       valor: valTotal,
       valor_promocional: null,
       entrega_ids: flow.entregasSelecionadas.map((item) => item.id).filter(Boolean),
@@ -174,7 +174,7 @@ export function useVitrineBooking({
 
   const handleBookingConfirm = useCallback((slot) => {
     const primeiraEntrega = flow.entregasSelecionadas?.[0];
-    const durTotal = (flow.entregasSelecionadas || []).reduce((sum, item) => sum + Number(item?.tempo_minutos || 0), 0);
+    const tempoTotalMinutos = (flow.entregasSelecionadas || []).reduce((sum, item) => sum + Number(item?.tempo_minutos || 0), 0);
     const entregaNames = (flow.entregasSelecionadas || []).map((item) => item?.nome).filter(Boolean);
     const titulo = primeiraEntrega?.nome || 'Agendamento';
     const detalhes = [
@@ -188,7 +188,7 @@ export function useVitrineBooking({
       dataISO: slot.dataISO,
       inicioHHMM: slot.inicio,
       fimHHMM: slot.fim,
-      tempoMin: durTotal,
+      tempoMin: tempoTotalMinutos,
       detalhes,
       local,
     });
@@ -197,7 +197,7 @@ export function useVitrineBooking({
       dataISO: slot.dataISO,
       inicioHHMM: slot.inicio,
       fimHHMM: slot.fim,
-      tempoMin: durTotal,
+      tempoMin: tempoTotalMinutos,
       detalhes,
       local,
       uidSeed: `${negocio?.id || 'negocio'}-${flow.profissional?.id || 'profissional'}-${slot.dataISO}-${slot.inicio}`,
