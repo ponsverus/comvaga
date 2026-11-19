@@ -107,7 +107,7 @@ export const dashboard = {
   metrics_load_error: geral.metrics_load_error,
   entrega_promo_invalid: negocio.entrega_promo_invalid,
   entrega_valor_invalid: negocio.entrega_valor_invalid,
-  entrega_duration_invalid: negocio.entrega_duration_invalid,
+  entrega_tempo_invalid: negocio.entrega_tempo_invalid,
   business: negocio.business,
   professional_updated: profissionais.professional_updated,
   professional_update_error: profissionais.professional_update_error,
