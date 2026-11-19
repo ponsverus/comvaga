@@ -16,7 +16,7 @@ export function useVitrineBooking({
   profissionais,
   entregas,
   counterPlural,
-  getPrecoFinalEntrega,
+  getValorFinalEntrega,
   gerarLinkGoogle,
   gerarArquivoICS,
   calendarPlatformMode,
@@ -161,16 +161,16 @@ export function useVitrineBooking({
     if (!flow.entregasSelecionadas?.length) return null;
     const primeiraEntrega = flow.entregasSelecionadas[0];
     const durTotal = flow.entregasSelecionadas.reduce((sum, item) => sum + Number(item?.duracao_minutos || 0), 0);
-    const valTotal = flow.entregasSelecionadas.reduce((sum, item) => sum + getPrecoFinalEntrega(item), 0);
+    const valTotal = flow.entregasSelecionadas.reduce((sum, item) => sum + getValorFinalEntrega(item), 0);
     return {
       id: primeiraEntrega.id,
       nome: flow.entregasSelecionadas.length === 1 ? primeiraEntrega.nome : `${flow.entregasSelecionadas.length} ${counterPlural}`,
       duracao_minutos: durTotal,
-      preco: valTotal,
-      preco_promocional: null,
+      valor: valTotal,
+      valor_promocional: null,
       entrega_ids: flow.entregasSelecionadas.map((item) => item.id).filter(Boolean),
     };
-  }, [counterPlural, flow.entregasSelecionadas, getPrecoFinalEntrega]);
+  }, [counterPlural, flow.entregasSelecionadas, getValorFinalEntrega]);
 
   const handleBookingConfirm = useCallback((slot) => {
     const primeiraEntrega = flow.entregasSelecionadas?.[0];
