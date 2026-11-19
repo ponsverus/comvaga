@@ -31,7 +31,7 @@ function buildPayloadFromKey(key, params) {
   if (!base) {
     return {
       title: 'Aviso',
-      body: `Mensagem não encontrada: ${key}`,
+      body: `Mensagem inexistente: ${key}`,
       variant: 'danger',
       screen: 'dark',
       buttonText: 'OK',

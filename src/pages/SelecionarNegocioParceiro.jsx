@@ -92,7 +92,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const searchResultsRef = useRef(null);
 
   const showRequestAlert = (message, variant = 'warning') => {
-    feedback.showCustom({ title: 'Solicitação de acesso', body: message, variant, screen: 'dark', buttonText: 'OK' });
+    feedback.showCustom({ title: 'Acesso solicitado', body: message, variant, screen: 'dark', buttonText: 'OK' });
   };
 
   const loadProfileName = useCallback(async () => {

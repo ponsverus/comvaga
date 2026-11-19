@@ -7,20 +7,20 @@ const ENTREGAS_POR_PAGINA = 6;
 function EntregaButtons({
   entrega,
   profissional,
-  selecaoProfId,
+  profissionalSelecionadoId,
   entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
   onAgendarClick,
-  onToggleSelecao,
+  onAlternarEntregaSelecionada,
   isLight,
   animarPromocao,
 }) {
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
   const isSelecionado = selecionadas.some((item) => item.id === entrega.id);
-  const modoSelecaoOn = selecionadas.length > 0;
-  const outroProfSel = modoSelecaoOn && selecaoProfId !== null && selecaoProfId !== profissional.id;
-  const agendarDesabilitado = !!isProfessional || modoSelecaoOn;
+  const temEntregasSelecionadas = selecionadas.length > 0;
+  const outroProfSel = temEntregasSelecionadas && profissionalSelecionadoId !== null && profissionalSelecionadoId !== profissional.id;
+  const agendarDesabilitado = !!isProfessional || temEntregasSelecionadas;
   const selecionarDesabilitado = !!isProfessional || outroProfSel;
 
   let selecionarClass;
@@ -28,7 +28,7 @@ function EntregaButtons({
     selecionarClass = 'bg-vcard2 border-vborder text-vmuted cursor-not-allowed opacity-30';
   } else if (isSelecionado) {
     selecionarClass = isLight ? 'bg-vprimary/10 border-vprimary text-vtext' : 'bg-primary/15 border-primary text-primary';
-  } else if (modoSelecaoOn) {
+  } else if (temEntregasSelecionadas) {
     selecionarClass = isLight
       ? 'bg-vcard border-vborder text-vsub hover:border-vprimary hover:text-vtext'
       : 'bg-vcard2 border-vborder text-white hover:border-primary hover:text-primary';
@@ -72,7 +72,7 @@ function EntregaButtons({
       </button>
       <button
         type="button"
-        onClick={() => !selecionarDesabilitado && onToggleSelecao(profissional, entrega)}
+        onClick={() => !selecionarDesabilitado && onAlternarEntregaSelecionada(profissional, entrega)}
         disabled={selecionarDesabilitado}
         className={`flex-1 py-2.5 rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-1.5 border ${selecionarClass}`}
       >
@@ -100,12 +100,12 @@ function EntregaButtons({
 function EntregaCard({
   entrega,
   profissional,
-  selecaoProfId,
+  profissionalSelecionadoId,
   entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
   onAgendarClick,
-  onToggleSelecao,
+  onAlternarEntregaSelecionada,
   isLight,
   promocaoEncerrada,
 }) {
@@ -145,12 +145,12 @@ function EntregaCard({
       <EntregaButtons
         entrega={entrega}
         profissional={profissional}
-        selecaoProfId={selecaoProfId}
+        profissionalSelecionadoId={profissionalSelecionadoId}
         entregasSelecionadas={selecionadas}
         isProfessional={isProfessional}
         onAgendarAgora={onAgendarAgora}
         onAgendarClick={temPromo ? onAgendarClick : undefined}
-        onToggleSelecao={onToggleSelecao}
+        onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
         isLight={isLight}
         animarPromocao={animarPromocao}
       />
@@ -167,11 +167,11 @@ export default function EntregasCarousel({
   onLoadPage,
   onLoadPageError,
   profissional,
-  selecaoProfId,
+  profissionalSelecionadoId,
   entregasSelecionadas = [],
   isProfessional,
   onAgendarAgora,
-  onToggleSelecao,
+  onAlternarEntregaSelecionada,
   emptyMsg,
   isLight,
 }) {
@@ -306,12 +306,12 @@ export default function EntregasCarousel({
                 key={item.id}
                 entrega={item}
                 profissional={profissional}
-                selecaoProfId={selecaoProfId}
+                profissionalSelecionadoId={profissionalSelecionadoId}
                 entregasSelecionadas={selecionadas}
                 isProfessional={isProfessional}
                 onAgendarAgora={onAgendarAgora}
                 onAgendarClick={encerrarPromocao}
-                onToggleSelecao={onToggleSelecao}
+                onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
                 isLight={isLight}
                 promocaoEncerrada={promocoesEncerradas.has(item.id)}
               />
@@ -326,12 +326,12 @@ export default function EntregasCarousel({
               key={item.id}
               entrega={item}
               profissional={profissional}
-              selecaoProfId={selecaoProfId}
+              profissionalSelecionadoId={profissionalSelecionadoId}
               entregasSelecionadas={selecionadas}
               isProfessional={isProfessional}
               onAgendarAgora={onAgendarAgora}
               onAgendarClick={encerrarPromocao}
-              onToggleSelecao={onToggleSelecao}
+              onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
               isLight={isLight}
               promocaoEncerrada={promocoesEncerradas.has(item.id)}
             />

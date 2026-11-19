@@ -6,7 +6,7 @@ export const BLOG_SCHEMA_ID = 'comvaga-blog-schema';
 export const BLOG_INDEX_SCHEMA_ID = 'comvaga-blog-index-schema';
 
 const BLOG_INDEX_NAME = 'Ideias para fazer sua agenda trabalhar melhor';
-const BLOG_INDEX_DESCRIPTION = 'Guias da Comvaga sobre agendamento online, organização de horários, profissionais, clientes e atendimento por hora marcada.';
+const BLOG_INDEX_DESCRIPTION = 'Guias da Comvaga sobre agendamento online, gerenciamento de horários, profissionais, clientes e atendimento por hora marcada.';
 
 export function buildBlogMetadata(post) {
   if (!post?.slug || !post?.title) return null;

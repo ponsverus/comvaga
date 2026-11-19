@@ -263,12 +263,12 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   const nomeNegocioLabel = String(negocio?.nome || '').trim() || 'NEGÓCIO';
   const {
     flow,
-    hasSelecao,
+    temEntregasSelecionadas,
     entregasSelecionadas,
     entregaVirtual,
     calendarActionConfig,
-    handleConfirmarSelecao,
-    handleLimparSelecao,
+    handleConfirmarEntregasSelecionadas,
+    handleLimparEntregasSelecionadas,
     handleBookingConfirm,
     closeBooking,
     bookingSectionState,
@@ -349,7 +349,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
   );
 
   return (
-    <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}${hasSelecao ? ' pb-[72px]' : ''}`}>
+    <div className={`min-h-screen bg-vbg text-vtext${isLight ? ' vitrine-light' : ''}${temEntregasSelecionadas ? ' pb-[72px]' : ''}`}>
       {feedbackOverlay}
 
       <VitrineTopSection
@@ -434,7 +434,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
         }}
       />
 
-      <SelectionBar itens={entregasSelecionadas} counterSingular={counterSingular} counterPlural={counterPlural} onConfirm={handleConfirmarSelecao} onClear={handleLimparSelecao} isLight={isLight} />
+      <SelectionBar itens={entregasSelecionadas} counterSingular={counterSingular} counterPlural={counterPlural} onConfirm={handleConfirmarEntregasSelecionadas} onClear={handleLimparEntregasSelecionadas} isLight={isLight} />
 
       {flow.step === 'booking' && entregaVirtual && (
         <BookingCalendar

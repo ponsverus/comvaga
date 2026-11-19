@@ -70,7 +70,7 @@ export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmTe
       <div className={`border rounded-custom max-w-md w-full p-6 ${bg}`}>
         <div className="flex justify-between items-start gap-3 mb-3">
           <h3 id={titleId} className={`text-xl font-normal ${titleCl}`}>{title}</h3>
-          <button type="button" onClick={onCancel} aria-label="Fechar confirmação" className={closeCl}><X className="w-6 h-6" /></button>
+          <button type="button" onClick={onCancel} aria-label="Fechar janela" className={closeCl}><X className="w-6 h-6" /></button>
         </div>
         {body && <p id={bodyId} className={`font-normal whitespace-pre-line ${bodyCl}`}>{body}</p>}
         <div className="mt-5 flex gap-3">

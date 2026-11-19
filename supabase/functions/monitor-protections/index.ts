@@ -6,31 +6,31 @@ const RULE_LABELS: Record<string, string> = {
   billing_worker_transport_timeout: "Chamada do worker de cobrança expirou no pg_net",
   billing_worker_http_error: "Worker de cobrança respondeu com erro HTTP",
   billing_worker_no_http_result: "Chamada do worker de cobrança sem resposta HTTP",
-  billing_worker_unconfirmed: "Worker de cobrança respondeu, mas não registrou a conclusão",
+  billing_worker_unconfirmed: "Worker de cobrança respondeu, mas deixou de registrar o término",
   billing_event_dead_letter: "Evento de cobrança esgotou 8 tentativas",
-  provider_sync_failed: "Sincronização da assinatura esgotou 8 tentativas",
-  notification_error: "Falha no envio de email de notificação",
-  auth_email_error: "Falha no envio de email de autenticação",
-  reactivation_pending_twice: "Reativação pendente após 2 conferências",
+  provider_sync_failed: "Sincronia da assinatura esgotou 8 tentativas",
+  notification_error: "Falha no envio de email de aviso",
+  auth_email_error: "Falha no envio de email de login",
+  reactivation_pending_twice: "Retomada pendente após 2 conferências",
   cancel_pending_twice: "Cancelamento pendente após 2 conferências",
-  cancel_db_sync_failed: "Asaas confirmou cancelamento; sincronização local falhou",
-  reactivation_verification_unavailable: "Não foi possível verificar a reativação no Asaas em 2 tentativas",
-  cancel_verification_unavailable: "Não foi possível verificar o cancelamento no Asaas em 2 tentativas",
-  reactivation_failed: "Reativação encerrada sem conclusão; conferir causa",
-  reactivation_reconciliation_failed: "Reativação: falha local de conciliação em 2 tentativas",
-  cancel_reconciliation_failed: "Cancelamento: falha local de conciliação em 2 tentativas",
+  cancel_db_sync_failed: "Asaas confirmou cancelamento; sincronia local falhou",
+  reactivation_verification_unavailable: "Foi impossível verificar a retomada no Asaas em 2 tentativas",
+  cancel_verification_unavailable: "Foi impossível verificar o cancelamento no Asaas em 2 tentativas",
+  reactivation_failed: "Retomada encerrada sem ser finalizada; conferir causa",
+  reactivation_reconciliation_failed: "Retomada: falha local de acerto em 2 tentativas",
+  cancel_reconciliation_failed: "Cancelamento: falha local de acerto em 2 tentativas",
 };
 const SAFE_ACTIONS: Record<string, string> = {
-  billing_worker_transport_timeout: "Verifique o estado final da execução e dos eventos; não repita a cobrança automaticamente.",
-  billing_worker_http_error: "Confira o código HTTP, os logs da função e os eventos pendentes antes de uma nova tentativa.",
-  billing_worker_no_http_result: "Confira se a função foi executada e o estado dos eventos; não repita a cobrança automaticamente.",
-  billing_worker_unconfirmed: "Confira o resumo da função e o registro da execução antes de uma nova tentativa.",
-  reactivation_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; consulte a assinatura no painel e refaça a conferência. Não force o estado no banco.",
-  cancel_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; confirme a assinatura no painel e refaça a conferência. Não force o cancelamento no banco.",
-  reactivation_failed: "Confira a causa e as cobranças no Asaas; após corrigir, inicie uma nova reativação pelo fluxo próprio.",
-  reactivation_reconciliation_failed: "Confira o erro no banco e o estado confirmado no Asaas; repita a conciliação pelo fluxo validado, sem editar o status diretamente.",
-  cancel_reconciliation_failed: "Confira o erro no banco e confirme a situação no Asaas antes de repetir a conciliação pelo fluxo validado.",
-  cancel_db_sync_failed: "Confirme a exclusão no Asaas e use a reconciliação validada para atualizar o banco.",
+  billing_worker_transport_timeout: "Verifique o estado final da rodada e dos eventos; nunca repita a cobrança automaticamente.",
+  billing_worker_http_error: "Confira o código HTTP, os logs da rotina e os eventos pendentes antes de uma nova tentativa.",
+  billing_worker_no_http_result: "Confira se a rotina rodou e o estado dos eventos; nunca repita a cobrança automaticamente.",
+  billing_worker_unconfirmed: "Confira o resumo da rotina e o registro da rodada antes de uma nova tentativa.",
+  reactivation_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; consulte a assinatura no painel e refaça a conferência. Nunca force o estado no banco.",
+  cancel_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; confirme a assinatura no painel e refaça a conferência. Nunca force o cancelamento no banco.",
+  reactivation_failed: "Confira a causa e as cobranças no Asaas; após corrigir, inicie uma nova retomada pelo fluxo próprio.",
+  reactivation_reconciliation_failed: "Confira o erro no banco e o estado confirmado no Asaas; repita o acerto pelo fluxo validado, sem editar o status diretamente.",
+  cancel_reconciliation_failed: "Confira o erro no banco e confirme o estado no Asaas antes de repetir o acerto pelo fluxo validado.",
+  cancel_db_sync_failed: "Confirme no Asaas que a assinatura foi removida e use o acerto validado para atualizar o banco.",
 };
 type Occurrence = {
   occurrence_id: string;
@@ -52,20 +52,20 @@ function escapeHtml(value: string): string {
 }
 function emailText(item: Occurrence): string {
   const lines = [
-    "Comvaga - proteção para conferência humana",
+    "Comvaga - salvaguarda para conferência humana",
     "",
     "Motivo: " + (RULE_LABELS[item.rule_code] || item.rule_code),
-    "Negócio: " + (item.negocio_id || "não aplicável"),
+    "Negócio: " + (item.negocio_id || "inaplicável"),
     "Ocorrência: " + item.occurrence_id,
     "Detectado em: " + item.opened_at,
-    ...(SAFE_ACTIONS[item.rule_code] ? ["Ação segura: " + SAFE_ACTIONS[item.rule_code]] : []),
+    ...(SAFE_ACTIONS[item.rule_code] ? ["Medida segura: " + SAFE_ACTIONS[item.rule_code]] : []),
   ];
   for (const [key, value] of Object.entries(item.evidence || {})) {
     if (value !== null && value !== undefined && value !== "") {
       lines.push(key + ": " + String(value).slice(0, 200));
     }
   }
-  lines.push("", "Conferir a ocorrência e os registros de origem antes de qualquer ação.");
+  lines.push("", "Conferir a ocorrência e os registros de origem antes de qualquer medida.");
   return lines.join("\n");
 }
 function errorMessage(error: unknown): string {
@@ -87,7 +87,7 @@ async function sendAlert(item: Occurrence): Promise<string> {
   const body = {
     app_id: requiredEnv("ONESIGNAL_APP_ID"),
     email_to: [SUPPORT_EMAIL],
-    email_subject: "[Comvaga] Proteção requer conferência: " +
+    email_subject: "[Comvaga] Salvaguarda requer conferência: " +
       (RULE_LABELS[item.rule_code] || item.rule_code),
     email_preheader: "Ocorrência " + item.occurrence_id,
     email_body: "<pre style=\"font:14px/1.5 sans-serif;white-space:pre-wrap\">" +
