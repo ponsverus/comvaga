@@ -78,7 +78,7 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_tempo_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_create_error`, 'error');
     } finally {
@@ -131,7 +131,7 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_tempo_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_update_error`, 'error');
     } finally {

@@ -204,7 +204,7 @@ export const negocio = {
     screen: 'dark',
     buttonText: 'OK',
   },
-  entrega_duration_invalid: {
+  entrega_tempo_invalid: {
     title: 'Tempo inválido',
     body: 'Informe o tempo em minutos.',
     variant: 'danger',

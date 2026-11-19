@@ -56,12 +56,12 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
     setSelectedSlot(null);
 
     try {
-      const dur = Number(entrega.tempo_minutos);
+      const tempoMinutos = Number(entrega.tempo_minutos);
       const { data, error } = await withAuthRetry(
         () => supabase.rpc('rpc_get_slots_v4', {
           p_profissional_id: profissional.id,
           p_dia: dayISO,
-          p_entrega_min: dur,
+          p_entrega_min: tempoMinutos,
           p_margem_min: 5,
           p_modo: 'todos',
         }),
