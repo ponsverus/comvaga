@@ -44,7 +44,7 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
     '@type': hasAddress ? 'LocalBusiness' : 'Organization',
     '@id': `${url}#business`, name, url,
   };
-  if (business.descricao?.trim()) entity.description = business.descricao.trim();
+  if (business.sobre?.trim()) entity.description = business.sobre.trim();
   if (business.telefone?.trim()) entity.telephone = business.telefone.trim();
   const profiles = [socialProfileUrl(business.instagram, 'instagram'), socialProfileUrl(business.facebook, 'facebook')]
     .filter(Boolean);

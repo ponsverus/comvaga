@@ -58,22 +58,22 @@ export function getCalendarPlatformMode() {
   return 'ics';
 }
 
-function getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin) {
+function getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, tempoMin) {
   const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
   if (fimHHMM) return parseSaoPauloDateTime(dataISO, fimHHMM);
-  return new Date(inicio.getTime() + duracaoMin * 60000);
+  return new Date(inicio.getTime() + tempoMin * 60000);
 }
 
-export function gerarLinkGoogle({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoMin, detalhes, local }) {
+export function gerarLinkGoogle({ titulo, dataISO, inicioHHMM, fimHHMM, tempoMin, detalhes, local }) {
   const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
-  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin);
+  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, tempoMin);
   const details = [detalhes, local ? `Local: ${local}` : ''].filter(Boolean).join('\n');
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${formatUtcCalendarDate(inicio)}/${formatUtcCalendarDate(fim)}&ctz=America%2FSao_Paulo&details=${encodeURIComponent(details)}&location=${encodeURIComponent(local || '')}&sf=true&output=xml`;
 }
 
-export function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoMin, detalhes, local, uidSeed }) {
+export function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, tempoMin, detalhes, local, uidSeed }) {
   const inicio = parseSaoPauloDateTime(dataISO, inicioHHMM);
-  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, duracaoMin);
+  const fim = getCalendarEndDate(dataISO, inicioHHMM, fimHHMM, tempoMin);
   const dtStamp = formatUtcCalendarDate(new Date());
   const dtStart = formatUtcCalendarDate(inicio);
   const dtEnd = formatUtcCalendarDate(fim);

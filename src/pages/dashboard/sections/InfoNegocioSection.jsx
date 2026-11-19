@@ -36,7 +36,7 @@ const saveButtonClass = 'shrink-0 rounded-full border border-primary/30 px-3 py-
 const iconButtonClass = 'inline-flex shrink-0 items-center justify-center p-1 text-gray-400 transition-colors hover:text-primary';
 const maskedPrivateValue = '••••••••';
 const aboutFields = [
-  'descricao',
+  'sobre',
   'cep',
   'bairro',
   'rua',
@@ -183,7 +183,7 @@ export default function InfoNegocioSection({
           readOnly={!isEditing('anuncio')}
           className={`${inputClass} uppercase ${inputStateClass(isEditing('anuncio'))}`}
           aria-label="Anúncio da Vitrine"
-          placeholder="ATÉ 30 CARACTERES"
+          placeholder="Frase de até 30 caracteres"
         />
       </InfoRow>
 
@@ -227,8 +227,8 @@ export default function InfoNegocioSection({
         {sobreExpanded ? (
           <>
             <textarea
-              value={formInfo.descricao}
-              onChange={(e) => setFormInfo((prev) => ({ ...prev, descricao: e.target.value }))}
+              value={formInfo.sobre}
+              onChange={(e) => setFormInfo((prev) => ({ ...prev, sobre: e.target.value }))}
               readOnly={!isEditing('sobre')}
               rows={4}
               className={`mt-3 max-h-32 w-full resize-none overflow-y-auto bg-transparent py-2 pl-0 pr-6 text-[14px] font-normal leading-5 text-white outline-none [scrollbar-width:none] placeholder-gray-600 focus:text-white sm:pr-0 [&::-webkit-scrollbar]:hidden ${inputStateClass(isEditing('sobre'))}`}

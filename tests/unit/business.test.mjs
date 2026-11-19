@@ -35,18 +35,22 @@ test('grupo: recusa grupo externo desconhecido', async () => {
 test('SEO: compacta caracteres em branco', () => assert.equal(normalizeSeoText(' A\n  B \t C '), 'A B C'));
 test('SEO: usa nome comercial', () => assert.match(buildBusinessSeo({ nome: 'Studio X', tipo_negocio: 'barbearia', cidade: 'Campinas' }).title, /Studio X/));
 test('SEO: limita tamanho', () => {
-  const { title, description } = buildBusinessSeo({ nome: 'A'.repeat(120), descricao: 'B'.repeat(200) });
+  const { title, description } = buildBusinessSeo({ nome: 'A'.repeat(120), sobre: 'B'.repeat(200) });
   assert.ok(Array.from(title).length <= SEO_TITLE_LIMIT);
   assert.ok(Array.from(description).length <= SEO_DESCRIPTION_LIMIT);
+  assert.ok(description.startsWith('B'));
 });
 test('Vitrine pública: preserva local e publica seus dados estruturados', () => {
   const local = 'Rua A, 10 - Centro, Campinas, SP';
+  const sobre = 'Atendimento personalizado.';
   const snapshot = publicBusinessSnapshot({
-    slug: 'teste', nome: 'Teste', local, rua: 'Rua A', numero: '10', cidade: 'Campinas', estado: 'SP',
+    slug: 'teste', nome: 'Teste', local, sobre, rua: 'Rua A', numero: '10', cidade: 'Campinas', estado: 'SP',
   });
   assert.equal(snapshot.local, local);
+  assert.equal(snapshot.sobre, sobre);
   const schema = buildBusinessStructuredData(snapshot);
   assert.equal(schema.mainEntity['@type'], 'LocalBusiness');
+  assert.equal(schema.mainEntity.description, sobre);
   assert.equal(schema.mainEntity.address.streetAddress, 'Rua A, 10');
 });
 test('reviews da Home: rejeita contagem incoerente', () => assert.throws(() => publicHomeReviewsSnapshot({ items: [{ id: 1 }], rating_count: 0 }), /Invalid/));

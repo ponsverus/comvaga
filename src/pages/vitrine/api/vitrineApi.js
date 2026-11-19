@@ -100,7 +100,7 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   const { data, error } = await withPublicAuthRetry(
     () => supabase
       .from('entregas')
-      .select('id, negocio_id, profissional_id, nome, duracao_minutos, valor, valor_promocional, ativo')
+      .select('id, negocio_id, profissional_id, nome, tempo_minutos, valor, valor_promocional, ativo')
       .eq('id', entregaId)
       .eq('profissional_id', profissionalId)
       .eq('ativo', true)

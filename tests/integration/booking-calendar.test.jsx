@@ -12,7 +12,7 @@ vi.mock('../../src/feedback/feedbackStore.js', () => ({ getFeedbackState: () => 
 
 const base = {
   profissional: { id: 'p1', nome: 'Ana', horarios: [{ dia_semana: 1, ativo: true }] },
-  entrega: { id: 'e1', nome: 'Corte', duracao_minutos: 30, valor: 100 },
+  entrega: { id: 'e1', nome: 'Corte', tempo_minutos: 30, valor: 100 },
   todayISO: '2026-11-16', negocioId: 'n1', actorUserId: 'cliente1',
   onClose: vi.fn(), onConfirm: vi.fn(), onAlert: vi.fn(),
 };
@@ -147,7 +147,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     });
     render(<BookingCalendar
       {...base}
-      entrega={{ ...base.entrega, entrega_ids: ['e1', 'e2'], duracao_minutos: 60 }}
+      entrega={{ ...base.entrega, entrega_ids: ['e1', 'e2'], tempo_minutos: 60 }}
       assistedBooking assistedClienteId="cliente-assistido" onConfirm={onConfirm}
     />);
     fireEvent.click(screen.getByRole('button', { name: '16' }));

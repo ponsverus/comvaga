@@ -133,7 +133,7 @@ function EntregaCard({
     <div ref={cardRef} className="bg-vcard2 border border-vborder rounded-custom p-4">
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex items-center rounded-full border border-vborder bg-transparent px-3 py-1 text-xs text-vmuted font-normal shrink-0">
-          {entrega.duracao_minutos} MIN
+          {entrega.tempo_minutos} MIN
         </span>
         {temPromo ? (
           <div className="font-normal text-base text-vpromo shrink-0">R$ {valorFinal.toFixed(2)}</div>

@@ -85,7 +85,7 @@ export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmTe
 export function SelectionBar({ itens, counterSingular, counterPlural, onConfirm, onClear, isLight }) {
   const qtd = itens.length;
   if (qtd === 0) return null;
-  const durTotal = itens.reduce((sum, x) => sum + Number(x.duracao_minutos || 0), 0);
+  const durTotal = itens.reduce((sum, x) => sum + Number(x.tempo_minutos || 0), 0);
   const valTotal = itens.reduce((sum, x) => sum + getValorFinalEntrega(x), 0);
   const label = qtd === 1 ? counterSingular : counterPlural;
   const textMain = isLight ? 'text-vtext' : 'text-white';

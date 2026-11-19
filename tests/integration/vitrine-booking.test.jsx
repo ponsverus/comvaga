@@ -8,8 +8,8 @@ import { fetchVitrineEntregaById } from '../../src/pages/vitrine/api/vitrineApi.
 vi.mock('../../src/pages/vitrine/api/vitrineApi.js', () => ({ fetchVitrineEntregaById: vi.fn() }));
 
 const ana = { id: 'p1', nome: 'Ana' };
-const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', valor: 100, valor_promocional: 80, duracao_minutos: 30, ativo: true };
-const barba = { id: 'e2', profissional_id: 'p1', nome: 'Barba', valor: 40, duracao_minutos: 20, ativo: true };
+const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', valor: 100, valor_promocional: 80, tempo_minutos: 30, ativo: true };
+const barba = { id: 'e2', profissional_id: 'p1', nome: 'Barba', valor: 40, tempo_minutos: 20, ativo: true };
 
 function config(overrides = {}) {
   return {
@@ -84,7 +84,7 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleAgendarAgora(ana, [corte, barba]));
     expect(result.current.entregaVirtual).toMatchObject({
-      nome: '2 trabalhos', duracao_minutos: 50, valor: 120, entrega_ids: ['e1', 'e2'],
+      nome: '2 trabalhos', tempo_minutos: 50, valor: 120, entrega_ids: ['e1', 'e2'],
     });
   });
 
@@ -96,7 +96,7 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     expect(result.current.entregasSelecionadas.map((item) => item.id)).toEqual(['e1', 'e2']);
     act(() => result.current.handleConfirmarSelecao());
     expect(result.current.flow.step).toBe('booking');
-    expect(result.current.entregaVirtual).toMatchObject({ duracao_minutos: 50, valor: 120 });
+    expect(result.current.entregaVirtual).toMatchObject({ tempo_minutos: 50, valor: 120 });
     expect(result.current.hasSelecao).toBe(false);
   });
 

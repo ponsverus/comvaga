@@ -42,7 +42,7 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
   }, [todayISO, todayValid]);
 
   const fetchSlots = useCallback(async (dayISO) => {
-    if (!profissional?.id || !entrega?.duracao_minutos || !dayISO) return;
+    if (!profissional?.id || !entrega?.tempo_minutos || !dayISO) return;
 
     const requestId = slotsRequestRef.current + 1;
     slotsRequestRef.current = requestId;
@@ -56,7 +56,7 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
     setSelectedSlot(null);
 
     try {
-      const dur = Number(entrega.duracao_minutos);
+      const dur = Number(entrega.tempo_minutos);
       const { data, error } = await withAuthRetry(
         () => supabase.rpc('rpc_get_slots_v4', {
           p_profissional_id: profissional.id,
@@ -105,7 +105,7 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
     } finally {
       if (canApply()) setSlotsLoading(false);
     }
-  }, [onAlert, profissional?.id, entrega?.duracao_minutos]);
+  }, [onAlert, profissional?.id, entrega?.tempo_minutos]);
 
   const handleSelectDay = (iso) => {
     selectedDayRef.current = iso;

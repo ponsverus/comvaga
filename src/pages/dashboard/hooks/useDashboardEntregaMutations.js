@@ -38,7 +38,7 @@ export function useDashboardEntregaMutations({
   const resetEntregaForm = () => {
     setShowNovaEntrega(false);
     setEditingEntregaId(null);
-    setFormEntrega({ nome: '', duracao_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
+    setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
   };
 
   const createEntrega = async (e) => {
@@ -59,7 +59,7 @@ export function useDashboardEntregaMutations({
       const payload = {
         nome: toUpperClean(formEntrega.nome),
         profissional_id: profId,
-        duracao_minutos: toNumberOrNull(formEntrega.duracao_minutos),
+        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
         valor,
         valor_promocional: promo,
         ativo: true,
@@ -67,7 +67,7 @@ export function useDashboardEntregaMutations({
       };
       if (!payload.nome) throw new Error('Nome da entrega e obrigatorio.');
       if (!payload.profissional_id) throw new Error('Selecione um profissional.');
-      if (!payload.duracao_minutos) throw new Error('Duracao invalida.');
+      if (!payload.tempo_minutos) throw new Error('Tempo inválido.');
       await insertEntrega(payload);
       await uiAlert(`dashboard.business.${businessGroup}.entrega_created`, 'success');
       resetEntregaForm();
@@ -78,7 +78,7 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('Duracao')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_create_error`, 'error');
     } finally {
@@ -97,7 +97,7 @@ export function useDashboardEntregaMutations({
       const promo = toNumberOrNull(formEntrega.valor_promocional);
       if (!toUpperClean(formEntrega.nome)) throw new Error('Nome da entrega e obrigatorio.');
       if (!profId) throw new Error('Selecione um profissional.');
-      if (!toNumberOrNull(formEntrega.duracao_minutos)) throw new Error('Duracao invalida.');
+      if (!toNumberOrNull(formEntrega.tempo_minutos)) throw new Error('Tempo inválido.');
       if (valor == null) {
         await uiAlert('dashboard.entrega_valor_invalid', 'error');
         return;
@@ -105,7 +105,7 @@ export function useDashboardEntregaMutations({
       if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
       const payload = {
         nome: toUpperClean(formEntrega.nome),
-        duracao_minutos: toNumberOrNull(formEntrega.duracao_minutos),
+        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
         valor,
         valor_promocional: promo,
         profissional_id: profId,
@@ -131,7 +131,7 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('Duracao')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_update_error`, 'error');
     } finally {
