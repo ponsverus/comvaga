@@ -123,8 +123,8 @@ export function useDashboardBusinessMutations({
         await uiAlert('dashboard.business_phone_invalid', 'error');
         return false;
       }
-      const descricao = String(formInfo.descricao || '').trim();
-      if (descricao.length > 150) {
+      const sobre = String(formInfo.sobre || '').trim();
+      if (sobre.length > 150) {
         await uiAlert('dashboard.business_description_too_long', 'error');
         return false;
       }
@@ -143,7 +143,7 @@ export function useDashboardBusinessMutations({
         nome: toUpperClean(formInfo.nome),
         meta_title: seoTitle || null,
         meta_description: seoDescription || null,
-        descricao,
+        sobre,
         anuncio: anuncio || null,
         telefone: telefone || null,
         cep: onlyDigits(formInfo.cep) || null,
