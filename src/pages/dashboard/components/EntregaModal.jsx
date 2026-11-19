@@ -88,8 +88,8 @@ export default function EntregaModal({
             <ServiceSplitField label="TEMPO" divider>
               <input
                 type="number"
-                value={formEntrega.duracao_minutos}
-                onChange={(e) => setFormEntrega({ ...formEntrega, duracao_minutos: e.target.value })}
+                value={formEntrega.tempo_minutos}
+                onChange={(e) => setFormEntrega({ ...formEntrega, tempo_minutos: e.target.value })}
                 className={serviceInputClass}
                 required
                 placeholder="MIN"
