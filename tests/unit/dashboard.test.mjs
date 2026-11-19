@@ -7,8 +7,8 @@ import {
   isCancelStatus, isDoneStatus, isCancellationScheduled, isScheduledDowngradeSync,
 } from '../../src/pages/dashboard/utils.js';
 
-test('dashboard: horários padrão têm 7 dias', () => assert.equal(DEFAULT_PROFISSIONAL_HORARIOS.length, 7));
-test('dashboard: horário padrão só ativa dias úteis', () => assert.deepEqual(getDiasTrabalhoFromHorarios(DEFAULT_PROFISSIONAL_HORARIOS), [1, 2, 3, 4, 5]));
+test('dashboard: horários iniciais abrangem 7 dias', () => assert.equal(DEFAULT_PROFISSIONAL_HORARIOS.length, 7));
+test('dashboard: horários iniciais ativam apenas dias úteis', () => assert.deepEqual(getDiasTrabalhoFromHorarios(DEFAULT_PROFISSIONAL_HORARIOS), [1, 2, 3, 4, 5]));
 test('dashboard: normaliza intervalos', () => {
   const horarios = normalizeProfissionalHorarios({ horarios: [{ dia_semana: 1, ativo: true, horario_inicio: '09:30:00', horario_fim: '17:30:00' }] });
   assert.equal(getHorarioPorDia(horarios, 1).horario_inicio, '09:30');
@@ -25,7 +25,7 @@ test('dashboard: compara agendamentos por hora decrescente', () => {
   assert.ok(compareAgendamentoDateTimeDesc(a, b) > 0);
 });
 test('dashboard: status sem acento', () => assert.equal(normalizeStatus(' CONCLUÍDO '), 'concluido'));
-test('dashboard: identifica cancelamento e conclusão', () => { assert.equal(isCancelStatus('CANCELADO_CLIENTE'), true); assert.equal(isDoneStatus('Concluído'), true); });
+test('dashboard: identifica cancelamento e término', () => { assert.equal(isCancelStatus('CANCELADO_CLIENTE'), true); assert.equal(isDoneStatus('Concluído'), true); });
 test('dashboard: cancelamento programado', () => assert.equal(isCancellationScheduled({ cancellation_scheduled: true }), true));
 test('dashboard: downgrade pendente exige todos os campos', () => {
   assert.equal(isScheduledDowngradeSync({ plan_change_scheduled: true, pending_plan_change_type: 'downgrade', provider_sync_operation: 'apply_downgrade', provider_sync_status: 'pending' }), true);
