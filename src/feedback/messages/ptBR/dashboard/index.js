@@ -106,7 +106,7 @@ export const dashboard = {
   billing_status_retry_action: cobranca.billing_status_retry_action,
   metrics_load_error: geral.metrics_load_error,
   entrega_promo_invalid: negocio.entrega_promo_invalid,
-  entrega_price_invalid: negocio.entrega_price_invalid,
+  entrega_valor_invalid: negocio.entrega_valor_invalid,
   entrega_duration_invalid: negocio.entrega_duration_invalid,
   business: negocio.business,
   professional_updated: profissionais.professional_updated,
