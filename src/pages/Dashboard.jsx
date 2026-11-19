@@ -148,7 +148,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const [showNovaEntrega, setShowNovaEntrega]       = useState(false);
   const [editingEntregaId, setEditingEntregaId]     = useState(null);
 
-  const [formEntrega, setFormEntrega] = useState({ nome: '', duracao_minutos: '', preco: '', preco_promocional: '', profissional_id: '' });
+  const [formEntrega, setFormEntrega] = useState({ nome: '', duracao_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
 
   const [formInfo, setFormInfo] = useState({
     nome: '',
@@ -540,7 +540,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topEntregas.total || 0) : '--'}
           >
             {topCardsReady ? (
-              <InfoPill label="Média" value={formatCurrency(topEntregas.preco_medio)} />
+              <InfoPill label="Média" value={formatCurrency(topEntregas.valor_medio)} />
             ) : null}
           </DashboardTopCard>
         </div>
@@ -746,7 +746,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         onClose={() => {
           setShowNovaEntrega(false);
           setEditingEntregaId(null);
-          setFormEntrega({ nome: '', duracao_minutos: '', preco: '', preco_promocional: '', profissional_id: '' });
+          setFormEntrega({ nome: '', duracao_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
         }}
         onSubmit={editingEntregaId ? updateEntrega : createEntrega}
       />
