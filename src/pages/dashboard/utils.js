@@ -181,15 +181,15 @@ export function getImageExt(file) {
 
 export const toUpperClean = (s) => String(s || '').trim().replace(/\s+/g, ' ').toUpperCase();
 export function getValorEntrega(entrega) {
-  const preco = Number(entrega?.preco ?? 0);
-  const promoRaw = entrega?.preco_promocional;
+  const valor = Number(entrega?.valor ?? 0);
+  const promoRaw = entrega?.valor_promocional;
   const promo = (promoRaw == null || promoRaw === '') ? null : Number(promoRaw);
-  if (promo != null && Number.isFinite(promo) && promo > 0 && promo < preco) return promo;
-  return preco;
+  if (promo != null && Number.isFinite(promo) && promo > 0 && promo < valor) return promo;
+  return valor;
 }
 
 export function getValorAgendamento(a) {
-  const raw = a?.preco_final;
+  const raw = a?.valor_final;
   if (raw != null && raw !== '') {
     const frozen = Number(raw);
     if (Number.isFinite(frozen) && frozen >= 0) return frozen;
