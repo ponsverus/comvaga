@@ -175,14 +175,14 @@ export async function serveSitemap(req, res, options = {}) {
   const url = new URL(req.url, PUBLIC_ORIGIN);
   const rawPage = req.query?.page ?? url.searchParams.get('page') ?? url.pathname.match(/^\/sitemap-(\d+)\.xml$/)?.[1] ?? '0';
   if (typeof rawPage !== 'string' || !/^\d{1,9}$/.test(rawPage)) {
-    send(req, res, 404, 'text/plain', 'Sitemap não encontrado.');
+    send(req, res, 404, 'text/plain', 'Sitemap indisponível.');
     return;
   }
   try {
     const page = Number(rawPage);
     const result = await (options.rpc || createPublicRpc(options.env || process.env, fetch, req))('get_public_business_sitemap', { p_page: page });
     if (!result) {
-      send(req, res, 404, 'text/plain', 'Sitemap não encontrado.');
+      send(req, res, 404, 'text/plain', 'Sitemap indisponível.');
       return;
     }
     let xml;
