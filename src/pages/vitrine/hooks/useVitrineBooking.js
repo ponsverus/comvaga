@@ -24,7 +24,7 @@ export function useVitrineBooking({
 }) {
   const [calendarExport, setCalendarExport] = useState({ googleUrl: '', icsUrl: '', icsFilename: '' });
   const [flow, setFlow] = useState({ step: 'idle', profissional: null, entregasSelecionadas: [], lastSlot: null });
-  const [selecaoProfId, setSelecaoProfId] = useState(null);
+  const [profissionalSelecionadoId, setProfissionalSelecionadoId] = useState(null);
   const [entregasSelecionadas, setEntregasSelecionadas] = useState([]);
   const rebookAppliedRef = useRef('');
   const assistedBooking = location.state?.assistedBooking || null;
@@ -65,7 +65,7 @@ export function useVitrineBooking({
       }
       if (cancelled || !profissional || !entrega) return;
       rebookAppliedRef.current = rebookKey;
-      setSelecaoProfId(null);
+      setProfissionalSelecionadoId(null);
       setEntregasSelecionadas([]);
       revokeCurrentIcs();
       setFlow({ step: 'booking', profissional, entregasSelecionadas: [entrega], lastSlot: null });
@@ -123,37 +123,37 @@ export function useVitrineBooking({
 
   const handleAgendarAgora = useCallback(async (profissional, entregas) => {
     if (!(await requireLogin())) return;
-    setSelecaoProfId(null);
+    setProfissionalSelecionadoId(null);
     setEntregasSelecionadas([]);
     revokeCurrentIcs();
     setFlow({ step: 'booking', profissional, entregasSelecionadas: entregas, lastSlot: null });
   }, [requireLogin, revokeCurrentIcs]);
 
-  const handleToggleSelecao = useCallback(async (profissional, entrega) => {
+  const handleAlternarEntregaSelecionada = useCallback(async (profissional, entrega) => {
     if (!(await requireLogin())) return;
     setEntregasSelecionadas((prev) => {
-      const jaTemEsseProf = selecaoProfId && selecaoProfId !== profissional.id;
+      const jaTemEsseProf = profissionalSelecionadoId && profissionalSelecionadoId !== profissional.id;
       if (jaTemEsseProf) return prev;
       const existe = prev.some((item) => item.id === entrega.id);
       const proximo = existe ? prev.filter((item) => item.id !== entrega.id) : [...prev, entrega];
-      if (proximo.length === 0) setSelecaoProfId(null);
-      else setSelecaoProfId(profissional.id);
+      if (proximo.length === 0) setProfissionalSelecionadoId(null);
+      else setProfissionalSelecionadoId(profissional.id);
       return proximo;
     });
-  }, [requireLogin, selecaoProfId]);
+  }, [requireLogin, profissionalSelecionadoId]);
 
-  const handleConfirmarSelecao = useCallback(() => {
+  const handleConfirmarEntregasSelecionadas = useCallback(() => {
     if (!entregasSelecionadas.length) return;
-    const profissional = profissionais.find((item) => item.id === selecaoProfId);
+    const profissional = profissionais.find((item) => item.id === profissionalSelecionadoId);
     if (!profissional) return;
     revokeCurrentIcs();
     setFlow({ step: 'booking', profissional, entregasSelecionadas, lastSlot: null });
-    setSelecaoProfId(null);
+    setProfissionalSelecionadoId(null);
     setEntregasSelecionadas([]);
-  }, [profissionais, revokeCurrentIcs, selecaoProfId, entregasSelecionadas]);
+  }, [profissionais, revokeCurrentIcs, profissionalSelecionadoId, entregasSelecionadas]);
 
-  const handleLimparSelecao = useCallback(() => {
-    setSelecaoProfId(null);
+  const handleLimparEntregasSelecionadas = useCallback(() => {
+    setProfissionalSelecionadoId(null);
     setEntregasSelecionadas([]);
   }, []);
 
@@ -251,21 +251,21 @@ export function useVitrineBooking({
 
   return {
     flow,
-    hasSelecao: entregasSelecionadas.length > 0,
+    temEntregasSelecionadas: entregasSelecionadas.length > 0,
     entregasSelecionadas,
     entregaVirtual,
     calendarActionConfig,
     handleAgendarAgora,
-    handleToggleSelecao,
-    handleConfirmarSelecao,
-    handleLimparSelecao,
+    handleAlternarEntregaSelecionada,
+    handleConfirmarEntregasSelecionadas,
+    handleLimparEntregasSelecionadas,
     handleBookingConfirm,
     closeBooking: () => setFlow((prev) => ({ ...prev, step: 'idle' })),
     bookingSectionState: {
-      selecaoProfId,
+      profissionalSelecionadoId,
       entregasSelecionadas,
       onAgendarAgora: handleAgendarAgora,
-      onToggleSelecao: handleToggleSelecao,
+      onAlternarEntregaSelecionada: handleAlternarEntregaSelecionada,
       isAssistedBooking,
       assistedClienteId: assistedBooking?.clienteId || null,
       assistedClienteNome: assistedBooking?.clienteNome || '',
