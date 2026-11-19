@@ -13,7 +13,7 @@ function onlyTrim(v) {
   return String(v || '').trim();
 }
 
-function negocioEnderecoFields(negocio) {
+function negocioLocalFields(negocio) {
   if (!negocio) {
     return { rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '', complemento: '' };
   }
@@ -113,7 +113,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
           .map((negocio) => ({ negocio }));
 
         const initialContext = contexts[0] || null;
-        const endereco = negocioEnderecoFields(initialContext?.negocio);
+        const local = negocioLocalFields(initialContext?.negocio);
 
         setProfileName(onlyTrim(userData?.nome || user?.user_metadata?.nome || ''));
         setResumeContexts(contexts);
@@ -123,13 +123,13 @@ export default function SignupProfessionalResume({ user, onLogin }) {
           urlNegocio: onlyTrim(initialContext?.negocio?.slug),
           tipoNegocio: onlyTrim(initialContext?.negocio?.tipo_negocio),
           telefone: formatPhoneForDisplay(initialContext?.negocio?.telefone),
-          cep: endereco.cep,
-          rua: endereco.rua,
-          numero: endereco.numero,
-          complemento: endereco.complemento,
-          bairro: endereco.bairro,
-          cidade: endereco.cidade,
-          estado: endereco.estado,
+          cep: local.cep,
+          rua: local.rua,
+          numero: local.numero,
+          complemento: local.complemento,
+          bairro: local.bairro,
+          cidade: local.cidade,
+          estado: local.estado,
         });
       } catch (err) {
         console.error('SignupProfessionalResume load error:', err);
@@ -147,19 +147,19 @@ export default function SignupProfessionalResume({ user, onLogin }) {
     if (!selectedNegocioId) return;
     const selectedContext = resumeContexts.find((item) => item.negocio.id === selectedNegocioId);
     if (!selectedContext) return;
-    const endereco = negocioEnderecoFields(selectedContext.negocio);
+    const local = negocioLocalFields(selectedContext.negocio);
     setFormData({
       nomeNegocio: onlyTrim(selectedContext.negocio?.nome),
       urlNegocio: onlyTrim(selectedContext.negocio?.slug),
       tipoNegocio: onlyTrim(selectedContext.negocio?.tipo_negocio),
       telefone: formatPhoneForDisplay(selectedContext.negocio?.telefone),
-      cep: endereco.cep,
-      rua: endereco.rua,
-      numero: endereco.numero,
-      complemento: endereco.complemento,
-      bairro: endereco.bairro,
-      cidade: endereco.cidade,
-      estado: endereco.estado,
+      cep: local.cep,
+      rua: local.rua,
+      numero: local.numero,
+      complemento: local.complemento,
+      bairro: local.bairro,
+      cidade: local.cidade,
+      estado: local.estado,
     });
   }, [selectedNegocioId, resumeContexts]);
 
@@ -181,7 +181,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
     }));
   };
 
-  const validarEnderecoCompleto = () => {
+  const validarLocalCompleto = () => {
     if (!onlyTrim(formData.rua)) return 'signupProfessional.address_street_required';
     if (!onlyTrim(formData.numero)) return 'signupProfessional.address_number_required';
     if (!onlyTrim(formData.bairro)) return 'signupProfessional.address_neighborhood_required';
@@ -214,8 +214,8 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       if (!slug || slug.length < 3) { showMessage('signupProfessional.business_slug_invalid'); return; }
       if (!tipoNegocio) { showMessage('signupProfessional.business_type_required'); return; }
 
-      const enderecoKey = validarEnderecoCompleto();
-      if (enderecoKey) { showMessage(enderecoKey); return; }
+      const localKey = validarLocalCompleto();
+      if (localKey) { showMessage(localKey); return; }
 
       const { data, error } = await withAuthRetry(
         () => supabase.rpc('complete_owner_business_onboarding', {
