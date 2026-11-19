@@ -64,7 +64,7 @@ export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, curs
     () => supabase.rpc('get_entregas_vitrine_paginadas', {
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
-      p_cursor_preco_final: cursor?.preco_final ?? null,
+      p_cursor_valor_final: cursor?.valor_final ?? null,
       p_cursor_nome: cursor?.nome ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
@@ -100,7 +100,7 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   const { data, error } = await withPublicAuthRetry(
     () => supabase
       .from('entregas')
-      .select('id, negocio_id, profissional_id, nome, duracao_minutos, preco, preco_promocional, ativo')
+      .select('id, negocio_id, profissional_id, nome, duracao_minutos, valor, valor_promocional, ativo')
       .eq('id', entregaId)
       .eq('profissional_id', profissionalId)
       .eq('ativo', true)
@@ -112,12 +112,12 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   );
   if (error) throw error;
   if (!data) return null;
-  const preco = Number(data.preco ?? 0);
-  const promo = Number(data.preco_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
+  const valor = Number(data.valor ?? 0);
+  const promo = Number(data.valor_promocional ?? 0);
+  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
   return {
     ...data,
-    preco_final: temPromo ? promo : preco,
+    valor_final: temPromo ? promo : valor,
   };
 }
 
