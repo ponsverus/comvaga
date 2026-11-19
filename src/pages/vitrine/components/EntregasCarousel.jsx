@@ -112,10 +112,10 @@ function EntregaCard({
   const cardRef = useRef(null);
   const [visivel, setVisivel] = useState(false);
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
-  const preco = Number(entrega.preco ?? 0);
-  const promo = Number(entrega.preco_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
-  const precoFinal = Number(entrega.preco_final ?? 0);
+  const valor = Number(entrega.valor ?? 0);
+  const promo = Number(entrega.valor_promocional ?? 0);
+  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
+  const valorFinal = Number(entrega.valor_final ?? 0);
   const animarPromocao = temPromo && visivel && !promocaoEncerrada && !isProfessional && selecionadas.length === 0;
 
   useEffect(() => {
@@ -136,9 +136,9 @@ function EntregaCard({
           {entrega.duracao_minutos} MIN
         </span>
         {temPromo ? (
-          <div className="font-normal text-base text-vpromo shrink-0">R$ {precoFinal.toFixed(2)}</div>
+          <div className="font-normal text-base text-vpromo shrink-0">R$ {valorFinal.toFixed(2)}</div>
         ) : (
-          <div className="text-vprimary font-normal text-base shrink-0">R$ {precoFinal.toFixed(2)}</div>
+          <div className="text-vprimary font-normal text-base shrink-0">R$ {valorFinal.toFixed(2)}</div>
         )}
       </div>
       <div className="font-normal text-sm leading-tight mt-4">{entrega.nome}</div>
