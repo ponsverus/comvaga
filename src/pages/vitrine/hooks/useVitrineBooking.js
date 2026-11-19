@@ -182,7 +182,7 @@ export function useVitrineBooking({
       flow.profissional?.nome ? `Profissional: ${flow.profissional.nome}` : '',
       entregaNames.length ? `Trabalhos: ${entregaNames.join(', ')}` : '',
     ].filter(Boolean).join('\n');
-    const local = negocio?.endereco || nomeNegocioLabel || '';
+    const local = negocio?.local || nomeNegocioLabel || '';
     const googleUrl = gerarLinkGoogle({
       titulo,
       dataISO: slot.dataISO,
@@ -207,7 +207,7 @@ export function useVitrineBooking({
     const icsUrl = URL.createObjectURL(icsBlob);
     setCalendarExport({ googleUrl, icsUrl, icsFilename: icsFile.filename });
     setFlow((prev) => ({ ...prev, step: 'confirmado', lastSlot: slot }));
-  }, [calendarExport.icsUrl, flow.profissional?.id, flow.profissional?.nome, flow.entregasSelecionadas, gerarArquivoICS, gerarLinkGoogle, negocio?.endereco, negocio?.id, nomeNegocioLabel]);
+  }, [calendarExport.icsUrl, flow.profissional?.id, flow.profissional?.nome, flow.entregasSelecionadas, gerarArquivoICS, gerarLinkGoogle, negocio?.local, negocio?.id, nomeNegocioLabel]);
 
   const abrirGoogleAgenda = useCallback(() => {
     if (!calendarExport.googleUrl) return;

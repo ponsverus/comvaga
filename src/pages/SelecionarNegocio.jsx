@@ -53,7 +53,7 @@ export default function SelecionarNegocio({ onLogout, professionalRole = null, n
           <div className="space-y-3 mb-6">
           {negocios.map((neg) => {
             const logoUrl = getPublicUrl('logos', neg.logo_path);
-            const endereco = formatBusinessAddress(neg);
+            const local = formatBusinessAddress(neg);
             return (
               <button
                 key={neg.id}
@@ -75,8 +75,8 @@ export default function SelecionarNegocio({ onLogout, professionalRole = null, n
                   {neg.tipo_negocio && (
                     <div className="text-xs text-gray-500 uppercase mt-0.5">{neg.tipo_negocio}</div>
                   )}
-                  {endereco && (
-                    <div className="text-xs text-gray-600 uppercase mt-0.5">{endereco}</div>
+                  {local && (
+                    <div className="text-xs text-gray-600 uppercase mt-0.5">{local}</div>
                   )}
                 </div>
                 <div className="text-gray-600 group-hover:text-primary transition-colors shrink-0">

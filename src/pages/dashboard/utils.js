@@ -180,8 +180,6 @@ export function getImageExt(file) {
 }
 
 export const toUpperClean = (s) => String(s || '').trim().replace(/\s+/g, ' ').toUpperCase();
-export const isEnderecoPadrao = (s) => /^.+,\s*\d+.*\s-\s.+,\s.+$/.test(String(s || '').trim());
-
 export function getValorEntrega(entrega) {
   const preco = Number(entrega?.preco ?? 0);
   const promoRaw = entrega?.preco_promocional;

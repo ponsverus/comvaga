@@ -59,15 +59,15 @@ function BusinessAvatar({ negocio }) {
 }
 
 function BusinessInfo({ negocio }) {
-  const endereco = formatBusinessAddress(negocio);
+  const local = formatBusinessAddress(negocio);
   return (
     <div className="flex-1 min-w-0">
       <div className="font-normal text-white truncate">{negocio?.nome}</div>
       {negocio?.tipo_negocio && (
         <div className="text-xs text-gray-500 uppercase mt-0.5">{negocio.tipo_negocio}</div>
       )}
-      {endereco && (
-        <div className="text-xs text-gray-600 uppercase mt-0.5">{endereco}</div>
+      {local && (
+        <div className="text-xs text-gray-600 uppercase mt-0.5">{local}</div>
       )}
     </div>
   );
@@ -162,6 +162,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     try {
       window.localStorage?.setItem(`comvaga:last-partner-negocio:${user.id}`, row.negocio_id);
     } catch {
+      // Sem armazenamento local, o state da rota ainda leva ao dashboard.
     }
     navigate('/dashboard', { state: { negocioId: row.negocio_id } });
   };

@@ -92,7 +92,7 @@ export default function CriarNegocio({ user }) {
     setFormData(prev => ({ ...prev, nomeNegocio: nomeUpper, urlNegocio: generateSlug(nomeUpper) }));
   };
 
-  const validarEndereco = () => {
+  const validarLocal = () => {
     if (!onlyTrim(formData.rua)) return 'signupProfessional.address_street_required';
     if (!onlyTrim(formData.numero)) return 'signupProfessional.address_number_required';
     if (!onlyTrim(formData.bairro)) return 'signupProfessional.address_neighborhood_required';
@@ -118,8 +118,8 @@ export default function CriarNegocio({ user }) {
     if (!telefoneRaw) { showMessage('signupProfessional.phone_required'); return; }
     if (telefone === null) { showMessage('signupProfessional.phone_invalid'); return; }
 
-    const enderecoKey = validarEndereco();
-    if (enderecoKey) { showMessage(enderecoKey); return; }
+    const localKey = validarLocal();
+    if (localKey) { showMessage(localKey); return; }
 
     setLoading(true);
 
