@@ -197,7 +197,7 @@ export const negocio = {
     screen: 'dark',
     buttonText: 'OK',
   },
-  entrega_price_invalid: {
+  entrega_valor_invalid: {
     title: 'Valor inválido',
     body: 'Informe um valor válido para continuar.',
     variant: 'danger',

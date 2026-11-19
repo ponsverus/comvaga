@@ -51,7 +51,10 @@ export function useDashboardEntregaMutations({
       if (!await checarPermissao(profId)) return;
       const valor = toNumberOrNull(formEntrega.valor);
       const promo = toNumberOrNull(formEntrega.valor_promocional);
-      if (valor == null) throw new Error('Valor inválido.');
+      if (valor == null) {
+        await uiAlert('dashboard.entrega_valor_invalid', 'error');
+        return;
+      }
       if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
       const payload = {
         nome: toUpperClean(formEntrega.nome),
@@ -75,7 +78,6 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('invalido')) await uiAlert('dashboard.entrega_price_invalid', 'error');
       else if (msg.includes('Duracao')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_create_error`, 'error');
@@ -96,7 +98,10 @@ export function useDashboardEntregaMutations({
       if (!toUpperClean(formEntrega.nome)) throw new Error('Nome da entrega e obrigatorio.');
       if (!profId) throw new Error('Selecione um profissional.');
       if (!toNumberOrNull(formEntrega.duracao_minutos)) throw new Error('Duracao invalida.');
-      if (valor == null) throw new Error('Valor inválido.');
+      if (valor == null) {
+        await uiAlert('dashboard.entrega_valor_invalid', 'error');
+        return;
+      }
       if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
       const payload = {
         nome: toUpperClean(formEntrega.nome),
@@ -126,7 +131,6 @@ export function useDashboardEntregaMutations({
       if (billingKey) await uiAlert(billingKey, 'warning');
       else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
       else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
-      else if (msg.includes('invalido')) await uiAlert('dashboard.entrega_price_invalid', 'error');
       else if (msg.includes('Duracao')) await uiAlert('dashboard.entrega_duration_invalid', 'error');
       else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
       else await uiAlert(`dashboard.business.${businessGroup}.entrega_update_error`, 'error');
