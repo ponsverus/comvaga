@@ -4,7 +4,7 @@ export const PUBLIC_ORIGIN = 'https://comvaga.com.br';
 export const DEFAULT_SEO_TITLE = 'Comvaga: Inteligência de Agenda';
 export const DEFAULT_SEO_DESCRIPTION = 'Plataforma inteligente de agendamento';
 export const DEFAULT_SEO_IMAGE = `${PUBLIC_ORIGIN}/og-default.png`;
-const DEFAULT_SEO_IMAGE_ALT = 'Identidade visual padrão dos negócios na Comvaga';
+const DEFAULT_SEO_IMAGE_ALT = 'Identidade visual base dos negócios na Comvaga';
 export const VALID_BUSINESS_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export function businessLogoUrl(path, supabaseUrl) {
