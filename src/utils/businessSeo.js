@@ -39,7 +39,7 @@ export function buildBusinessStructuredData(business, image = DEFAULT_SEO_IMAGE)
   const url = `${PUBLIC_ORIGIN}/v/${business.slug}`;
   const street = String(business.rua || '').trim();
   const city = String(business.cidade || '').trim();
-  const hasAddress = Boolean(street && city && business.endereco?.trim());
+  const hasAddress = Boolean(street && city && business.local?.trim());
   const entity = {
     '@type': hasAddress ? 'LocalBusiness' : 'Organization',
     '@id': `${url}#business`, name, url,
