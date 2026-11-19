@@ -4,7 +4,7 @@ export const PUBLIC_BUSINESS_DATA_ID = 'comvaga-public-business';
 
 const TEXT_FIELDS = [
   'id', 'nome', 'slug', 'descricao', 'telefone', 'tipo_negocio', 'instagram', 'facebook',
-  'logo_path', 'tema', 'anuncio', 'endereco', 'cep', 'rua', 'numero', 'complemento',
+  'logo_path', 'tema', 'anuncio', 'local', 'cep', 'rua', 'numero', 'complemento',
   'bairro', 'cidade', 'estado', 'meta_title', 'meta_description',
 ];
 const GROUPS = new Set(['servs', 'consultas', 'aulas']);
