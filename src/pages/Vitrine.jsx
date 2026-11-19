@@ -33,7 +33,7 @@ import {
   getCalendarPlatformMode,
   gerarLinkGoogle,
   gerarArquivoICS,
-  getPrecoFinalEntrega,
+  getValorFinalEntrega,
   sanitizeTel,
 } from './vitrine/utils';
 
@@ -287,7 +287,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     profissionais,
     entregas,
     counterPlural,
-    getPrecoFinalEntrega,
+    getValorFinalEntrega,
     gerarLinkGoogle,
     gerarArquivoICS,
     calendarPlatformMode,
@@ -318,7 +318,7 @@ export default function Vitrine({ user, userType, professionalRole = null, onLog
     depoimentoNota,
     serverNow,
     getPublicUrl,
-    getPrecoFinalEntrega,
+    getValorFinalEntrega,
     getDowFromDateSP,
     resolveInstagram,
     resolveFacebook,
