@@ -5,7 +5,7 @@ import {
   getValorFinalEntrega, sanitizeTel, getCalendarPlatformMode,
 } from '../../src/pages/vitrine/utils.js';
 
-const evento = { titulo: 'Corte, barba', dataISO: '2026-11-16', inicioHHMM: '09:00', duracaoMin: 45, detalhes: 'Linha 1\nLinha 2', local: 'Rua A; 10' };
+const evento = { titulo: 'Corte, barba', dataISO: '2026-11-16', inicioHHMM: '09:00', tempoMin: 45, detalhes: 'Linha 1\nLinha 2', local: 'Rua A; 10' };
 
 test('vitrine: data brasileira', () => assert.equal(formatDateBR('2026-11-16'), '16.11.2026'));
 test('vitrine: dia da semana em Campinas', () => assert.equal(getDowFromDateSP('2026-11-16'), 1));
