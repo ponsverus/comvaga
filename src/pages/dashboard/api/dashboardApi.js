@@ -72,18 +72,18 @@ async function normalizeFunctionError(error) {
 export function normalizeAgRow(a) {
   const profId = a?.prof_id ?? a?.profissional_id ?? null;
   const profNome = a?.prof_nome ?? a?.profissional_nome ?? null;
-  const precoFinal = a?.preco_final ?? a?.valor ?? null;
+  const valorFinal = a?.valor_final ?? a?.valor ?? null;
 
   return {
     ...a,
     data: a?.data ?? null,
     horario_inicio: a?.horario_inicio ?? null,
     horario_fim: a?.horario_fim ?? null,
-    preco_final: precoFinal,
+    valor_final: valorFinal,
     entregas: {
       nome: a?.entrega_nome ?? null,
-      preco: a?.entrega_preco ?? null,
-      preco_promocional: a?.entrega_promo ?? null,
+      valor: a?.entrega_valor ?? null,
+      valor_promocional: a?.entrega_promo ?? null,
     },
     profissionais: {
       id: profId,
@@ -430,7 +430,7 @@ export async function fetchEntregasPage({
       p_profissional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
       p_cursor_ativo: cursor?.ativo ?? null,
-      p_cursor_preco: cursor?.preco ?? null,
+      p_cursor_valor: cursor?.valor ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
     7000,
