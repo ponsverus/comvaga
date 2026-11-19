@@ -38,7 +38,7 @@ export function useDashboardEntregaMutations({
   const resetEntregaForm = () => {
     setShowNovaEntrega(false);
     setEditingEntregaId(null);
-    setFormEntrega({ nome: '', duracao_minutos: '', preco: '', preco_promocional: '', profissional_id: '' });
+    setFormEntrega({ nome: '', duracao_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
   };
 
   const createEntrega = async (e) => {
@@ -49,16 +49,16 @@ export function useDashboardEntregaMutations({
       if (!negocio?.id) throw new Error('Erro ao carregar o negocio');
       const profId = formEntrega.profissional_id;
       if (!await checarPermissao(profId)) return;
-      const preco = toNumberOrNull(formEntrega.preco);
-      const promo = toNumberOrNull(formEntrega.preco_promocional);
-      if (preco == null) throw new Error('Preco invalido.');
-      if (promo != null && promo >= preco) throw new Error('Preco de oferta deve ser menor.');
+      const valor = toNumberOrNull(formEntrega.valor);
+      const promo = toNumberOrNull(formEntrega.valor_promocional);
+      if (valor == null) throw new Error('Valor inválido.');
+      if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
       const payload = {
         nome: toUpperClean(formEntrega.nome),
         profissional_id: profId,
         duracao_minutos: toNumberOrNull(formEntrega.duracao_minutos),
-        preco,
-        preco_promocional: promo,
+        valor,
+        valor_promocional: promo,
         ativo: true,
         negocio_id: negocio.id,
       };
@@ -91,18 +91,18 @@ export function useDashboardEntregaMutations({
       setSubmittingEntrega(true);
       const profId = formEntrega.profissional_id;
       if (!await checarPermissao(profId)) return;
-      const preco = toNumberOrNull(formEntrega.preco);
-      const promo = toNumberOrNull(formEntrega.preco_promocional);
+      const valor = toNumberOrNull(formEntrega.valor);
+      const promo = toNumberOrNull(formEntrega.valor_promocional);
       if (!toUpperClean(formEntrega.nome)) throw new Error('Nome da entrega e obrigatorio.');
       if (!profId) throw new Error('Selecione um profissional.');
       if (!toNumberOrNull(formEntrega.duracao_minutos)) throw new Error('Duracao invalida.');
-      if (preco == null) throw new Error('Preco invalido.');
-      if (promo != null && promo >= preco) throw new Error('Preco de oferta deve ser menor.');
+      if (valor == null) throw new Error('Valor inválido.');
+      if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
       const payload = {
         nome: toUpperClean(formEntrega.nome),
         duracao_minutos: toNumberOrNull(formEntrega.duracao_minutos),
-        preco,
-        preco_promocional: promo,
+        valor,
+        valor_promocional: promo,
         profissional_id: profId,
       };
       const entregaAtual = (entregas || []).find((item) => item.id === editingEntregaId);
