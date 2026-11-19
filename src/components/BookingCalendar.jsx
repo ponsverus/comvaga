@@ -139,7 +139,7 @@ export default function BookingCalendar({
             <div className={`font-normal truncate ${titleColor}`}>{entrega?.nome}</div>
             <div className={`text-xs mt-0.5 ${subtitleColor}`}>
               <span className="uppercase">{profissional?.nome}</span>
-              {entrega?.duracao_minutos && <span className={`ml-2 ${subMutedColor}`}>• {entrega.duracao_minutos} MIN</span>}
+              {entrega?.tempo_minutos && <span className={`ml-2 ${subMutedColor}`}>• {entrega.tempo_minutos} MIN</span>}
               <span className="ml-2 text-vpromo">• R$ {valorExibido}</span>
             </div>
           </div>
