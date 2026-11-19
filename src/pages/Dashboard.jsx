@@ -152,7 +152,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const [formInfo, setFormInfo] = useState({
     nome: '',
-    descricao: '',
+    sobre: '',
     meta_title: '',
     meta_description: '',
     telefone: '',
@@ -179,7 +179,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     if (!negocio) return;
     setFormInfo({
       nome: negocio.nome || '',
-      descricao: negocio.descricao || '',
+      sobre: negocio.sobre || '',
       meta_title: negocio.meta_title || '',
       meta_description: negocio.meta_description || '',
       telefone: formatPhoneForDisplay(negocio.telefone) || '',
