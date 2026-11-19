@@ -85,7 +85,7 @@ export function ConfirmModal({ open, onCancel, onConfirm, title, body, confirmTe
 export function SelectionBar({ itens, counterSingular, counterPlural, onConfirm, onClear, isLight }) {
   const qtd = itens.length;
   if (qtd === 0) return null;
-  const durTotal = itens.reduce((sum, x) => sum + Number(x.tempo_minutos || 0), 0);
+  const tempoTotalMinutos = itens.reduce((sum, x) => sum + Number(x.tempo_minutos || 0), 0);
   const valTotal = itens.reduce((sum, x) => sum + getValorFinalEntrega(x), 0);
   const label = qtd === 1 ? counterSingular : counterPlural;
   const textMain = isLight ? 'text-vtext' : 'text-white';
@@ -99,7 +99,7 @@ export function SelectionBar({ itens, counterSingular, counterPlural, onConfirm,
           <div className="w-8 h-8 rounded-full bg-vprimary flex items-center justify-center text-vprimary-text text-xs font-normal shrink-0 tabular-nums">{qtd}</div>
           <div className="min-w-0">
             <div className={`text-sm font-normal truncate ${textMain}`}>{qtd} {label} SELECIONADO{qtd > 1 ? 's' : ''}</div>
-            <div className={`text-xs font-normal ${textSub}`}>{durTotal} MIN • R$ {valTotal.toFixed(2)}</div>
+            <div className={`text-xs font-normal ${textSub}`}>{tempoTotalMinutos} MIN • R$ {valTotal.toFixed(2)}</div>
           </div>
           <button type="button" onClick={onClear} className={`shrink-0 ml-1 ${clearBtn}`} title="Limpar"><X className="w-4 h-4" /></button>
         </div>
