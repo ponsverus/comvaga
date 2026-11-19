@@ -1,17 +1,18 @@
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   formatDateBR, getDowFromDateSP, gerarLinkGoogle, gerarArquivoICS,
-  getPrecoFinalEntrega, sanitizeTel, getCalendarPlatformMode,
+  getValorFinalEntrega, sanitizeTel, getCalendarPlatformMode,
 } from '../../src/pages/vitrine/utils.js';
 
 const evento = { titulo: 'Corte, barba', dataISO: '2026-11-16', inicioHHMM: '09:00', duracaoMin: 45, detalhes: 'Linha 1\nLinha 2', local: 'Rua A; 10' };
 
 test('vitrine: data brasileira', () => assert.equal(formatDateBR('2026-11-16'), '16.11.2026'));
 test('vitrine: dia da semana em Campinas', () => assert.equal(getDowFromDateSP('2026-11-16'), 1));
-test('vitrine: data fora do formato esperado retorna null', () => assert.equal(getDowFromDateSP('16/11/2026'), null));
-test('vitrine: valor promocional menor prevalece', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 30 }), 30));
-test('vitrine: valor promocional maior conserva o original', () => assert.equal(getPrecoFinalEntrega({ preco: 50, preco_promocional: 65 }), 50));
+test('vitrine: data inválida retorna null', () => assert.equal(getDowFromDateSP('16/11/2026'), null));
+test('vitrine: valor promocional inferior prevalece', () => assert.equal(getValorFinalEntrega({ valor: 50, valor_promocional: 30 }), 30));
+test('vitrine: valor promocional superior mantém o valor original', () => assert.equal(getValorFinalEntrega({ valor: 50, valor_promocional: 65 }), 50));
 test('vitrine: remove caracteres externos de telefone', () => assert.equal(sanitizeTel(' +55 (31) 99999-8888 '), '+5531999998888'));
 test('vitrine: plataforma de desktop seleciona ICS', () => assert.equal(getCalendarPlatformMode(), 'ics'));
 test('Google Agenda: codifica detalhes e horário UTC', () => {

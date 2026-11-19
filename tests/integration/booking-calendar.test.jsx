@@ -12,7 +12,7 @@ vi.mock('../../src/feedback/feedbackStore.js', () => ({ getFeedbackState: () => 
 
 const base = {
   profissional: { id: 'p1', nome: 'Ana', horarios: [{ dia_semana: 1, ativo: true }] },
-  entrega: { id: 'e1', nome: 'Corte', duracao_minutos: 30, preco: 100 },
+  entrega: { id: 'e1', nome: 'Corte', duracao_minutos: 30, valor: 100 },
   todayISO: '2026-11-16', negocioId: 'n1', actorUserId: 'cliente1',
   onClose: vi.fn(), onConfirm: vi.fn(), onAlert: vi.fn(),
 };

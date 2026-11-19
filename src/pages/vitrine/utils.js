@@ -106,11 +106,11 @@ export function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, duracaoM
   };
 }
 
-export function getPrecoFinalEntrega(s) {
-  const preco = Number(s?.preco ?? 0);
-  const promo = Number(s?.preco_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < preco;
-  return temPromo ? promo : preco;
+export function getValorFinalEntrega(s) {
+  const valor = Number(s?.valor ?? 0);
+  const promo = Number(s?.valor_promocional ?? 0);
+  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
+  return temPromo ? promo : valor;
 }
 
 export function sanitizeTel(raw) {

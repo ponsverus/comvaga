@@ -34,7 +34,7 @@ function getLastItem(rows) {
 
 function getEntregaCursor(rows) {
   const last = getLastItem(rows);
-  return last ? { ativo: last.ativo, preco: last.preco, id: last.id } : null;
+  return last ? { ativo: last.ativo, valor: last.valor, id: last.id } : null;
 }
 
 function getLastPartnerNegocioId(userId) {

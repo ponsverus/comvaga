@@ -99,9 +99,9 @@ export default function BookingCalendar({
 
   const canGoPrev    = !(viewYear === today?.year && viewMonth === today?.month);
   const diasTrabalho = getDiasTrabalho(profissional);
-  const valorExibido = entrega?.preco_promocional
-    ? Number(entrega.preco_promocional).toFixed(2)
-    : Number(entrega?.preco ?? 0).toFixed(2);
+  const valorExibido = entrega?.valor_promocional
+    ? Number(entrega.valor_promocional).toFixed(2)
+    : Number(entrega?.valor ?? 0).toFixed(2);
 
   const totalDays = daysInMonth(viewYear, viewMonth);
   const startDow  = firstDow(viewYear, viewMonth);

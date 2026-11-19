@@ -23,7 +23,7 @@ function getLastItem(rows) {
 
 function getEntregaCursor(rows) {
   const last = getLastItem(rows);
-  return last ? { preco_final: last.preco_final, nome: last.nome, id: last.id } : null;
+  return last ? { valor_final: last.valor_final, nome: last.nome, id: last.id } : null;
 }
 
 export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = null, initialBusiness = null }) {

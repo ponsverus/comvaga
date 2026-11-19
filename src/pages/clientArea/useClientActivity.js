@@ -40,14 +40,14 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
     });
     return (data || []).map(a => ({
       ...a,
-      preco_final:  a.preco_final ?? null,
+      valor_final:  a.valor_final ?? null,
       data:         String(a.data || ''),
       hora_inicio:  a.horario_inicio ? String(a.horario_inicio).slice(0, 5) : '',
       hora_fim:     a.horario_fim    ? String(a.horario_fim).slice(0, 5)    : '',
       entregas: {
         nome:              a.entrega_nome,
-        preco:             a.entrega_preco,
-        preco_promocional: a.entrega_promo,
+        valor:             a.entrega_valor,
+        valor_promocional: a.entrega_promo,
       },
       profissionais: {
         nome:    a.profissional_nome,

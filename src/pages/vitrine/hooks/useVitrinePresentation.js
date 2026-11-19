@@ -67,7 +67,7 @@ export function useVitrinePresentation({
   depoimentoNota,
   serverNow,
   getPublicUrl,
-  getPrecoFinalEntrega,
+  getValorFinalEntrega,
   getDowFromDateSP,
   resolveInstagram,
   resolveFacebook,
@@ -120,9 +120,9 @@ export function useVitrinePresentation({
       const pageState = entregaPagesByProf?.[prof.id] || { pages: {}, totalCount: 0, loadingPage: null, version: 0 };
       const pages = Object.fromEntries(Object.entries(pageState.pages || {}).map(([page, rows]) => [
         page,
-        (rows || []).map((entrega) => ({ ...entrega, preco_final: getPrecoFinalEntrega(entrega) })),
+        (rows || []).map((entrega) => ({ ...entrega, valor_final: getValorFinalEntrega(entrega) })),
       ]));
-      const lista = (entregasPorProf.get(prof.id) || []).map((entrega) => ({ ...entrega, preco_final: getPrecoFinalEntrega(entrega) }));
+      const lista = (entregasPorProf.get(prof.id) || []).map((entrega) => ({ ...entrega, valor_final: getValorFinalEntrega(entrega) }));
       return {
         id: prof.id,
         nome: prof.nome,
@@ -134,7 +134,7 @@ export function useVitrinePresentation({
         version: pageState.version || 0,
       };
     })
-  ), [entregaPagesByProf, entregasPorProf, getPrecoFinalEntrega, profissionais]);
+  ), [entregaPagesByProf, entregasPorProf, getValorFinalEntrega, profissionais]);
 
   const galeriaView = useMemo(() => (
     galeriaItems

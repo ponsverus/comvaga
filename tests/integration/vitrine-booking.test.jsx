@@ -2,14 +2,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useVitrineBooking } from '../../src/pages/vitrine/hooks/useVitrineBooking.js';
-import { getPrecoFinalEntrega } from '../../src/pages/vitrine/utils.js';
+import { getValorFinalEntrega } from '../../src/pages/vitrine/utils.js';
 import { fetchVitrineEntregaById } from '../../src/pages/vitrine/api/vitrineApi.js';
 
 vi.mock('../../src/pages/vitrine/api/vitrineApi.js', () => ({ fetchVitrineEntregaById: vi.fn() }));
 
 const ana = { id: 'p1', nome: 'Ana' };
-const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', preco: 100, preco_promocional: 80, duracao_minutos: 30, ativo: true };
-const barba = { id: 'e2', profissional_id: 'p1', nome: 'Barba', preco: 40, duracao_minutos: 20, ativo: true };
+const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', valor: 100, valor_promocional: 80, duracao_minutos: 30, ativo: true };
+const barba = { id: 'e2', profissional_id: 'p1', nome: 'Barba', valor: 40, duracao_minutos: 20, ativo: true };
 
 function config(overrides = {}) {
   return {
@@ -17,7 +17,7 @@ function config(overrides = {}) {
     fetchNowFromDb: vi.fn(), confirmKey: vi.fn().mockResolvedValue(true), alertKey: vi.fn(),
     navigate: vi.fn(), location: { pathname: '/v/teste', key: 'a', state: {} },
     loading: false, negocio: { id: 'n1' }, nomeNegocioLabel: 'Barbearia', profissionais: [ana],
-    entregas: [corte, barba], counterPlural: 'trabalhos', getPrecoFinalEntrega,
+    entregas: [corte, barba], counterPlural: 'trabalhos', getValorFinalEntrega,
     gerarLinkGoogle: vi.fn().mockReturnValue('https://calendar.google.com/teste'),
     gerarArquivoICS: vi.fn().mockReturnValue({ filename: 'evento.ics', content: 'BEGIN:VCALENDAR' }),
     calendarPlatformMode: 'ics', billingStatus: { booking_allowed: true },
@@ -34,7 +34,7 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     await act(async () => result.current.handleAgendarAgora(ana, [corte]));
     expect(result.current.flow.step).toBe('booking');
     expect(result.current.flow.profissional).toEqual(ana);
-    expect(result.current.entregaVirtual.preco).toBe(80);
+    expect(result.current.entregaVirtual.valor).toBe(80);
     expect(props.confirmKey).not.toHaveBeenCalled();
     expect(fetchVitrineEntregaById).not.toHaveBeenCalled();
   });
@@ -80,11 +80,11 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     expect(props.alertKey).toHaveBeenCalledWith('schedule_time_unavailable');
   });
 
-  it('combina trabalhos e soma tempo e precos promocionais', async () => {
+  it('combina trabalhos e soma tempo e valores promocionais', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleAgendarAgora(ana, [corte, barba]));
     expect(result.current.entregaVirtual).toMatchObject({
-      nome: '2 trabalhos', duracao_minutos: 50, preco: 120, entrega_ids: ['e1', 'e2'],
+      nome: '2 trabalhos', duracao_minutos: 50, valor: 120, entrega_ids: ['e1', 'e2'],
     });
   });
 
@@ -96,7 +96,7 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     expect(result.current.entregasSelecionadas.map((item) => item.id)).toEqual(['e1', 'e2']);
     act(() => result.current.handleConfirmarSelecao());
     expect(result.current.flow.step).toBe('booking');
-    expect(result.current.entregaVirtual).toMatchObject({ duracao_minutos: 50, preco: 120 });
+    expect(result.current.entregaVirtual).toMatchObject({ duracao_minutos: 50, valor: 120 });
     expect(result.current.hasSelecao).toBe(false);
   });
 

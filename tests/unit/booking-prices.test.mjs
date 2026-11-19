@@ -1,20 +1,21 @@
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  PAGE_SIZE, formatDateBRFromISO, moneyBR, getPrecoFinalEntrega, getValorAgendamento,
+  PAGE_SIZE, formatDateBRFromISO, moneyBR, getValorFinalEntrega, getValorAgendamento,
   mergeById, getStatusText, getStatusColor, sortByDateThenTimeDesc,
 } from '../../src/pages/clientArea/utils.js';
 
 test('página: limite de itens definido', () => assert.equal(PAGE_SIZE, 50));
-test('valor: promocional menor que o original prevalece', () => assert.equal(getPrecoFinalEntrega({ preco: 100, preco_promocional: 80 }), 80));
-test('valor: promocional maior que o original é ignorado', () => assert.equal(getPrecoFinalEntrega({ preco: 100, preco_promocional: 120 }), 100));
-test('valor: promocional igual ao original é ignorado', () => assert.equal(getPrecoFinalEntrega({ preco: 100, preco_promocional: 100 }), 100));
-test('valor: promocional zero é ignorado', () => assert.equal(getPrecoFinalEntrega({ preco: 100, preco_promocional: 0 }), 100));
-test('valor: promocional vazio é ignorado', () => assert.equal(getPrecoFinalEntrega({ preco: '80', preco_promocional: '' }), 80));
-test('agendamento: valor final registrado permanece preservado', () => assert.equal(getValorAgendamento({ preco_final: 25, entregas: { preco: 100 } }), 25));
-test('agendamento: zero é um valor final válido', () => assert.equal(getValorAgendamento({ preco_final: 0, entregas: { preco: 100 } }), 0));
-test('agendamento: valor final inválido usa o valor do trabalho', () => assert.equal(getValorAgendamento({ preco_final: 'invalido', entregas: { preco: 100, preco_promocional: 80 } }), 80));
-test('agendamento: valor final negativo usa o valor do trabalho', () => assert.equal(getValorAgendamento({ preco_final: -1, entregas: { preco: 70 } }), 70));
+test('valor: promocional menor que o original prevalece', () => assert.equal(getValorFinalEntrega({ valor: 100, valor_promocional: 80 }), 80));
+test('valor: promocional maior que o original é ignorado', () => assert.equal(getValorFinalEntrega({ valor: 100, valor_promocional: 120 }), 100));
+test('valor: promocional igual ao original é ignorado', () => assert.equal(getValorFinalEntrega({ valor: 100, valor_promocional: 100 }), 100));
+test('valor: promocional zero é ignorado', () => assert.equal(getValorFinalEntrega({ valor: 100, valor_promocional: 0 }), 100));
+test('valor: promocional vazio é ignorado', () => assert.equal(getValorFinalEntrega({ valor: '80', valor_promocional: '' }), 80));
+test('agendamento: valor final registrado permanece preservado', () => assert.equal(getValorAgendamento({ valor_final: 25, entregas: { valor: 100 } }), 25));
+test('agendamento: zero é um valor final válido', () => assert.equal(getValorAgendamento({ valor_final: 0, entregas: { valor: 100 } }), 0));
+test('agendamento: valor final inválido usa o valor do trabalho', () => assert.equal(getValorAgendamento({ valor_final: 'invalido', entregas: { valor: 100, valor_promocional: 80 } }), 80));
+test('agendamento: valor final negativo usa o valor do trabalho', () => assert.equal(getValorAgendamento({ valor_final: -1, entregas: { valor: 70 } }), 70));
 test('moeda: apresenta duas casas e separador decimal', () => assert.equal(moneyBR(12.5), '12,50'));
 test('moeda: entrada inválida retorna zero', () => assert.equal(moneyBR('inválido'), '0,00'));
 test('data: apresenta no formato brasileiro', () => assert.equal(formatDateBRFromISO('2026-11-14'), '14.11.2026'));
