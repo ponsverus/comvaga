@@ -16,3 +16,46 @@ export async function createOwnerBusiness({ nomeNegocio, slug, telefone, tipoNeg
     p_estado: formData.estado,
   }), 8000, 'create-owner-business');
 }
+
+export async function fetchOwnerResumeData(userId) {
+  const [userResult, negociosResult] = await Promise.all([
+    withAuthRetry(
+      () => supabase.from('users').select('nome').eq('id', userId).maybeSingle(),
+      6000,
+      'resume-user-profile'
+    ),
+    withAuthRetry(
+      () => supabase.from('negocios')
+        .select('id, nome, slug, tipo_negocio, telefone, cep, rua, numero, complemento, bairro, cidade, estado, created_at')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: true }),
+      6000,
+      'resume-businesses'
+    ),
+  ]);
+  if (userResult.error) throw userResult.error;
+  if (negociosResult.error) throw negociosResult.error;
+  return { userData: userResult.data, negocioRows: negociosResult.data || [] };
+}
+
+export async function completeOwnerBusinessOnboarding({ negocioId, nome, nomeNegocio, slug, telefone, tipoNegocio, local }) {
+  return withAuthRetry(
+    () => supabase.rpc('complete_owner_business_onboarding', {
+      p_negocio_id: negocioId,
+      p_nome_usuario: nome,
+      p_nome_negocio: nomeNegocio,
+      p_slug: slug,
+      p_telefone: telefone,
+      p_tipo_negocio: tipoNegocio,
+      p_cep: local.cep,
+      p_rua: local.rua,
+      p_numero: local.numero,
+      p_complemento: local.complemento,
+      p_bairro: local.bairro,
+      p_cidade: local.cidade,
+      p_estado: local.estado,
+    }),
+    8000,
+    'complete-owner-onboarding'
+  );
+}
