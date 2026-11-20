@@ -19,7 +19,7 @@ function props() {
     verificarAcessoAoProfissional: vi.fn().mockResolvedValue(true),
     uiAlert: vi.fn().mockResolvedValue(undefined),
     uiConfirm: vi.fn(),
-    formEntrega: { nome: 'Corte', tempo_minutos: '30', valor: '', valor_promocional: '', profissional_id: 'p1' },
+    formEntrega: { nome: 'Corte', tempo_minutos: '30', valor: '', valor_oferta: '', profissional_id: 'p1' },
     setFormEntrega: vi.fn(),
     entregas: [{ id: 'e1', profissional_id: 'p1' }],
     editingEntregaId: 'e1',
