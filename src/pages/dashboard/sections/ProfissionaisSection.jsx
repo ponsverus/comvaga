@@ -12,7 +12,7 @@ import { resolveProfissionalStatusKey } from '../../../utils/profissionalStatus'
 function buildProfissionalForm(p) {
   return {
     nome: p.nome || '',
-    profissao: p.profissao || '',
+    oficio: p.oficio || '',
     anos_experiencia: String(p.anos_experiencia ?? ''),
     horarios: normalizeProfissionalHorarios(p),
   };
@@ -93,7 +93,7 @@ export default function ProfissionaisSection({
                       <span className={`text-xs ${isPendente ? 'text-yellow-400' : 'text-gray-400'}`}>{isPendente ? 'PENDENTE' : (statusLabelView || '-')}</span>
                     </div>
                   )}
-                  {p.profissao && <p className="text-xs text-gray-500 mt-1">{p.profissao}</p>}
+                  {p.oficio && <p className="text-xs text-gray-500 mt-1">{p.oficio}</p>}
                   {!isPendente && p.anos_experiencia != null && (
                     <p className="text-xs text-gray-500 mt-1">{p.anos_experiencia} ANOS DE EXPERIÊNCIA</p>
                   )}

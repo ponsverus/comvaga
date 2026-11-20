@@ -38,7 +38,7 @@ function previewProfessionals(value, supabaseUrl) {
     && ['ABERTO', 'FECHADO', 'PAUSA'].includes(prof.status_key)).slice(0, 3).map((prof) => ({
     id: prof.id,
     nome: prof.nome,
-    profissao: typeof prof.profissao === 'string' ? prof.profissao : null,
+    oficio: typeof prof.oficio === 'string' ? prof.oficio : null,
     anos_experiencia: Number.isInteger(prof.anos_experiencia) && prof.anos_experiencia >= 0 ? prof.anos_experiencia : null,
     avatar_url: previewAvatarUrl(prof, supabaseUrl),
     status_key: prof.status_key,

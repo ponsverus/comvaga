@@ -676,7 +676,7 @@ export async function updateProfissionalComHorarios(profissionalId, payload) {
     () => supabase.rpc('update_profissional_com_horarios', {
       p_profissional_id: profissionalId,
       p_nome: payload.nome,
-      p_profissao: payload.profissao,
+      p_oficio: payload.oficio,
       p_anos_experiencia: payload.anos_experiencia,
       p_horarios: payload.horarios,
     }),

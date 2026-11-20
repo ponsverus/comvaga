@@ -173,7 +173,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const [showEditProfissional, setShowEditProfissional]       = useState(false);
   const [editingProfissionalId, setEditingProfissionalId]     = useState(null);
-  const [formProfissional, setFormProfissional] = useState({ nome: '', profissao: '', anos_experiencia: '', horarios: DEFAULT_PROFISSIONAL_HORARIOS });
+  const [formProfissional, setFormProfissional] = useState({ nome: '', oficio: '', anos_experiencia: '', horarios: DEFAULT_PROFISSIONAL_HORARIOS });
 
   useEffect(() => {
     if (!negocio) return;
