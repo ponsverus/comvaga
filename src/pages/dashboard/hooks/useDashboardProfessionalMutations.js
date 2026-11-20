@@ -1,203 +1,205 @@
 import { useState } from 'react';
-import { getDiasTrabalhoFromHorarios, timeToMinutes, toUpperClean } from '../utils';
+import { toNumberOrNull, toUpperClean } from '../utils';
 import {
-  aprovarParceiroProfissional,
-  excluirProfissionalParceiroSeguramente,
-  fetchUserNome,
-  insertProfissional,
-  updateProfissionalComHorarios,
-  updateProfissionalStatus,
+  ativarEntregaSeguramente,
+  excluirEntregaSeguramente,
+  inativarEntregaSeguramente,
+  insertEntrega,
+  updateEntregaById,
 } from '../api/dashboardApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 
-export function useDashboardProfessionalMutations({
-  userId,
+export function useDashboardEntregaMutations({
   negocio,
-  parceiroProfissional,
-  reloadProfissionais,
+  businessGroup,
   reloadEntregas,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   uiAlert,
   uiConfirm,
-  formProfissional,
-  editingProfissionalId,
-  setEditingProfissionalId,
-  setShowEditProfissional,
+  formEntrega,
+  setFormEntrega,
+  entregas,
+  editingEntregaId,
+  setEditingEntregaId,
+  setShowNovaEntrega,
   lockAction,
   unlockAction,
   getBillingErrorKey,
 }) {
-  const [submittingProfissional, setSubmittingProfissional] = useState(false);
-  const [submittingAdminProf, setSubmittingAdminProf] = useState(false);
+  const [submittingEntrega, setSubmittingEntrega] = useState(false);
 
-  const cadastrarAdminComoProfissional = async () => {
-    if (!negocio?.id || !userId || submittingAdminProf) return;
+  const isEntregaDuplicateNameError = (error) => {
+    const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+    return raw.includes('23505')
+      || raw.includes('ux_entregas_ativas_profissional_nome_normalizado')
+      || raw.includes('duplicate key');
+  };
+
+  const resetEntregaForm = () => {
+    setShowNovaEntrega(false);
+    setEditingEntregaId(null);
+    setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
+  };
+
+  const createEntrega = async (e) => {
+    e.preventDefault();
+    if (submittingEntrega || !businessGroup) return;
     try {
-      setSubmittingAdminProf(true);
-      const userData = await fetchUserNome(userId);
-      const nome = String(userData?.nome || '').trim() || 'PROFISSIONAL';
-      await insertProfissional({
+      setSubmittingEntrega(true);
+      if (!negocio?.id) throw new Error('Erro ao carregar o negocio');
+      const profId = formEntrega.profissional_id;
+      if (!await verificarAcessoAoProfissional(profId)) return;
+      const valor = toNumberOrNull(formEntrega.valor);
+      const promo = toNumberOrNull(formEntrega.valor_promocional);
+      if (valor == null) {
+        await uiAlert('dashboard.entrega_valor_invalid', 'error');
+        return;
+      }
+      if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
+      const payload = {
+        nome: toUpperClean(formEntrega.nome),
+        profissional_id: profId,
+        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
+        valor,
+        valor_promocional: promo,
+        ativo: true,
         negocio_id: negocio.id,
-        user_id: userId,
-        nome,
-        status: 'ativo',
-      });
-      await uiAlert('dashboard.professional_updated', 'success');
-      await reloadProfissionais();
-    } catch (err) {
-      const billingKey = getBillingErrorKey(err);
+      };
+      if (!payload.nome) throw new Error('Nome da entrega e obrigatorio.');
+      if (!payload.profissional_id) throw new Error('Selecione um profissional.');
+      if (!payload.tempo_minutos) throw new Error('Tempo inválido.');
+      await insertEntrega(payload);
+      await uiAlert(`dashboard.business.${businessGroup}.entrega_created`, 'success');
+      resetEntregaForm();
+      await reloadEntregas(negocio.id, [profId]);
+    } catch (e2) {
+      const billingKey = getBillingErrorKey(e2);
+      const msg = String(e2?.message || '');
       if (billingKey) await uiAlert(billingKey, 'warning');
-      else await uiAlert('dashboard.professional_update_error', 'error');
+      else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
+      else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_tempo_invalid', 'error');
+      else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
+      else await uiAlert(`dashboard.business.${businessGroup}.entrega_create_error`, 'error');
     } finally {
-      setSubmittingAdminProf(false);
+      setSubmittingEntrega(false);
     }
   };
 
-  const toggleStatusProfissional = async (p) => {
-    const lockKey = `profissional-status:${p?.id || 'item'}`;
-    if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(p.id)) {
-      unlockAction(lockKey);
-      return;
-    }
+  const updateEntrega = async (e) => {
+    e.preventDefault();
+    if (submittingEntrega || !businessGroup) return;
     try {
-      const novoStatus = p.status === 'ativo' ? 'inativo' : 'ativo';
-      if (novoStatus === 'inativo') {
-        const confirmed = await uiConfirm('dashboard.professional_inactivate_confirm', 'warning');
-        if (!confirmed) return;
+      setSubmittingEntrega(true);
+      const profId = formEntrega.profissional_id;
+      if (!await verificarAcessoAoProfissional(profId)) return;
+      const valor = toNumberOrNull(formEntrega.valor);
+      const promo = toNumberOrNull(formEntrega.valor_promocional);
+      if (!toUpperClean(formEntrega.nome)) throw new Error('Nome da entrega e obrigatorio.');
+      if (!profId) throw new Error('Selecione um profissional.');
+      if (!toNumberOrNull(formEntrega.tempo_minutos)) throw new Error('Tempo inválido.');
+      if (valor == null) {
+        await uiAlert('dashboard.entrega_valor_invalid', 'error');
+        return;
       }
-      await updateProfissionalStatus(
-        p.id,
-        negocio.id,
-        novoStatus
-      );
-      await uiAlert(novoStatus === 'ativo' ? 'dashboard.professional_activated' : 'dashboard.professional_inactivated', 'success');
-      await reloadProfissionais();
-    } catch (error) {
-      const msg = String(error?.message || '');
-      if (msg.includes('profissional_agendamentos_futuros_bloqueados')) {
-        await uiAlert('dashboard.professional_future_bookings_blocked', 'warning');
+      if (promo != null && promo >= valor) throw new Error('Valor de oferta deve ser menor.');
+      const payload = {
+        nome: toUpperClean(formEntrega.nome),
+        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
+        valor,
+        valor_promocional: promo,
+        profissional_id: profId,
+      };
+      const entregaAtual = (entregas || []).find((item) => item.id === editingEntregaId);
+      const mudouProfissional = entregaAtual?.profissional_id && entregaAtual.profissional_id !== profId;
+
+      if (mudouProfissional) {
+        await insertEntrega({ ...payload, ativo: true, negocio_id: negocio.id });
+        await uiAlert(`dashboard.business.${businessGroup}.entrega_created`, 'success');
       } else {
-        await uiAlert('dashboard.professional_toggle_error', 'error');
+        await updateEntregaById(editingEntregaId, negocio.id, payload);
+        await uiAlert(`dashboard.business.${businessGroup}.entrega_updated`, 'success');
       }
+      resetEntregaForm();
+      await reloadEntregas(
+        negocio.id,
+        mudouProfissional ? [entregaAtual.profissional_id, profId].filter(Boolean) : [profId]
+      );
+    } catch (e2) {
+      const billingKey = getBillingErrorKey(e2);
+      const msg = String(e2?.message || '');
+      if (billingKey) await uiAlert(billingKey, 'warning');
+      else if (isEntregaDuplicateNameError(e2)) await uiAlert(`dashboard.business.${businessGroup}.entrega_duplicate_name`, 'warning');
+      else if (msg.includes('oferta')) await uiAlert('dashboard.entrega_promo_invalid', 'error');
+      else if (msg.includes('Tempo')) await uiAlert('dashboard.entrega_tempo_invalid', 'error');
+      else if (msg.includes('Selecione')) await uiAlert(`dashboard.business.${businessGroup}.entrega_prof_required`, 'error');
+      else await uiAlert(`dashboard.business.${businessGroup}.entrega_update_error`, 'error');
     } finally {
-      unlockAction(lockKey);
+      setSubmittingEntrega(false);
     }
   };
 
-  const excluirProfissional = async (p) => {
-    const lockKey = `profissional-delete:${p?.id || 'item'}`;
+  const deleteEntrega = async (entrega) => {
+    if (!businessGroup) return;
+    const lockKey = `entrega-delete:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(p.id)) {
+    if (!await verificarAcessoAoProfissional(entrega.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
-    const isSelfProfessional = Boolean(p?.user_id && p.user_id === userId && negocio?.owner_id === userId);
-    const ok = await uiConfirm(
-      isSelfProfessional ? 'dashboard.professional_self_delete_confirm' : 'dashboard.professional_delete_confirm',
-      'warning'
-    );
+    const ok = await uiConfirm(`dashboard.business.${businessGroup}.entrega_delete_confirm`, 'warning');
     if (!ok) {
       unlockAction(lockKey);
       return;
     }
     try {
-      await excluirProfissionalParceiroSeguramente(p.id);
-      await uiAlert(isSelfProfessional ? 'dashboard.professional_self_deleted' : 'dashboard.professional_deleted', 'success');
-      const profs = await reloadProfissionais();
-      if (profs?.length) await reloadEntregas(negocio.id, profs.map((item) => item.id));
-      else await reloadEntregas(negocio.id, []);
+      await excluirEntregaSeguramente(entrega.id);
+      await uiAlert(`dashboard.business.${businessGroup}.entrega_deleted`, 'success');
+      await reloadEntregas(negocio.id, [entrega.profissional_id]);
     } catch (error) {
-      const requestKey = getRequestErrorKey(error);
-      const msg = String(error?.message || '');
-      if (msg.includes('profissional_agendamentos_futuros_bloqueados')) await uiAlert('dashboard.professional_future_bookings_blocked', 'warning');
-      else if (requestKey) await uiAlert(requestKey, 'warning');
-      else await uiAlert('dashboard.professional_delete_error', 'error');
+      const requestKey = getRequestErrorKey(error, {
+        entregaFutureBookingsKey: `dashboard.business.${businessGroup}.entrega_future_bookings_blocked`,
+      });
+      if (requestKey) await uiAlert(requestKey, 'warning');
+      else await uiAlert(`dashboard.business.${businessGroup}.entrega_delete_error`, 'error');
     } finally {
       unlockAction(lockKey);
     }
   };
 
-  const updateProfissional = async (e) => {
-    e.preventDefault();
-    if (submittingProfissional) return;
-    try {
-      setSubmittingProfissional(true);
-      if (!await checarPermissao(editingProfissionalId)) return;
-      const horarios = Array.isArray(formProfissional.horarios) ? formProfissional.horarios : [];
-      const diasAtivos = getDiasTrabalhoFromHorarios(horarios);
-      if (!diasAtivos.length) throw new Error('profissional_horarios_sem_dia_ativo');
-      for (const h of horarios) {
-        if (h.ativo === false) continue;
-        const inicio = timeToMinutes(h.horario_inicio);
-        const fim = timeToMinutes(h.horario_fim);
-        const pausaInicio = h.pausa_inicio ? timeToMinutes(h.pausa_inicio) : null;
-        const pausaFim = h.pausa_fim ? timeToMinutes(h.pausa_fim) : null;
-        if (!Number.isFinite(inicio) || !Number.isFinite(fim) || inicio >= fim) throw new Error('profissional_horarios_invalidos');
-        if ((pausaInicio == null) !== (pausaFim == null)) throw new Error('profissional_horarios_invalidos');
-        if (pausaInicio != null && (pausaInicio >= pausaFim || pausaInicio < inicio || pausaFim > fim)) throw new Error('profissional_horarios_invalidos');
-      }
-      const payload = {
-        nome: String(formProfissional.nome || '').trim(),
-        oficio: toUpperClean(formProfissional.oficio) || null,
-        anos_experiencia: formProfissional.anos_experiencia !== '' ? Number(formProfissional.anos_experiencia) : null,
-        horarios: horarios.map((h) => ({
-          dia_semana: Number(h.dia_semana),
-          ativo: h.ativo !== false,
-          horario_inicio: h.horario_inicio || '08:00',
-          horario_fim: h.horario_fim || '18:00',
-          pausa_inicio: h.pausa_inicio || null,
-          pausa_fim: h.pausa_fim || null,
-        })),
-      };
-      if (!payload.nome) throw new Error('Nome obrigatorio.');
-      await updateProfissionalComHorarios(editingProfissionalId, payload);
-      await uiAlert('dashboard.professional_updated', 'success');
-      setShowEditProfissional(false);
-      setEditingProfissionalId(null);
-      await reloadProfissionais();
-    } catch (e) {
-      const msg = String(e?.message || '');
-      if (msg.includes('profissional_horarios_invalidos') || msg.includes('profissional_horarios_sem_dia_ativo')) await uiAlert('dashboard.professional_update_error', 'error');
-      else if (msg.includes('profissional_pausa_bloqueada')) await uiAlert('dashboard.professional_pausa_blocked', 'error');
-      else if (msg.includes('profissional_dia_bloqueado')) await uiAlert('dashboard.professional_dia_blocked', 'error');
-      else if (msg.includes('profissional_horario_bloqueado') || msg.includes('profissional_expediente_bloqueado')) await uiAlert('dashboard.professional_schedule_blocked', 'error');
-      else await uiAlert('dashboard.professional_update_error', 'error');
-    } finally {
-      setSubmittingProfissional(false);
-    }
-  };
-
-  const aprovarParceiro = async (prof) => {
-    const lockKey = `parceiro-aprovar:${prof?.id || 'item'}`;
+  const toggleStatusEntrega = async (entrega) => {
+    if (!businessGroup) return;
+    const lockKey = `entrega-status:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (parceiroProfissional) {
-      await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
+    if (!await verificarAcessoAoProfissional(entrega.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
     try {
-      await aprovarParceiroProfissional(prof.id, negocio.id);
-      await uiAlert('dashboard.professional_approved', 'success');
-      await reloadProfissionais();
-    } catch (err) {
-      const billingKey = getBillingErrorKey(err);
-      const requestKey = getRequestErrorKey(err);
-      if (billingKey) await uiAlert(billingKey, 'warning');
-      else if (requestKey) await uiAlert(requestKey, 'warning');
-      else await uiAlert('dashboard.partner_approve_error', 'error');
+      if (entrega.ativo) {
+        await inativarEntregaSeguramente(entrega.id);
+        await uiAlert(`dashboard.business.${businessGroup}.entrega_inactivated`, 'success');
+      } else {
+        await ativarEntregaSeguramente(entrega.id);
+        await uiAlert(`dashboard.business.${businessGroup}.entrega_activated`, 'success');
+      }
+      await reloadEntregas(negocio.id, [entrega.profissional_id]);
+    } catch (error) {
+      const requestKey = getRequestErrorKey(error, {
+        entregaFutureBookingsKey: `dashboard.business.${businessGroup}.entrega_future_bookings_blocked`,
+      });
+      if (requestKey) await uiAlert(requestKey, 'warning');
+      else await uiAlert(`dashboard.business.${businessGroup}.entrega_toggle_error`, 'error');
     } finally {
       unlockAction(lockKey);
     }
   };
 
   return {
-    submittingProfissional,
-    submittingAdminProf,
-    cadastrarAdminComoProfissional,
-    toggleStatusProfissional,
-    excluirProfissional,
-    updateProfissional,
-    aprovarParceiro,
+    submittingEntrega,
+    createEntrega,
+    updateEntrega,
+    deleteEntrega,
+    toggleStatusEntrega,
   };
 }
