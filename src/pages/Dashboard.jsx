@@ -108,12 +108,12 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const verificarAcessoAoProfissional = useCallback(async (profissionalId) => {
     if (!acessoDashboardAutorizado) {
-      await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
+      await uiAlert('dashboard.parceiro_acesso_restrito', 'warning');
       return false;
     }
     if (!parceiroProfissional) return true;
     if (parceiroProfissional.id === profissionalId) return true;
-    await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
+    await uiAlert('dashboard.parceiro_acesso_restrito', 'warning');
     return false;
   }, [acessoDashboardAutorizado, parceiroProfissional, uiAlert]);
 

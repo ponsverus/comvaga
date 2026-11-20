@@ -172,7 +172,7 @@ export function useDashboardProfessionalMutations({
     const lockKey = `parceiro-aprovar:${prof?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
     if (parceiroProfissional) {
-      await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
+      await uiAlert('dashboard.parceiro_acesso_restrito', 'warning');
       unlockAction(lockKey);
       return;
     }

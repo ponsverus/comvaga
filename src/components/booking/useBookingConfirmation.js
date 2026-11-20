@@ -76,7 +76,7 @@ export function useBookingConfirmation({
       if (!mountedRef.current) return;
       const msg = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
       const limited = isRateLimitError(error);
-      const notAllowed = msg.includes('acao_nao_permitida');
+      const notAllowed = msg.includes('acesso_negado');
       const connectionFailed = isConnectionError(error);
       const scheduleBlocked = msg.includes('blocked');
       const expired = msg.includes('agendamento_horario_expirado') || msg.includes('horario_expirado');
