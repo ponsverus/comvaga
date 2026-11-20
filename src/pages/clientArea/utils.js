@@ -16,10 +16,10 @@ export const moneyBR = (v) => {
 
 export const getValorFinalEntrega = (e) => {
   const valor = Number(e?.valor ?? 0);
-  const promoRaw = e?.valor_promocional;
-  const promo = (promoRaw == null || promoRaw === '') ? 0 : Number(promoRaw);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
-  return temPromo ? promo : valor;
+  const ofertaRaw = e?.valor_oferta;
+  const oferta = (ofertaRaw == null || ofertaRaw === '') ? 0 : Number(ofertaRaw);
+  const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
+  return temOferta ? oferta : valor;
 };
 
 export const getValorAgendamento = (a) => {
