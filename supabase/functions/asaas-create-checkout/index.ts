@@ -146,7 +146,7 @@ function classifyCheckoutFailure(error: unknown, providerCallStarted: boolean): 
     return { code: message, status: 409, outcomeUnknown: false, providerStatus: null };
   }
   if (message === 'checkout_owner_required') {
-    return { code: 'acao_nao_permitida', status: 403, outcomeUnknown: false, providerStatus: null };
+    return { code: 'acesso_negado', status: 403, outcomeUnknown: false, providerStatus: null };
   }
   if (message === 'plan_not_found') {
     return { code: message, status: 404, outcomeUnknown: false, providerStatus: null };
@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
     if (planFetchError) throw planFetchError;
     if (negocioError) throw negocioError;
     if (!plan) return jsonResponse({ error: 'plan_not_found' }, 404, req);
-    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
+    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acesso_negado' }, 403, req);
 
     const selectedPlan = plan as BillingPlan;
 

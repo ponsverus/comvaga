@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const { data: negocio, error: negocioError } = await admin.from('negocios')
       .select('owner_id').eq('id', negocioId).maybeSingle();
     if (negocioError) throw negocioError;
-    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
+    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acesso_negado' }, 403, req);
     const limited = await reserveOwnerAsaasAction(admin, authData.user.id, 'cancel_downgrade', req);
     if (limited) return limited;
 

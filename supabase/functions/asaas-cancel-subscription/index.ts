@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
 
     if (negocioError) throw negocioError;
     if (subscriptionError) throw subscriptionError;
-    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
+    if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acesso_negado' }, 403, req);
     if (!subscription) return jsonResponse({ error: 'subscription_not_cancelable' }, 400, req);
 
     const providerSubscriptionId = asText(subscription.provider_subscription_id);
