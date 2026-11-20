@@ -562,7 +562,7 @@ export async function fetchDashboardOverview({
     metricsTopCards: data?.top_cards || null,
     metricsDia: { selected_day: data?.selected_day || null },
     metricsPeriodoData: { period: data?.period || null },
-    metricsUtilizacao: { utilizacao: data?.utilizacao || null },
+    metricsAgendaDiaSeguinte: { agenda_dia_seguinte: data?.agenda_dia_seguinte || null },
     metricsFutureBookings: { future_bookings: data?.future_bookings || null },
     proximoAgendamento: data?.proximo_agendamento ? normalizeAgRow(data.proximo_agendamento) : null,
   };
