@@ -69,8 +69,8 @@ export default function ProfissionalModal({
           <ProfessionalFieldRow label="PROFISS.">
             <input
               type="text"
-              value={formProfissional.profissao}
-              onChange={(e) => setFormProfissional({ ...formProfissional, profissao: toUpperClean(e.target.value) })}
+              value={formProfissional.oficio}
+              onChange={(e) => setFormProfissional({ ...formProfissional, oficio: toUpperClean(e.target.value) })}
               className={professionalInputClass}
               placeholder="EX: BARBEIRO, MANICURE..."
             />
