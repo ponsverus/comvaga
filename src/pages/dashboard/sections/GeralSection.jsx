@@ -1,6 +1,6 @@
 import DatePicker from '../../../components/DatePicker';
 import MesSelect from '../../../components/MesSelect';
-import AgendaUtilizacaoBlock from '../components/AgendaUtilizacaoBlock';
+import AgendaDiaSeguinteBlock from '../components/AgendaDiaSeguinteBlock';
 import FutureBookingsBlock from '../components/FutureBookingsBlock';
 import ScrollableCardsRow from '../components/ScrollableCardsRow';
 import { getAgInicio } from '../utils';
@@ -69,8 +69,8 @@ export default function VisaoGeralSection({
   metricsPeriodoData,
   metricsPeriodoLoading,
   faturamentoPorProfissionalPeriodo,
-  metricsUtilizacao,
-  metricsUtilizacaoLoading,
+  metricsAgendaDiaSeguinte,
+  metricsAgendaDiaSeguinteLoading,
   metricsFutureBookings,
   metricsFutureBookingsLoading,
   counterSingular,
@@ -96,10 +96,10 @@ export default function VisaoGeralSection({
           renderItem={([nome, valor]) => <ProfessionalRevenueCard nome={nome} valor={valor} />}
         />
       )}
-      <AgendaUtilizacaoBlock
+      <AgendaDiaSeguinteBlock
         souDono={souDono}
-        metricsUtilizacao={metricsUtilizacao}
-        metricsUtilizacaoLoading={metricsUtilizacaoLoading}
+        metricsAgendaDiaSeguinte={metricsAgendaDiaSeguinte}
+        metricsAgendaDiaSeguinteLoading={metricsAgendaDiaSeguinteLoading}
       />
       <FutureBookingsBlock
         souDono={souDono}
