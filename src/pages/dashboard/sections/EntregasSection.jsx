@@ -93,14 +93,14 @@ function ProfissionalEntregasBlock({
           >
               {visibleEntregas.map(s => {
                 const valor = Number(s.valor ?? 0);
-                const promo = s.valor_promocional == null ? null : Number(s.valor_promocional);
+                const oferta = s.valor_oferta == null ? null : Number(s.valor_oferta);
                 const isInativo = s.ativo === false;
                 return (
                   <div key={s.id} className={`relative bg-dark-100 border rounded-custom p-5 ${isInativo ? 'border-gray-700' : 'border-gray-800'}`}>
                     <div className="flex justify-between items-start mb-4">
                       <span className="inline-flex items-center rounded-full border border-gray-700 bg-transparent px-3 py-1 text-xs text-gray-500">{s.tempo_minutos} MIN</span>
-                      {promo != null && promo > 0 && promo < valor ? (
-                        <div className="text-xl font-normal text-green-400">R$ {promo.toFixed(2)}</div>
+                      {oferta != null && oferta > 0 && oferta < valor ? (
+                        <div className="text-xl font-normal text-green-400">R$ {oferta.toFixed(2)}</div>
                       ) : (<div className="text-xl font-normal text-primary">R$ {valor.toFixed(2)}</div>)}
                     </div>
                     <h3 className="flex items-center gap-2 text-sm font-normal text-white mb-0.5">
@@ -118,7 +118,7 @@ function ProfissionalEntregasBlock({
                       <button onClick={async () => {
                           if (!await verificarAcessoAoProfissional(s.profissional_id)) return;
                           setEditingEntregaId(s.id);
-                          setFormEntrega({ nome: s.nome || '', tempo_minutos: String(s.tempo_minutos ?? ''), valor: String(s.valor ?? ''), valor_promocional: String(s.valor_promocional ?? ''), profissional_id: s.profissional_id || '' });
+                          setFormEntrega({ nome: s.nome || '', tempo_minutos: String(s.tempo_minutos ?? ''), valor: String(s.valor ?? ''), valor_oferta: String(s.valor_oferta ?? ''), profissional_id: s.profissional_id || '' });
                           setShowNovaEntrega(true);
                         }} className="w-full py-2 bg-blue-500/20 border border-blue-500/50 text-blue-400 rounded-button text-sm font-normal uppercase">EDITAR</button>
                     </div>
@@ -188,7 +188,7 @@ export default function EntregasSection({
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-normal">{sectionTitle}</h2>
         <button
-          onClick={() => { const profId = parceiroProfissional ? parceiroProfissional.id : ''; setShowNovaEntrega(true); setEditingEntregaId(null); setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_promocional: '', profissional_id: profId }); }}
+          onClick={() => { const profId = parceiroProfissional ? parceiroProfissional.id : ''; setShowNovaEntrega(true); setEditingEntregaId(null); setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_oferta: '', profissional_id: profId }); }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-button font-normal uppercase border bg-gradient-to-r from-primary to-yellow-600 text-black border-transparent">
           <Plus className="w-5 h-5" />{btnAddLabel}
         </button>
