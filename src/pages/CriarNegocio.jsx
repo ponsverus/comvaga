@@ -140,7 +140,7 @@ export default function CriarNegocio({ user }) {
           showMessage('signupProfessional.partner_cannot_create_business');
           return;
         }
-        if (code === 'usuario_sem_permissao' || code === 'nao_autenticado') {
+        if (code === 'acesso_negado' || code === 'nao_autenticado') {
           showMessage('signupProfessional.profile_not_created');
           return;
         }
