@@ -29,9 +29,9 @@ function PeriodProfessionalsScroller({ items }) {
         items={items}
         keyExtractor={([nome]) => String(nome)}
         cardClassName="relative bg-dark-200 border border-gray-800 rounded-custom p-4 pr-24"
-        renderItem={([nome, valor, concluidos, variacao]) => (
+        renderItem={([nome, valor, concluidos, comparativoPercentual]) => (
           <>
-            <PeriodRevenueBadge value={variacao} />
+            <PeriodRevenueBadge value={comparativoPercentual} />
             <div className="text-xs text-gray-500 mb-1">PROFISSIONAL</div>
             <div className="font-normal text-white uppercase">{String(nome || '—')}</div>
             <div className="text-primary font-normal mt-1">R$ {Number(valor || 0).toFixed(2)}</div>
@@ -75,7 +75,7 @@ export default function VisaoGeralSection({
   metricsFutureBookingsLoading,
   counterSingular,
 }) {
-  const variacaoMensalParceiro = !souDono && faturamentoPorProfissionalPeriodo.length > 0
+  const comparativoPercentualMensalParceiro = !souDono && faturamentoPorProfissionalPeriodo.length > 0
     ? faturamentoPorProfissionalPeriodo[0]?.[3]
     : null;
 
@@ -129,7 +129,7 @@ export default function VisaoGeralSection({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3"><div className="text-sm text-white-500 uppercase tracking-wide">FATURAMENTO MÊS</div><MesSelect value={faturamentoMes} onChange={setFaturamentoMes} todayISO={hoje} /></div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">CONCLUÍDOS</div><div className="text-xl font-normal text-green-400">{Number(metricsPeriodoData?.period?.concluidos || 0)}</div></div>
-            <div className="relative bg-dark-200 border border-gray-800 rounded-custom p-4"><PeriodRevenueBadge value={variacaoMensalParceiro} /><div className="text-xs text-gray-500 mb-1 pr-20">FATURAMENTO</div><div className="text-xl font-normal text-primary">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.faturamento || 0).toFixed(2)}`}</div></div>
+            <div className="relative bg-dark-200 border border-gray-800 rounded-custom p-4"><PeriodRevenueBadge value={comparativoPercentualMensalParceiro} /><div className="text-xs text-gray-500 mb-1 pr-20">FATURAMENTO</div><div className="text-xl font-normal text-primary">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.faturamento || 0).toFixed(2)}`}</div></div>
             <div className="bg-dark-200 border border-gray-800 rounded-custom p-4"><div className="text-xs text-gray-500 mb-1">MÉDIA POR {counterSingular.toUpperCase()}</div><div className="text-xl font-normal text-white">{metricsPeriodoLoading ? '...' : `R$ ${Number(metricsPeriodoData?.period?.media_por_atendimento || 0).toFixed(2)}`}</div></div>
           </div>
           {souDono && faturamentoPorProfissionalPeriodo.length > 0 && <PeriodProfessionalsScroller items={faturamentoPorProfissionalPeriodo} />}
