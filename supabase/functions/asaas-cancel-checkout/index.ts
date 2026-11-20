@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (negocioError) throw negocioError;
     if (!negocio || negocio.owner_id !== authData.user.id) {
-      return jsonResponse({ error: 'acao_nao_permitida' }, 403, req);
+      return jsonResponse({ error: 'acesso_negado' }, 403, req);
     }
 
     const now = new Date().toISOString();
