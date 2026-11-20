@@ -190,9 +190,9 @@ export const negocio = {
     buttonText: 'OK',
   },
 
-  entrega_promo_invalid: {
+  entrega_oferta_invalid: {
     title: 'Oferta inválida',
-    body: 'O valor promocional precisa ser menor que o valor original.',
+    body: 'O valor da oferta precisa ser menor que o valor original.',
     variant: 'danger',
     screen: 'dark',
     buttonText: 'OK',

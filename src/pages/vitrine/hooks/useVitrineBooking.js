@@ -167,7 +167,7 @@ export function useVitrineBooking({
       nome: flow.entregasSelecionadas.length === 1 ? primeiraEntrega.nome : `${flow.entregasSelecionadas.length} ${counterPlural}`,
       tempo_minutos: tempoTotalMinutos,
       valor: valTotal,
-      valor_promocional: null,
+      valor_oferta: null,
       entrega_ids: flow.entregasSelecionadas.map((item) => item.id).filter(Boolean),
     };
   }, [counterPlural, flow.entregasSelecionadas, getValorFinalEntrega]);

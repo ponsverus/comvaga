@@ -100,7 +100,7 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   const { data, error } = await withPublicAuthRetry(
     () => supabase
       .from('entregas')
-      .select('id, negocio_id, profissional_id, nome, tempo_minutos, valor, valor_promocional, ativo')
+      .select('id, negocio_id, profissional_id, nome, tempo_minutos, valor, valor_oferta, ativo')
       .eq('id', entregaId)
       .eq('profissional_id', profissionalId)
       .eq('ativo', true)
@@ -113,11 +113,11 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   if (error) throw error;
   if (!data) return null;
   const valor = Number(data.valor ?? 0);
-  const promo = Number(data.valor_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
+  const oferta = Number(data.valor_oferta ?? 0);
+  const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
   return {
     ...data,
-    valor_final: temPromo ? promo : valor,
+    valor_final: temOferta ? oferta : valor,
   };
 }
 

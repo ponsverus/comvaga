@@ -148,7 +148,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
   const [showNovaEntrega, setShowNovaEntrega]       = useState(false);
   const [editingEntregaId, setEditingEntregaId]     = useState(null);
 
-  const [formEntrega, setFormEntrega] = useState({ nome: '', tempo_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
+  const [formEntrega, setFormEntrega] = useState({ nome: '', tempo_minutos: '', valor: '', valor_oferta: '', profissional_id: '' });
 
   const [formInfo, setFormInfo] = useState({
     nome: '',
@@ -746,7 +746,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         onClose={() => {
           setShowNovaEntrega(false);
           setEditingEntregaId(null);
-          setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_promocional: '', profissional_id: '' });
+          setFormEntrega({ nome: '', tempo_minutos: '', valor: '', valor_oferta: '', profissional_id: '' });
         }}
         onSubmit={editingEntregaId ? updateEntrega : createEntrega}
       />

@@ -193,7 +193,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: ag, error } = await supabase
     .from('agendamentos')
-    .select(`id, data, horario_inicio, status, valor_final, entregas (nome, valor, valor_promocional), profissionais (id, nome, user_id, negocio_id), cliente:clientes!agendamentos_cliente_id_fkey (id, user_id, nome), negocios (id, owner_id, nome)`)
+    .select(`id, data, horario_inicio, status, valor_final, entregas (nome, valor, valor_oferta), profissionais (id, nome, user_id, negocio_id), cliente:clientes!agendamentos_cliente_id_fkey (id, user_id, nome), negocios (id, owner_id, nome)`)
     .eq('id', agendamentoId)
     .single();
 
@@ -211,7 +211,7 @@ Deno.serve(async (req: Request) => {
   const valorFinal = ag.valor_final == null ? null : Number(ag.valor_final);
   const valorReal = valorFinal != null && Number.isFinite(valorFinal)
     ? valorFinal
-    : Number(entrega?.valor_promocional || entrega?.valor || 0);
+    : Number(entrega?.valor_oferta || entrega?.valor || 0);
 
   const entregaNomeRaw = (entrega?.nome as string | null | undefined) ?? null;
 

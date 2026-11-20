@@ -99,8 +99,8 @@ export default function BookingCalendar({
 
   const canGoPrev    = !(viewYear === today?.year && viewMonth === today?.month);
   const diasTrabalho = getDiasTrabalho(profissional);
-  const valorExibido = entrega?.valor_promocional
-    ? Number(entrega.valor_promocional).toFixed(2)
+  const valorExibido = entrega?.valor_oferta
+    ? Number(entrega.valor_oferta).toFixed(2)
     : Number(entrega?.valor ?? 0).toFixed(2);
 
   const totalDays = daysInMonth(viewYear, viewMonth);
@@ -140,7 +140,7 @@ export default function BookingCalendar({
             <div className={`text-xs mt-0.5 ${subtitleColor}`}>
               <span className="uppercase">{profissional?.nome}</span>
               {entrega?.tempo_minutos && <span className={`ml-2 ${subMutedColor}`}>• {entrega.tempo_minutos} MIN</span>}
-              <span className="ml-2 text-vpromo">• R$ {valorExibido}</span>
+              <span className="ml-2 text-voferta">• R$ {valorExibido}</span>
             </div>
           </div>
           <button

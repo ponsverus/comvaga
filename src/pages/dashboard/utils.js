@@ -182,9 +182,9 @@ export function getImageExt(file) {
 export const toUpperClean = (s) => String(s || '').trim().replace(/\s+/g, ' ').toUpperCase();
 export function getValorEntrega(entrega) {
   const valor = Number(entrega?.valor ?? 0);
-  const promoRaw = entrega?.valor_promocional;
-  const promo = (promoRaw == null || promoRaw === '') ? null : Number(promoRaw);
-  if (promo != null && Number.isFinite(promo) && promo > 0 && promo < valor) return promo;
+  const ofertaRaw = entrega?.valor_oferta;
+  const oferta = (ofertaRaw == null || ofertaRaw === '') ? null : Number(ofertaRaw);
+  if (oferta != null && Number.isFinite(oferta) && oferta > 0 && oferta < valor) return oferta;
   return valor;
 }
 

@@ -47,7 +47,7 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
       entregas: {
         nome:              a.entrega_nome,
         valor:             a.entrega_valor,
-        valor_promocional: a.entrega_promo,
+        valor_oferta: a.entrega_valor_oferta,
       },
       profissionais: {
         nome:    a.profissional_nome,
