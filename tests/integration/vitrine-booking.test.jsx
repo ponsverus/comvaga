@@ -1,3 +1,4 @@
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useVitrineBooking } from '../../src/pages/vitrine/hooks/useVitrineBooking.js';
@@ -7,7 +8,7 @@ import { fetchVitrineEntregaById } from '../../src/pages/vitrine/api/vitrineApi.
 vi.mock('../../src/pages/vitrine/api/vitrineApi.js', () => ({ fetchVitrineEntregaById: vi.fn() }));
 
 const ana = { id: 'p1', nome: 'Ana' };
-const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', valor: 100, valor_promocional: 80, tempo_minutos: 30, ativo: true };
+const corte = { id: 'e1', profissional_id: 'p1', nome: 'Corte', valor: 100, valor_oferta: 80, tempo_minutos: 30, ativo: true };
 const barba = { id: 'e2', profissional_id: 'p1', nome: 'Barba', valor: 40, tempo_minutos: 20, ativo: true };
 
 function config(overrides = {}) {
@@ -79,7 +80,7 @@ describe('Fluxo simulado de escolha e abertura do agendamento', () => {
     expect(props.alertKey).toHaveBeenCalledWith('schedule_time_unavailable');
   });
 
-  it('combina trabalhos e soma tempo e valores promocionais', async () => {
+  it('combina trabalhos e soma tempo e valores de oferta', async () => {
     const { result } = renderHook(() => useVitrineBooking(config()));
     await act(async () => result.current.handleAgendarAgora(ana, [corte, barba]));
     expect(result.current.entregaVirtual).toMatchObject({
