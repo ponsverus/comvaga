@@ -133,3 +133,93 @@ export async function removerFavoritoCliente({ favoritoId, clienteId }) {
 
   if (error) throw error;
 }
+
+export async function salvarAvatarCliente({ userId, path, file }) {
+  let uploadedPath = null;
+  try {
+    const { error: uploadError } = await withAuthRetry(
+      () => supabase.storage.from('avatars').upload(path, file, { upsert: false, contentType: file.type }),
+      10000,
+      'avatar-upload'
+    );
+    if (uploadError) throw uploadError;
+    uploadedPath = path;
+
+    const { data: updatedClient, error: updateError } = await withAuthRetry(
+      () => supabase.from('clientes')
+        .update({ avatar_path: path })
+        .eq('user_id', userId)
+        .eq('status', 'ativo')
+        .select('id')
+        .maybeSingle(),
+      6000,
+      'avatar-path-update'
+    );
+    if (updateError) throw updateError;
+    if (!updatedClient?.id) throw new Error('avatar_path_update_missing_client');
+    return path;
+  } catch (error) {
+    if (uploadedPath) {
+      try {
+        const { error: queueError } = await withAuthRetry(
+          () => supabase.rpc('enqueue_owned_orphan_storage_delete', {
+            p_bucket: 'avatars',
+            p_path: uploadedPath,
+          }),
+          6000,
+          'avatar-enqueue-orphan-delete'
+        );
+        if (queueError) throw queueError;
+      } catch (queueError) {
+        console.warn('Falha ao enfileirar limpeza de avatar sem vinculo.', queueError);
+      }
+    }
+    throw error;
+  }
+}
+
+export async function salvarNomeCliente(userId, nome) {
+  const { error } = await withAuthRetry(
+    () => supabase.from('users').update({ nome }).eq('id', userId),
+    6000,
+    'cliente-nome-update'
+  );
+  if (error) throw error;
+
+  const { error: metadataError } = await withAuthRetry(
+    () => supabase.auth.updateUser({ data: { nome } }),
+    6000,
+    'cliente-auth-nome-update'
+  );
+  if (metadataError) console.warn('Falha ao atualizar metadados do usuário.', metadataError);
+}
+
+export async function salvarEmailCliente(email) {
+  const { error } = await withAuthRetry(
+    () => supabase.auth.updateUser({ email }),
+    6000,
+    'cliente-email-update'
+  );
+  if (error) throw error;
+}
+
+export async function salvarTelefoneCliente(userId, telefone) {
+  const { error } = await withAuthRetry(
+    () => supabase.from('clientes')
+      .update({ telefone: telefone || null })
+      .eq('user_id', userId)
+      .eq('status', 'ativo'),
+    6000,
+    'cliente-telefone-update'
+  );
+  if (error) throw error;
+}
+
+export async function salvarSenhaCliente(password) {
+  const { error } = await withAuthRetry(
+    () => supabase.auth.updateUser({ password }),
+    6000,
+    'cliente-password-update'
+  );
+  if (error) throw error;
+}

@@ -168,19 +168,6 @@ export async function fetchBusinessBillingStatus(negocioId) {
   return data || null;
 }
 
-export async function setBusinessPlan(negocioId, planCode) {
-  const { data, error } = await withAuthRetry(
-    () => supabase.rpc('set_business_plan', {
-      p_negocio_id: negocioId,
-      p_plan_code: planCode,
-    }),
-    6500,
-    'set-plan'
-  );
-  if (error) throw error;
-  return data || null;
-}
-
 export async function createAsaasCheckout(negocioId, planCode) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-create-checkout', {

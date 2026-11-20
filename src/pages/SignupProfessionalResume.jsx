@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../supabase';
+import { setBusinessPlan } from '../api/negociosApi';
+import { completeOwnerBusinessOnboarding, fetchOwnerResumeData } from './api/criarNegocioApi';
 import { useFeedback } from '../feedback/useFeedback';
 import { ProfessionalIcon } from '../components/icons';
 import { DEFAULT_PLAN_CODE, clearSelectedPlanIntent, getSelectedPlanIntent, normalizePlanCode } from '../utils/plans';
 import { formatPhoneForDisplay, normalizeBrazilPhone } from '../utils/phone';
-import { withAuthRetry } from '../utils/authSession';
 import { fetchUserAccessProfile } from '../utils/profileAccess';
 
 function onlyTrim(v) {
@@ -86,27 +86,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       if (!user?.id) return;
 
       try {
-        const [
-          { data: userData, error: userErr },
-          { data: negocioRows, error: negocioErr },
-        ] = await Promise.all([
-          withAuthRetry(
-            () => supabase.from('users').select('nome').eq('id', user.id).maybeSingle(),
-            6000,
-            'resume-user-profile'
-          ),
-          withAuthRetry(
-            () => supabase.from('negocios')
-              .select('id, nome, slug, tipo_negocio, telefone, cep, rua, numero, complemento, bairro, cidade, estado, created_at')
-              .eq('owner_id', user.id)
-              .order('created_at', { ascending: true }),
-            6000,
-            'resume-businesses'
-          ),
-        ]);
-
-        if (userErr) throw userErr;
-        if (negocioErr) throw negocioErr;
+        const { userData, negocioRows } = await fetchOwnerResumeData(user.id);
         if (!active) return;
 
         const contexts = (negocioRows || [])
@@ -217,25 +197,15 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       const localKey = validarLocalCompleto();
       if (localKey) { showMessage(localKey); return; }
 
-      const { data, error } = await withAuthRetry(
-        () => supabase.rpc('complete_owner_business_onboarding', {
-          p_negocio_id: isWaitingRoom ? null : negocioId,
-          p_nome_usuario: nome,
-          p_nome_negocio: nomeNegocio,
-          p_slug: slug,
-          p_telefone: telefone,
-          p_tipo_negocio: tipoNegocio,
-          p_cep: formData.cep,
-          p_rua: formData.rua,
-          p_numero: formData.numero,
-          p_complemento: formData.complemento,
-          p_bairro: formData.bairro,
-          p_cidade: formData.cidade,
-          p_estado: formData.estado,
-        }),
-        8000,
-        'complete-owner-onboarding'
-      );
+      const { data, error } = await completeOwnerBusinessOnboarding({
+        negocioId: isWaitingRoom ? null : negocioId,
+        nome,
+        nomeNegocio,
+        slug,
+        telefone,
+        tipoNegocio,
+        local: formData,
+      });
 
       if (error) {
         const code = String(error.message || '').split(':')[0].trim();
@@ -270,19 +240,12 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       const selectedPlanCode = normalizePlanCode(user?.user_metadata?.selected_plan)
         || getSelectedPlanIntent()
         || DEFAULT_PLAN_CODE;
-      const { error: planError } = await withAuthRetry(
-        () => supabase.rpc('set_business_plan', {
-          p_negocio_id: data.negocio_id,
-          p_plan_code: selectedPlanCode,
-        }),
-        6500,
-        'resume-set-plan'
-      );
-      if (planError) {
+      try {
+        await setBusinessPlan(data.negocio_id, selectedPlanCode, 'resume-set-plan');
+        clearSelectedPlanIntent();
+      } catch (planError) {
         console.warn('set_business_plan error:', planError);
         showMessage('signupProfessional.plan_selection_failed');
-      } else {
-        clearSelectedPlanIntent();
       }
 
       const profile = await fetchUserAccessProfile(user?.id);
