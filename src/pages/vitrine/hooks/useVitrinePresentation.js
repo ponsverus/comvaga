@@ -17,7 +17,7 @@ export function buildVitrineProfessionalCard(prof, { todayDow, avatarUrl, totalE
     avatarUrl,
     status: { label: getProfissionalStatusLabel(statusKey), color: getProfissionalStatusDotClass(statusKey) },
     depInfo,
-    profissaoLabel: String(prof?.profissao ?? '').trim(),
+    oficioLabel: String(prof?.oficio ?? '').trim(),
     pausa: { ini: horario.pausa_inicio || null, fim: horario.pausa_fim || null },
     horarioIni: String(horario.horario_inicio || '08:00').slice(0, 5),
     horarioFim: String(horario.horario_fim || '18:00').slice(0, 5),
