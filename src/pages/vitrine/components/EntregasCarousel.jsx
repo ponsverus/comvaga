@@ -14,7 +14,7 @@ function EntregaButtons({
   onAgendarClick,
   onAlternarEntregaSelecionada,
   isLight,
-  animarPromocao,
+  animarOferta,
 }) {
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
   const isSelecionado = selecionadas.some((item) => item.id === entrega.id);
@@ -55,7 +55,7 @@ function EntregaButtons({
         }}
         disabled={agendarDesabilitado}
         aria-label={`Agendar ${entrega.nome}`}
-        className={`flex-1 py-2.5 rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-1.5 ${agendarClass} ${animarPromocao ? 'promo-booking-cta' : ''}`}
+        className={`flex-1 py-2.5 rounded-button text-sm font-normal uppercase transition-all flex items-center justify-center gap-1.5 ${agendarClass} ${animarOferta ? 'oferta-booking-cta' : ''}`}
       >
         <CalendarIcon
           className={[
@@ -63,10 +63,10 @@ function EntregaButtons({
             agendarDesabilitado ? 'opacity-40' : 'opacity-90',
           ].join(' ')}
         />
-        {animarPromocao ? (
-          <span className="promo-booking-label" aria-hidden="true">
-            <span className="promo-booking-standard">Agendar</span>
-            <span className="promo-booking-drop">Baixou</span>
+        {animarOferta ? (
+          <span className="oferta-booking-label" aria-hidden="true">
+            <span className="oferta-booking-standard">Agendar</span>
+            <span className="oferta-booking-drop">Baixou</span>
           </span>
         ) : 'Agendar'}
       </button>
@@ -107,27 +107,27 @@ function EntregaCard({
   onAgendarClick,
   onAlternarEntregaSelecionada,
   isLight,
-  promocaoEncerrada,
+  animacaoOfertaEncerrada,
 }) {
   const cardRef = useRef(null);
   const [visivel, setVisivel] = useState(false);
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
   const valor = Number(entrega.valor ?? 0);
-  const promo = Number(entrega.valor_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
+  const oferta = Number(entrega.valor_oferta ?? 0);
+  const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
   const valorFinal = Number(entrega.valor_final ?? 0);
-  const animarPromocao = temPromo && visivel && !promocaoEncerrada && !isProfessional && selecionadas.length === 0;
+  const animarOferta = temOferta && visivel && !animacaoOfertaEncerrada && !isProfessional && selecionadas.length === 0;
 
   useEffect(() => {
     const node = cardRef.current;
-    if (!temPromo || promocaoEncerrada || !node || typeof IntersectionObserver === 'undefined') return undefined;
+    if (!temOferta || animacaoOfertaEncerrada || !node || typeof IntersectionObserver === 'undefined') return undefined;
 
     const observer = new IntersectionObserver(([entry]) => {
       setVisivel(entry.intersectionRatio >= 0.6);
     }, { threshold: 0.6 });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [temPromo, promocaoEncerrada]);
+  }, [temOferta, animacaoOfertaEncerrada]);
 
   return (
     <div ref={cardRef} className="bg-vcard2 border border-vborder rounded-custom p-4">
@@ -135,8 +135,8 @@ function EntregaCard({
         <span className="inline-flex items-center rounded-full border border-vborder bg-transparent px-3 py-1 text-xs text-vmuted font-normal shrink-0">
           {entrega.tempo_minutos} MIN
         </span>
-        {temPromo ? (
-          <div className="font-normal text-base text-vpromo shrink-0">R$ {valorFinal.toFixed(2)}</div>
+        {temOferta ? (
+          <div className="font-normal text-base text-voferta shrink-0">R$ {valorFinal.toFixed(2)}</div>
         ) : (
           <div className="text-vprimary font-normal text-base shrink-0">R$ {valorFinal.toFixed(2)}</div>
         )}
@@ -149,10 +149,10 @@ function EntregaCard({
         entregasSelecionadas={selecionadas}
         isProfessional={isProfessional}
         onAgendarAgora={onAgendarAgora}
-        onAgendarClick={temPromo ? onAgendarClick : undefined}
+        onAgendarClick={temOferta ? onAgendarClick : undefined}
         onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
         isLight={isLight}
-        animarPromocao={animarPromocao}
+        animarOferta={animarOferta}
       />
     </div>
   );
@@ -180,13 +180,13 @@ export default function EntregasCarousel({
   const [exibindo, setExibindo] = useState(0);
   const [animando, setAnimando] = useState(false);
   const [loadingTargetPage, setLoadingTargetPage] = useState(null);
-  const [promocoesEncerradas, setPromocoesEncerradas] = useState(() => new Set());
+  const [ofertasComAnimacaoEncerrada, setOfertasComAnimacaoEncerrada] = useState(() => new Set());
   const touchStartX = useRef(null);
   const animationTimeoutRef = useRef(null);
   const listaSegura = Array.isArray(lista) ? lista : [];
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
-  const encerrarPromocao = (id) => {
-    setPromocoesEncerradas((anteriores) => {
+  const encerrarAnimacaoOferta = (id) => {
+    setOfertasComAnimacaoEncerrada((anteriores) => {
       if (anteriores.has(id)) return anteriores;
       const atualizadas = new Set(anteriores);
       atualizadas.add(id);
@@ -310,10 +310,10 @@ export default function EntregasCarousel({
                 entregasSelecionadas={selecionadas}
                 isProfessional={isProfessional}
                 onAgendarAgora={onAgendarAgora}
-                onAgendarClick={encerrarPromocao}
+                onAgendarClick={encerrarAnimacaoOferta}
                 onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
                 isLight={isLight}
-                promocaoEncerrada={promocoesEncerradas.has(item.id)}
+                animacaoOfertaEncerrada={ofertasComAnimacaoEncerrada.has(item.id)}
               />
             ))}
           </div>
@@ -330,10 +330,10 @@ export default function EntregasCarousel({
               entregasSelecionadas={selecionadas}
               isProfessional={isProfessional}
               onAgendarAgora={onAgendarAgora}
-              onAgendarClick={encerrarPromocao}
+              onAgendarClick={encerrarAnimacaoOferta}
               onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
               isLight={isLight}
-              promocaoEncerrada={promocoesEncerradas.has(item.id)}
+              animacaoOfertaEncerrada={ofertasComAnimacaoEncerrada.has(item.id)}
             />
           ))}
         </div>
