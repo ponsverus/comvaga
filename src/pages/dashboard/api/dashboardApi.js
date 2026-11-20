@@ -83,7 +83,7 @@ export function normalizeAgRow(a) {
     entregas: {
       nome: a?.entrega_nome ?? null,
       valor: a?.entrega_valor ?? null,
-      valor_promocional: a?.entrega_promo ?? null,
+      valor_oferta: a?.entrega_valor_oferta ?? null,
     },
     profissionais: {
       id: profId,
