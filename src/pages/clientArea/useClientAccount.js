@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '../../supabase';
 import { convertImageToWebp, isImageFile, MEDIA_LIMITS } from '../../utils/media';
 import { formatPhoneForDisplay, normalizeBrazilPhone } from '../../utils/phone';
 import { getRequestErrorKey } from '../../utils/requestError';
-import { withAuthRetry } from '../../utils/authSession';
-import { excluirContaCliente } from './api/clientAreaApi';
+import { excluirContaCliente, salvarAvatarCliente, salvarEmailCliente, salvarNomeCliente, salvarSenhaCliente, salvarTelefoneCliente } from './api/clientAreaApi';
 
 export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm }) {
   const [avatarPath,      setAvatarPath]      = useState(null);
@@ -41,50 +39,14 @@ export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm 
     const maxMb   = MEDIA_LIMITS.avatarInputBytes / (1024 * 1024);
     if (!isImageFile(file)) { uiAlert('clientArea.avatar_invalid_format', 'error'); return; }
     if (file.size > MEDIA_LIMITS.avatarInputBytes) { uiAlert('clientArea.avatar_too_large', 'error', { maxMb }); return; }
-    let uploadedPath = null;
     try {
       setUploadingAvatar(true);
       const convertedFile = await convertImageToWebp(file, { maxDimension: MEDIA_LIMITS.avatarMaxDimension });
       const path = `${user.id}/avatar-${Date.now()}.webp`;
-      const { error: upErr } = await withAuthRetry(
-        () => supabase.storage.from('avatars').upload(path, convertedFile, { upsert: false, contentType: convertedFile.type }),
-        10000,
-        'avatar-upload'
-      );
-      if (upErr) throw upErr;
-      uploadedPath = path;
-      const { data: updatedClient, error: updErr } = await withAuthRetry(
-        () => supabase
-          .from('clientes')
-          .update({ avatar_path: path })
-          .eq('user_id', user.id)
-          .eq('status', 'ativo')
-          .select('id')
-          .maybeSingle(),
-        6000,
-        'avatar-path-update'
-      );
-      if (updErr) throw updErr;
-      if (!updatedClient?.id) throw new Error('avatar_path_update_missing_client');
-      uploadedPath = null;
+      await salvarAvatarCliente({ userId: user.id, path, file: convertedFile });
       setAvatarPath(path);
       uiAlert('clientArea.avatar_updated', 'success');
     } catch {
-      if (uploadedPath) {
-        try {
-          const { error: queueError } = await withAuthRetry(
-            () => supabase.rpc('enqueue_owned_orphan_storage_delete', {
-              p_bucket: 'avatars',
-              p_path: uploadedPath,
-            }),
-            6000,
-            'avatar-enqueue-orphan-delete'
-          );
-          if (queueError) throw queueError;
-        } catch (queueError) {
-          console.warn('Falha ao enfileirar limpeza de avatar sem vinculo.', queueError);
-        }
-      }
       uiAlert('clientArea.avatar_update_error', 'error');
     } finally {
       setUploadingAvatar(false);
@@ -96,20 +58,7 @@ export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm 
     if (!nome) { uiAlert('clientArea.profile_name_required', 'error'); return false; }
     try {
       setSavingPerfil(true);
-      const { error: updErr } = await withAuthRetry(
-        () => supabase.from('users').update({ nome }).eq('id', user.id),
-        6000,
-        'cliente-nome-update'
-      );
-      if (updErr) throw updErr;
-      const { error: metaErr } = await withAuthRetry(
-        () => supabase.auth.updateUser({ data: { nome } }),
-        6000,
-        'cliente-auth-nome-update'
-      );
-      if (metaErr) {
-        console.warn('Falha ao atualizar metadados do usuário.', metaErr);
-      }
+      await salvarNomeCliente(user.id, nome);
       uiAlert('clientArea.profile_name_updated', 'success');
       return true;
     } catch {
@@ -125,12 +74,7 @@ export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm 
     if (!email || !email.includes('@')) { uiAlert('clientArea.account_email_invalid', 'error'); return false; }
     try {
       setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase.auth.updateUser({ email }),
-        6000,
-        'cliente-email-update'
-      );
-      if (error) throw error;
+      await salvarEmailCliente(email);
       uiAlert('clientArea.account_email_update_sent', 'success');
       return true;
     } catch {
@@ -150,16 +94,7 @@ export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm 
 
     try {
       setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase
-          .from('clientes')
-          .update({ telefone: telefone || null })
-          .eq('user_id', user.id)
-          .eq('status', 'ativo'),
-        6000,
-        'cliente-telefone-update'
-      );
-      if (error) throw error;
+      await salvarTelefoneCliente(user.id, telefone);
       uiAlert('clientArea.phone_updated', 'success');
       return true;
     } catch {
@@ -177,12 +112,7 @@ export function useClientAccount({ user, onLogout, navigate, uiAlert, uiConfirm 
     if (pass !== conf)   { uiAlert('clientArea.account_password_mismatch',  'error'); return false; }
     try {
       setSavingDados(true);
-      const { error } = await withAuthRetry(
-        () => supabase.auth.updateUser({ password: pass }),
-        6000,
-        'cliente-password-update'
-      );
-      if (error) throw error;
+      await salvarSenhaCliente(pass);
       setNovaSenha('');
       setConfirmarSenha('');
       uiAlert('clientArea.account_password_updated', 'success');
