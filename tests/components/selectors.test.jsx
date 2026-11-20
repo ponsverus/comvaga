@@ -4,7 +4,7 @@ import ProfissionalSelect from '../../src/components/ProfissionalSelect.jsx';
 import DatePicker from '../../src/components/DatePicker.jsx';
 
 const profissionais = [
-  { id: 'p1', nome: 'Ana', status: 'ativo', profissao: 'Barbeiro' },
+  { id: 'p1', nome: 'Ana', status: 'ativo', oficio: 'Barbeiro' },
   { id: 'p2', nome: 'Bruno', status: 'inativo' },
 ];
 
