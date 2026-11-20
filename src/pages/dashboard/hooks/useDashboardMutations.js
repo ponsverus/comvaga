@@ -20,7 +20,7 @@ export function useDashboardMutations({
   reloadGaleria,
   loadOverview,
   navigate,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   uiAlert,
   uiConfirm,
   setNegocio,
@@ -97,7 +97,7 @@ export function useDashboardMutations({
     negocio,
     businessGroup,
     reloadEntregas,
-    checarPermissao,
+    verificarAcessoAoProfissional,
     uiAlert,
     uiConfirm,
     formEntrega,
@@ -125,7 +125,7 @@ export function useDashboardMutations({
     parceiroProfissional,
     reloadProfissionais,
     reloadEntregas,
-    checarPermissao,
+    verificarAcessoAoProfissional,
     uiAlert,
     uiConfirm,
     formProfissional,
@@ -140,7 +140,7 @@ export function useDashboardMutations({
   const confirmarAtendimento = async (a) => {
     const lockKey = `agendamento-confirmar:${a?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(a.profissional_id)) {
+    if (!await verificarAcessoAoProfissional(a.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
@@ -161,7 +161,7 @@ export function useDashboardMutations({
   const cancelarAgendamento = async (a) => {
     const lockKey = `agendamento-cancelar:${a?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(a.profissional_id)) {
+    if (!await verificarAcessoAoProfissional(a.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
