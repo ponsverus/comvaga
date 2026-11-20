@@ -1,9 +1,3 @@
-function formatDelta(value) {
-  const number = Number(value || 0);
-  if (number === 0) return '0';
-  return `${number > 0 ? '+' : ''}${number}`;
-}
-
 function formatPercentDelta(value) {
   const number = Number(value || 0);
   if (number === 0) return '0.0%';
@@ -11,18 +5,15 @@ function formatPercentDelta(value) {
 }
 
 export function TrendBadge({ data }) {
-  const percent = data?.variacao_percentual;
-  const delta = data?.variacao_valor;
-  const hasPercent = percent !== null && percent !== undefined;
-  const value = hasPercent ? Number(percent || 0) : Number(delta || 0);
+  const percent = data?.comparativo_percentual;
+  if (percent === null || percent === undefined) return null;
+  const value = Number(percent || 0);
   const tone = value > 0
     ? 'border-green-400/30 bg-green-400/10 text-green-400'
     : value < 0
       ? 'border-red-400/30 bg-red-400/10 text-red-400'
       : 'border-gray-700 bg-transparent text-gray-400';
-  const text = hasPercent ? formatPercentDelta(percent) : formatDelta(delta);
-
-  if (text === '0') return null;
+  const text = formatPercentDelta(percent);
 
   return (
     <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${tone}`}>
@@ -32,14 +23,11 @@ export function TrendBadge({ data }) {
 }
 
 export function RevenueTrendBadge({ data }) {
-  const percent = data?.variacao_percentual;
-  const delta = data?.variacao_valor;
-  const hasPercent = percent !== null && percent !== undefined;
-  const value = hasPercent ? Number(percent || 0) : Number(delta || 0);
-  const text = hasPercent ? formatPercentDelta(percent) : formatDelta(delta);
+  const percent = data?.comparativo_percentual;
+  if (percent === null || percent === undefined) return null;
+  const value = Number(percent || 0);
+  const text = formatPercentDelta(percent);
   const tone = value > 0 ? 'text-green-500' : value < 0 ? 'text-red-500' : 'text-gray-500';
-
-  if (text === '0') return null;
 
   return (
     <div className={`inline-flex items-center rounded-full border border-white bg-white px-3 py-1 text-xs ${tone}`}>
