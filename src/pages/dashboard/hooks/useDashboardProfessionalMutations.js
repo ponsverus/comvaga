@@ -139,7 +139,7 @@ export function useDashboardProfessionalMutations({
       }
       const payload = {
         nome: String(formProfissional.nome || '').trim(),
-        profissao: toUpperClean(formProfissional.profissao) || null,
+        oficio: toUpperClean(formProfissional.oficio) || null,
         anos_experiencia: formProfissional.anos_experiencia !== '' ? Number(formProfissional.anos_experiencia) : null,
         horarios: horarios.map((h) => ({
           dia_semana: Number(h.dia_semana),
