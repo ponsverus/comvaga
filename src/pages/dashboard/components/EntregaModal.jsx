@@ -113,8 +113,8 @@ export default function EntregaModal({
             <input
               type="number"
               step="0.01"
-              value={formEntrega.valor_promocional}
-              onChange={(e) => setFormEntrega({ ...formEntrega, valor_promocional: e.target.value })}
+              value={formEntrega.valor_oferta}
+              onChange={(e) => setFormEntrega({ ...formEntrega, valor_oferta: e.target.value })}
               className={serviceInputClass}
               placeholder="OPCIONAL"
             />
