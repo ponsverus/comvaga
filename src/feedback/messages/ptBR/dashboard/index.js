@@ -136,7 +136,7 @@ export const dashboard = {
   account_password_mismatch: geral.account_password_mismatch,
   account_password_updated: geral.account_password_updated,
   account_password_update_error: geral.account_password_update_error,
-  parceiro_acao_proibida: geral.parceiro_acao_proibida,
+  parceiro_acesso_restrito: geral.parceiro_acesso_restrito,
   partner_dashboard_access_inactive: geral.partner_dashboard_access_inactive,
   professional_approved: profissionais.professional_approved,
   partner_approve_error: geral.partner_approve_error,
