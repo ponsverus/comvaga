@@ -16,7 +16,7 @@ function props() {
     negocio: { id: 'n1' },
     businessGroup: 'servs',
     reloadEntregas: vi.fn(),
-    checarPermissao: vi.fn().mockResolvedValue(true),
+    verificarAcessoAoProfissional: vi.fn().mockResolvedValue(true),
     uiAlert: vi.fn().mockResolvedValue(undefined),
     uiConfirm: vi.fn(),
     formEntrega: { nome: 'Corte', tempo_minutos: '30', valor: '', valor_promocional: '', profissional_id: 'p1' },

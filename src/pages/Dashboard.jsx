@@ -106,7 +106,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     reloadBillingStatus,
   } = useDashboardBillingStatus({ negocio, souDono });
 
-  const checarPermissao = useCallback(async (profissionalId) => {
+  const verificarAcessoAoProfissional = useCallback(async (profissionalId) => {
     if (!acessoDashboardAutorizado) {
       await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
       return false;
@@ -292,7 +292,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     reloadGaleria,
     loadOverview,
     navigate,
-    checarPermissao,
+    verificarAcessoAoProfissional,
     uiAlert,
     uiConfirm,
     setNegocio,
@@ -669,7 +669,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 counterSingular={counterSingular}
                 counterPlural={counterPlural}
                 emptyListMsg={emptyListMsg}
-                checarPermissao={checarPermissao}
+                verificarAcessoAoProfissional={verificarAcessoAoProfissional}
                 deleteEntrega={deleteEntrega}
                 toggleStatusEntrega={toggleStatusEntrega}
               />

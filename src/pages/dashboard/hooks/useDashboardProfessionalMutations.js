@@ -16,7 +16,7 @@ export function useDashboardProfessionalMutations({
   parceiroProfissional,
   reloadProfissionais,
   reloadEntregas,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   uiAlert,
   uiConfirm,
   formProfissional,
@@ -56,7 +56,7 @@ export function useDashboardProfessionalMutations({
   const toggleStatusProfissional = async (p) => {
     const lockKey = `profissional-status:${p?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(p.id)) {
+    if (!await verificarAcessoAoProfissional(p.id)) {
       unlockAction(lockKey);
       return;
     }
@@ -88,7 +88,7 @@ export function useDashboardProfessionalMutations({
   const excluirProfissional = async (p) => {
     const lockKey = `profissional-delete:${p?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(p.id)) {
+    if (!await verificarAcessoAoProfissional(p.id)) {
       unlockAction(lockKey);
       return;
     }
@@ -123,7 +123,7 @@ export function useDashboardProfessionalMutations({
     if (submittingProfissional) return;
     try {
       setSubmittingProfissional(true);
-      if (!await checarPermissao(editingProfissionalId)) return;
+      if (!await verificarAcessoAoProfissional(editingProfissionalId)) return;
       const horarios = Array.isArray(formProfissional.horarios) ? formProfissional.horarios : [];
       const diasAtivos = getDiasTrabalhoFromHorarios(horarios);
       if (!diasAtivos.length) throw new Error('profissional_horarios_sem_dia_ativo');

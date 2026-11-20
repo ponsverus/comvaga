@@ -12,7 +12,7 @@ function ProfissionalEntregasBlock({
   counterSingular,
   counterPlural,
   emptyListMsg,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   deleteEntrega,
   toggleStatusEntrega,
   setEditingEntregaId,
@@ -116,7 +116,7 @@ function ProfissionalEntregasBlock({
                         <button onClick={() => deleteEntrega(s)} className="flex-1 py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-button text-sm font-normal uppercase">EXCLUIR</button>
                       </div>
                       <button onClick={async () => {
-                          if (!await checarPermissao(s.profissional_id)) return;
+                          if (!await verificarAcessoAoProfissional(s.profissional_id)) return;
                           setEditingEntregaId(s.id);
                           setFormEntrega({ nome: s.nome || '', tempo_minutos: String(s.tempo_minutos ?? ''), valor: String(s.valor ?? ''), valor_promocional: String(s.valor_promocional ?? ''), profissional_id: s.profissional_id || '' });
                           setShowNovaEntrega(true);
@@ -179,7 +179,7 @@ export default function EntregasSection({
   counterSingular,
   counterPlural,
   emptyListMsg,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   deleteEntrega,
   toggleStatusEntrega,
 }) {
@@ -212,7 +212,7 @@ export default function EntregasSection({
                 counterSingular={counterSingular}
                 counterPlural={counterPlural}
                 emptyListMsg={emptyListMsg}
-                checarPermissao={checarPermissao}
+                verificarAcessoAoProfissional={verificarAcessoAoProfissional}
                 deleteEntrega={deleteEntrega}
                 toggleStatusEntrega={toggleStatusEntrega}
                 setEditingEntregaId={setEditingEntregaId}
