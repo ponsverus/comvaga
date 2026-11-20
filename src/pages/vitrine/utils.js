@@ -108,9 +108,9 @@ export function gerarArquivoICS({ titulo, dataISO, inicioHHMM, fimHHMM, tempoMin
 
 export function getValorFinalEntrega(s) {
   const valor = Number(s?.valor ?? 0);
-  const promo = Number(s?.valor_promocional ?? 0);
-  const temPromo = Number.isFinite(promo) && promo > 0 && promo < valor;
-  return temPromo ? promo : valor;
+  const oferta = Number(s?.valor_oferta ?? 0);
+  const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
+  return temOferta ? oferta : valor;
 }
 
 export function sanitizeTel(raw) {
