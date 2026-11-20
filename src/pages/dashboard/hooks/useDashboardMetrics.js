@@ -20,14 +20,14 @@ export function useDashboardMetrics({
   const [metricsTopCards, setMetricsTopCards] = useState(null);
   const [metricsDia, setMetricsDia] = useState(null);
   const [metricsPeriodoData, setMetricsPeriodoData] = useState(null);
-  const [metricsUtilizacao, setMetricsUtilizacao] = useState(null);
+  const [metricsAgendaDiaSeguinte, setMetricsAgendaDiaSeguinte] = useState(null);
   const [metricsFutureBookings, setMetricsFutureBookings] = useState(null);
   const [proximoAgendamento, setProximoAgendamento] = useState(null);
   const [metricsHojeLoading, setMetricsHojeLoading] = useState(false);
   const [metricsTopCardsLoading, setMetricsTopCardsLoading] = useState(false);
   const [metricsDiaLoading, setMetricsDiaLoading] = useState(false);
   const [metricsPeriodoLoading, setMetricsPeriodoLoading] = useState(false);
-  const [metricsUtilizacaoLoading, setMetricsUtilizacaoLoading] = useState(false);
+  const [metricsAgendaDiaSeguinteLoading, setMetricsAgendaDiaSeguinteLoading] = useState(false);
   const [metricsFutureBookingsLoading, setMetricsFutureBookingsLoading] = useState(false);
   const [proximoAgendamentoLoading, setProximoAgendamentoLoading] = useState(false);
 
@@ -36,7 +36,7 @@ export function useDashboardMetrics({
     setMetricsTopCardsLoading(loading);
     setMetricsDiaLoading(loading);
     setMetricsPeriodoLoading(loading);
-    setMetricsUtilizacaoLoading(loading);
+    setMetricsAgendaDiaSeguinteLoading(loading);
     setMetricsFutureBookingsLoading(loading);
     setProximoAgendamentoLoading(loading);
   }, []);
@@ -46,7 +46,7 @@ export function useDashboardMetrics({
     setMetricsTopCards(null);
     setMetricsDia(null);
     setMetricsPeriodoData(null);
-    setMetricsUtilizacao(null);
+    setMetricsAgendaDiaSeguinte(null);
     setMetricsFutureBookings(null);
     setProximoAgendamento(null);
   }, []);
@@ -75,7 +75,7 @@ export function useDashboardMetrics({
       setMetricsTopCards(overview.metricsTopCards);
       setMetricsDia(overview.metricsDia);
       setMetricsPeriodoData(overview.metricsPeriodoData);
-      setMetricsUtilizacao(overview.metricsUtilizacao);
+      setMetricsAgendaDiaSeguinte(overview.metricsAgendaDiaSeguinte);
       setMetricsFutureBookings(overview.metricsFutureBookings);
       setProximoAgendamento(overview.proximoAgendamento);
     } catch (error) {
@@ -117,14 +117,14 @@ export function useDashboardMetrics({
     metricsTopCards,
     metricsDia,
     metricsPeriodoData,
-    metricsUtilizacao,
+    metricsAgendaDiaSeguinte,
     metricsFutureBookings,
     proximoAgendamento,
     metricsHojeLoading,
     metricsTopCardsLoading,
     metricsDiaLoading,
     metricsPeriodoLoading,
-    metricsUtilizacaoLoading,
+    metricsAgendaDiaSeguinteLoading,
     metricsFutureBookingsLoading,
     proximoAgendamentoLoading,
     loadOverview,
