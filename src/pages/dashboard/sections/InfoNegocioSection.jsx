@@ -183,7 +183,7 @@ export default function InfoNegocioSection({
           readOnly={!isEditing('anuncio')}
           className={`${inputClass} uppercase ${inputStateClass(isEditing('anuncio'))}`}
           aria-label="Anúncio da Vitrine"
-          placeholder="Frase de até 30 caracteres"
+          placeholder="até 30 caracteres"
         />
       </InfoRow>
 
