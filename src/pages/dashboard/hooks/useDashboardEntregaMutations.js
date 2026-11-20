@@ -13,7 +13,7 @@ export function useDashboardEntregaMutations({
   negocio,
   businessGroup,
   reloadEntregas,
-  checarPermissao,
+  verificarAcessoAoProfissional,
   uiAlert,
   uiConfirm,
   formEntrega,
@@ -48,7 +48,7 @@ export function useDashboardEntregaMutations({
       setSubmittingEntrega(true);
       if (!negocio?.id) throw new Error('Erro ao carregar o negocio');
       const profId = formEntrega.profissional_id;
-      if (!await checarPermissao(profId)) return;
+      if (!await verificarAcessoAoProfissional(profId)) return;
       const valor = toNumberOrNull(formEntrega.valor);
       const promo = toNumberOrNull(formEntrega.valor_promocional);
       if (valor == null) {
@@ -92,7 +92,7 @@ export function useDashboardEntregaMutations({
     try {
       setSubmittingEntrega(true);
       const profId = formEntrega.profissional_id;
-      if (!await checarPermissao(profId)) return;
+      if (!await verificarAcessoAoProfissional(profId)) return;
       const valor = toNumberOrNull(formEntrega.valor);
       const promo = toNumberOrNull(formEntrega.valor_promocional);
       if (!toUpperClean(formEntrega.nome)) throw new Error('Nome da entrega e obrigatorio.');
@@ -143,7 +143,7 @@ export function useDashboardEntregaMutations({
     if (!businessGroup) return;
     const lockKey = `entrega-delete:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(entrega.profissional_id)) {
+    if (!await verificarAcessoAoProfissional(entrega.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
@@ -171,7 +171,7 @@ export function useDashboardEntregaMutations({
     if (!businessGroup) return;
     const lockKey = `entrega-status:${entrega?.id || 'item'}`;
     if (!lockAction(lockKey)) return;
-    if (!await checarPermissao(entrega.profissional_id)) {
+    if (!await verificarAcessoAoProfissional(entrega.profissional_id)) {
       unlockAction(lockKey);
       return;
     }
