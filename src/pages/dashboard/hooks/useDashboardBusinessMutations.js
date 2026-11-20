@@ -47,7 +47,7 @@ export function useDashboardBusinessMutations({
       return false;
     }
     if (parceiroProfissional) {
-      await uiAlert('dashboard.parceiro_acao_proibida', 'warning');
+      await uiAlert('dashboard.parceiro_acesso_restrito', 'warning');
       return false;
     }
     return true;
