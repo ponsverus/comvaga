@@ -37,12 +37,12 @@ export function ProfileConfirmationNotice({ error, onRetry }) {
   if (!error) return null;
 
   const title = error.kind === 'session_unavailable'
-    ? 'Sessão não confirmada'
+    ? 'Acesso ainda por validar'
     : error.kind === 'profile_rate_limited'
       ? 'Aguarde para tentar novamente'
       : error.kind === 'profile_missing'
         ? 'Perfil indisponível'
-        : 'Perfil não confirmado';
+        : 'Perfil pendente';
 
   return (
     <div role="alert" className="mb-6 rounded-custom border border-primary/40 bg-primary/10 p-4 text-left text-sm">

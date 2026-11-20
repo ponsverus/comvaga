@@ -103,7 +103,7 @@ export function useAppSession() {
     try {
       await signOutLocalSession();
     } catch (signOutError) {
-      console.warn('Erro ao encerrar sessao local.', signOutError);
+      console.warn('Falha ao desconectar deste dispositivo.', signOutError);
     }
 
     safeSet(() => {

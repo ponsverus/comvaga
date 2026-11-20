@@ -127,13 +127,13 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
     metricsTopCards,
     metricsDia,
     metricsPeriodoData,
-    metricsUtilizacao,
+    metricsAgendaDiaSeguinte,
     metricsFutureBookings,
     proximoAgendamento,
     metricsTopCardsLoading,
     metricsDiaLoading,
     metricsPeriodoLoading,
-    metricsUtilizacaoLoading,
+    metricsAgendaDiaSeguinteLoading,
     metricsFutureBookingsLoading,
     loadOverview,
   } = useDashboardMetrics({
@@ -602,8 +602,8 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 metricsPeriodoData={metricsPeriodoData}
                 metricsPeriodoLoading={metricsPeriodoLoading}
                 faturamentoPorProfissionalPeriodo={faturamentoPorProfissionalPeriodo}
-                metricsUtilizacao={metricsUtilizacao}
-                metricsUtilizacaoLoading={metricsUtilizacaoLoading}
+                metricsAgendaDiaSeguinte={metricsAgendaDiaSeguinte}
+                metricsAgendaDiaSeguinteLoading={metricsAgendaDiaSeguinteLoading}
                 metricsFutureBookings={metricsFutureBookings}
                 metricsFutureBookingsLoading={metricsFutureBookingsLoading}
                 counterSingular={counterSingular}
