@@ -62,7 +62,7 @@ export const vitrine = {
     slot_expired: 'Esse horário expirou. Escolha outro.',
     slot_conflict: 'Alguém acabou de reservar esse horário. Escolha outro.',
     not_allowed: 'Você só pode criar agendamentos para a sua própria agenda.',
-    connection: 'Sem acesso à rede. Verifique sua internet e tente novamente.',
+    connection: 'Houve um erro ao confirmar o resultado do agendamento. Acesse Minha Área, na aba Agendamentos, aguarde alguns instantes, atualize a página e verifique se ele aparece antes de escolher outro horário.',
     unexpected: 'Houve um erro ao concluir o agendamento. Tente novamente em alguns instantes.',
   },
 
