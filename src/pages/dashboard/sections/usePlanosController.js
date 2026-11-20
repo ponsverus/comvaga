@@ -7,8 +7,8 @@ import {
   fetchBillingPlans,
   recoverAsaasSubscriptionPayment,
   reactivateAsaasSubscription,
-  setBusinessPlan,
 } from '../api/dashboardApi';
+import { setBusinessPlan } from '../../../api/negociosApi';
 import { getRequestErrorKey } from '../../../utils/requestError';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { isScheduledDowngradeSync } from '../utils';
