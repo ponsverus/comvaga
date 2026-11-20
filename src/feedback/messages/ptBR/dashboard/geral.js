@@ -76,7 +76,7 @@ export const geral = {
     buttonText: 'OK',
   },
 
-  parceiro_acao_proibida: {
+  parceiro_acesso_restrito: {
     title: 'Acesso restrito',
     body: 'Gerencie apenas itens referentes a você.',
     variant: 'warning',
