@@ -107,7 +107,7 @@ function EntregaCard({
   onAgendarClick,
   onAlternarEntregaSelecionada,
   isLight,
-  animacaoOfertaEncerrada,
+  destaqueOfertaEncerrado,
 }) {
   const cardRef = useRef(null);
   const [visivel, setVisivel] = useState(false);
@@ -116,18 +116,18 @@ function EntregaCard({
   const oferta = Number(entrega.valor_oferta ?? 0);
   const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
   const valorFinal = Number(entrega.valor_final ?? 0);
-  const animarOferta = temOferta && visivel && !animacaoOfertaEncerrada && !isProfessional && selecionadas.length === 0;
+  const animarOferta = temOferta && visivel && !destaqueOfertaEncerrado && !isProfessional && selecionadas.length === 0;
 
   useEffect(() => {
     const node = cardRef.current;
-    if (!temOferta || animacaoOfertaEncerrada || !node || typeof IntersectionObserver === 'undefined') return undefined;
+    if (!temOferta || destaqueOfertaEncerrado || !node || typeof IntersectionObserver === 'undefined') return undefined;
 
     const observer = new IntersectionObserver(([entry]) => {
       setVisivel(entry.intersectionRatio >= 0.6);
     }, { threshold: 0.6 });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [temOferta, animacaoOfertaEncerrada]);
+  }, [temOferta, destaqueOfertaEncerrado]);
 
   return (
     <div ref={cardRef} className="bg-vcard2 border border-vborder rounded-custom p-4">
@@ -180,13 +180,13 @@ export default function EntregasCarousel({
   const [exibindo, setExibindo] = useState(0);
   const [animando, setAnimando] = useState(false);
   const [loadingTargetPage, setLoadingTargetPage] = useState(null);
-  const [ofertasComAnimacaoEncerrada, setOfertasComAnimacaoEncerrada] = useState(() => new Set());
+  const [ofertasComDestaqueEncerrado, setOfertasComDestaqueEncerrado] = useState(() => new Set());
   const touchStartX = useRef(null);
   const animationTimeoutRef = useRef(null);
   const listaSegura = Array.isArray(lista) ? lista : [];
   const selecionadas = Array.isArray(entregasSelecionadas) ? entregasSelecionadas : [];
-  const encerrarAnimacaoOferta = (id) => {
-    setOfertasComAnimacaoEncerrada((anteriores) => {
+  const encerrarDestaqueOferta = (id) => {
+    setOfertasComDestaqueEncerrado((anteriores) => {
       if (anteriores.has(id)) return anteriores;
       const atualizadas = new Set(anteriores);
       atualizadas.add(id);
@@ -310,10 +310,10 @@ export default function EntregasCarousel({
                 entregasSelecionadas={selecionadas}
                 isProfessional={isProfessional}
                 onAgendarAgora={onAgendarAgora}
-                onAgendarClick={encerrarAnimacaoOferta}
+                onAgendarClick={encerrarDestaqueOferta}
                 onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
                 isLight={isLight}
-                animacaoOfertaEncerrada={ofertasComAnimacaoEncerrada.has(item.id)}
+                destaqueOfertaEncerrado={ofertasComDestaqueEncerrado.has(item.id)}
               />
             ))}
           </div>
@@ -330,10 +330,10 @@ export default function EntregasCarousel({
               entregasSelecionadas={selecionadas}
               isProfessional={isProfessional}
               onAgendarAgora={onAgendarAgora}
-              onAgendarClick={encerrarAnimacaoOferta}
+              onAgendarClick={encerrarDestaqueOferta}
               onAlternarEntregaSelecionada={onAlternarEntregaSelecionada}
               isLight={isLight}
-              animacaoOfertaEncerrada={ofertasComAnimacaoEncerrada.has(item.id)}
+              destaqueOfertaEncerrado={ofertasComDestaqueEncerrado.has(item.id)}
             />
           ))}
         </div>
