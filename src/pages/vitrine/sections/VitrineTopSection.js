@@ -86,7 +86,7 @@ export default function VitrineTopSection({ header, business, actions }) {
 		type: "button",
 		onClick: actions.onAbrirDepoimento,
 		disabled: !!header.isProfessional || !!header.loading,
-		className: `flex items-center gap-2 h-9 px-5 rounded-button transition-all border uppercase focus:outline-none focus:ring-0 ${header.depoimentoBtn}`
+		className: `flex items-center gap-2 h-7 sm:h-9 px-5 rounded-button transition-all border uppercase focus:outline-none focus:ring-0 ${header.depoimentoBtn}`
 	}, /* @__PURE__ */ React.createElement(StarChar, {
 		size: 18,
 		className: "text-primary"
@@ -94,7 +94,7 @@ export default function VitrineTopSection({ header, business, actions }) {
 		type: "button",
 		onClick: actions.onToggleFavorito,
 		disabled: !!header.isProfessional || !!header.favoritoLoading || !!header.loading,
-		className: `h-9 flex items-center gap-2 px-5 rounded-button transition-all uppercase border focus:outline-none focus:ring-0 disabled:opacity-60 ${header.favoritoBtn}`
+		className: `h-7 sm:h-9 flex items-center gap-2 px-5 rounded-button transition-all uppercase border focus:outline-none focus:ring-0 disabled:opacity-60 ${header.favoritoBtn}`
 	}, /* @__PURE__ */ React.createElement(HeartIcon, {
 		filled: header.isFavorito,
 		size: 20,
