@@ -516,7 +516,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
           <DashboardTopCard
             icon={<CalendarIcon className="w-8 h-8 text-blue-400" />}
-            label="AGENDAMENTOs"
+            label="AGENDAMENTOS"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topAgendamentos.total || 0) : '--'}
           >
             {topCardsReady ? (
