@@ -565,7 +565,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         </div>
 
         <div className="bg-dark-100 border border-gray-800 rounded-custom overflow-visible">
-          <div className="flex overflow-x-auto border-b border-gray-800">
+          <div className="flex overflow-x-auto border-b border-gray-800 rounded-t-custom">
             {tabs.map(tab => {
               const notif = tab === 'agendamentos' ? notifAgendamentos : 0;
               return (
