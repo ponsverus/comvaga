@@ -506,7 +506,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
           <DashboardTopCard
             highlight
             icon={<span className="font-condensed text-green-400 font-normal text-3xl leading-none">$</span>}
-            label="FATURAMENTO HOJE"
+            label="FATURAMENTO"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? formatCurrency(topFaturamento.valor) : '--'}
           >
             {topCardsReady ? (
@@ -516,7 +516,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
           <DashboardTopCard
             icon={<CalendarIcon className="w-8 h-8 text-blue-400" />}
-            label="AGENDAMENTOS HOJE"
+            label="AGENDAMENTOs"
             value={metricsTopCardsLoading ? '...' : topCardsReady ? Number(topAgendamentos.total || 0) : '--'}
           >
             {topCardsReady ? (
