@@ -162,9 +162,9 @@ export default function BookingCalendar({
             ref={closeButtonRef}
             type="button"
             onClick={handleDismiss}
-            disabled={confirming}
+            aria-disabled={confirming}
             aria-label="Fechar calendário"
-            className={`shrink-0 ml-4 p-1.5 rounded-button transition-colors disabled:opacity-60 ${closeBtn}`}
+            className={`shrink-0 ml-4 p-1.5 rounded-button transition-colors aria-disabled:opacity-60 ${closeBtn}`}
           >
             <X className="w-5 h-5" />
           </button>

@@ -69,6 +69,28 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     expect(trigger).toHaveFocus();
   });
 
+  it('mantém o fechamento bloqueado durante uma confirmação pendente', async () => {
+    const pending = deferred();
+    const onClose = vi.fn();
+    invokeProtectedAction.mockReturnValue(pending.promise);
+    render(<BookingCalendar {...base} onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /16 de novembro de 2026/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /09:00/ }));
+    fireEvent.click(screen.getByRole('button', { name: /confirmar agendamento/i }));
+
+    const closeButton = screen.getByRole('button', { name: 'Fechar calendário' });
+    expect(closeButton).toHaveAttribute('aria-disabled', 'true');
+    closeButton.focus();
+    expect(closeButton).toHaveFocus();
+    fireEvent.click(closeButton);
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
+    expect(onClose).not.toHaveBeenCalled();
+
+    await act(async () => { pending.resolve({ data: [{ inicio: '09:00', fim: '09:30' }], error: null }); });
+    expect(closeButton).toHaveAttribute('aria-disabled', 'false');
+  });
+
   it('mostra que horário oficial é necessário quando ausente', () => {
     render(<BookingCalendar {...base} todayISO={null} officialTimeUnavailable />);
     expect(screen.queryByRole('button', { name: /16 de novembro de 2026/i })).not.toBeInTheDocument();
