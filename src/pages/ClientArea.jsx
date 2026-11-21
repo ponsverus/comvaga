@@ -260,10 +260,10 @@ export default function ClientArea({ user, onLogout, userType = 'client' }) {
                 )}
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={onPickAvatar} className="hidden" />
-              <button onClick={openFilePicker} disabled={uploadingAvatar} className="h-9 px-5 bg-dark-200 border border-gray-800 hover:border-primary/50 rounded-button text-sm transition-all uppercase focus:outline-none">
+              <button onClick={openFilePicker} disabled={uploadingAvatar} className="h-7 sm:h-9 px-5 bg-dark-200 border border-gray-800 hover:border-primary/50 rounded-button text-sm transition-all uppercase focus:outline-none">
                 {uploadingAvatar ? 'ENVIANDO...' : 'FOTO'}
               </button>
-              <button onClick={() => onLogout?.()} className="h-9 flex items-center gap-2 px-5 bg-red-600 hover:bg-red-700 text-white rounded-button text-sm transition-all uppercase focus:outline-none">
+              <button onClick={() => onLogout?.()} className="h-7 sm:h-9 flex items-center gap-2 px-5 bg-red-600 hover:bg-red-700 text-white rounded-button text-sm transition-all uppercase focus:outline-none">
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">SAIR</span>
               </button>

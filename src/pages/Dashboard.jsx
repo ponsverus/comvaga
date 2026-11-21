@@ -480,13 +480,13 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
-                <Link to={`/v/${negocio.slug}`} target="_blank" className="hidden sm:flex items-center gap-2 px-4 py-2 bg-dark-200 border border-gray-800 hover:border-primary rounded-button text-sm font-normal uppercase">
+                <Link to={`/v/${negocio.slug}`} target="_blank" className="hidden sm:flex items-center gap-2 px-4 py-2 md:py-0 md:h-9 bg-dark-200 border border-gray-800 hover:border-primary rounded-button text-sm font-normal uppercase">
                   <Eye className="w-4 h-4" />VER VITRINE
                 </Link>
                 {souDono && (
                   <label className="inline-block">
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => uploadLogoNegocio(e.target.files?.[0])} disabled={logoUploading} />
-                    <span className={`inline-flex items-center justify-center text-center rounded-button font-normal border transition-all uppercase focus:outline-none ${logoUploading ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed' : 'bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary cursor-pointer'}  px-4 py-1.5 text-[11px] sm:px-4 sm:py-2 sm:text-sm`}>
+                    <span className={`inline-flex items-center justify-center text-center rounded-button font-normal border transition-all uppercase focus:outline-none ${logoUploading ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed' : 'bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary cursor-pointer'}  px-4 py-1.5 text-[11px] sm:px-4 sm:py-2 sm:text-sm md:py-0 md:h-9`}>
                       <span className="sm:hidden">{logoUploading ? 'ENVIANDO...' : 'LOGO'}</span>
                       <span className="hidden sm:inline">{logoUploading ? 'ENVIANDO...' : 'ALTERAR LOGO'}</span>
                     </span>
@@ -565,7 +565,7 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
         </div>
 
         <div className="bg-dark-100 border border-gray-800 rounded-custom overflow-visible">
-          <div className="flex overflow-x-auto border-b border-gray-800 rounded-t-custom">
+          <div className="flex overflow-x-auto border-b border-gray-800">
             {tabs.map(tab => {
               const notif = tab === 'agendamentos' ? notifAgendamentos : 0;
               return (
