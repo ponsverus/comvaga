@@ -45,8 +45,16 @@ export function resolveFacebook(fbRaw) {
 export function getVitrineTopStyles({ isLight, isProfessional = false, isFavorito = false }) {
   return {
     headerVoltar: isLight ? 'text-vsub hover:text-vtext' : 'text-vsub hover:text-primary',
-    depoimentoBtn: isLight ? (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-vprimary hover:text-vtext bg-vcard') : (isProfessional ? 'border-vborder2 text-vmuted cursor-not-allowed bg-vcard2' : 'border-vborder text-vsub hover:border-primary bg-vcard2'),
-    favoritoBtn: isLight ? (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-50 border-red-300 text-red-500' : 'bg-vcard border-vborder text-vsub hover:text-red-500 hover:border-red-300') : (isProfessional ? 'bg-vcard2 border-vborder2 text-vmuted cursor-not-allowed' : isFavorito ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-vcard2 border-vborder text-vsub hover:text-red-400'),
+    depoimentoBtn: isProfessional
+      ? 'text-vmuted cursor-not-allowed'
+      : isLight
+        ? 'text-vsub hover:text-vtext'
+        : 'text-vsub hover:text-primary',
+    favoritoBtn: isProfessional
+      ? 'text-vmuted cursor-not-allowed'
+      : isFavorito
+        ? (isLight ? 'text-red-500' : 'text-red-400')
+        : (isLight ? 'text-vsub hover:text-red-500' : 'text-vsub hover:text-red-400'),
     socialIconCl: isLight ? 'border-vborder bg-vcard text-vsub hover:bg-vcard2 hover:border-vprimary/40 hover:text-vtext' : 'border-white/20 bg-white/7 text-white/80 hover:bg-white/15 hover:border-white/35',
     heroBg: isLight ? 'bg-[linear-gradient(135deg,var(--vcard)_0%,var(--vbg)_48%,var(--vcard2)_100%)]' : 'bg-gradient-to-br from-primary/20 via-vbg to-yellow-600/20',
     telClass: isLight ? 'text-vtext hover:text-vsub' : 'text-primary hover:text-yellow-500',
