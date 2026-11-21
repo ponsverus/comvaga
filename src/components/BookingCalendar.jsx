@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { ptBR } from '../feedback/messages/ptBR.js';
 import { getFeedbackState } from '../feedback/feedbackStore';
@@ -6,6 +6,7 @@ import { CheckIcon } from './icons';
 import { ZapIcon } from '../components/icons';
 import { useBookingSlots } from './booking/useBookingSlots.js';
 import { useBookingConfirmation } from './booking/useBookingConfirmation.js';
+import ModalDialog from './ModalDialog.jsx';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -34,6 +35,7 @@ function getDiasTrabalho(profissional) {
 
 const MONTH_NAMES   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAY_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const WEEKDAY_NAMES = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 
 export default function BookingCalendar({
   profissional,
@@ -66,15 +68,22 @@ export default function BookingCalendar({
   const [retryingOfficialTime, setRetryingOfficialTime] = useState(false);
 
   const containerRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const titleId = useId();
+  const entregaNameId = useId();
+
+  const handleDismiss = useCallback(() => {
+    if (confirming || getFeedbackState().open) return;
+    onClose?.();
+  }, [confirming, onClose]);
 
   useEffect(() => {
     function handle(e) {
-      if (confirming || getFeedbackState().open) return;
-      if (containerRef.current && !containerRef.current.contains(e.target)) onClose?.();
+      if (containerRef.current && !containerRef.current.contains(e.target)) handleDismiss();
     }
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
-  }, [onClose, confirming]);
+  }, [handleDismiss]);
 
   useEffect(() => {
     const parsedToday = parseISO(todayISO);
@@ -128,15 +137,21 @@ export default function BookingCalendar({
     : 'bg-gradient-to-r from-primary to-yellow-600 text-black';
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+    <ModalDialog
+      open
+      onDismiss={handleDismiss}
+      labelledBy={`${titleId} ${entregaNameId}`}
+      initialFocusRef={closeButtonRef}
+      overlayClassName="bg-black/80"
+    >
       <div
         ref={containerRef}
         className={`border rounded-custom w-full max-w-md max-h-[92vh] overflow-y-auto ${containerBg}`}
       >
         <div className={`flex items-center justify-between px-6 pt-6 pb-4 border-b ${headerBorder}`}>
           <div className="min-w-0">
-            <div className={`text-xs uppercase tracking-wide ${labelColor}`}>Agendamento</div>
-            <div className={`font-normal truncate ${titleColor}`}>{entrega?.nome}</div>
+            <h2 id={titleId} className={`text-xs uppercase tracking-wide ${labelColor}`}>Agendamento</h2>
+            <div id={entregaNameId} className={`font-normal truncate ${titleColor}`}>{entrega?.nome}</div>
             <div className={`text-xs mt-0.5 ${subtitleColor}`}>
               <span className="uppercase">{profissional?.nome}</span>
               {entrega?.tempo_minutos && <span className={`ml-2 ${subMutedColor}`}>• {entrega.tempo_minutos} MIN</span>}
@@ -144,9 +159,12 @@ export default function BookingCalendar({
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
-            onClick={onClose}
-            className={`shrink-0 ml-4 p-1.5 rounded-button transition-colors ${closeBtn}`}
+            onClick={handleDismiss}
+            disabled={confirming}
+            aria-label="Fechar calendário"
+            className={`shrink-0 ml-4 p-1.5 rounded-button transition-colors disabled:opacity-60 ${closeBtn}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -178,6 +196,7 @@ export default function BookingCalendar({
                 type="button"
                 onClick={prevMonth}
                 disabled={!canGoPrev}
+                aria-label="Mês anterior"
                 className={`p-1.5 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${navBtn}`}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -188,6 +207,7 @@ export default function BookingCalendar({
               <button
                 type="button"
                 onClick={nextMonth}
+                aria-label="Próximo mês"
                 className={`p-1.5 rounded transition-colors ${navBtn}`}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -216,6 +236,9 @@ export default function BookingCalendar({
                     type="button"
                     disabled={isDisabled}
                     onClick={() => !isDisabled && handleSelectDay(iso)}
+                    aria-label={`${WEEKDAY_NAMES[dow]}, ${day} de ${MONTH_NAMES[viewMonth - 1]} de ${viewYear}`}
+                    aria-pressed={Boolean(isSelected)}
+                    aria-current={isToday ? 'date' : undefined}
                     className={[
                       'h-9 w-9 mx-auto flex items-center justify-center text-sm font-normal transition-colors select-none rounded-full',
                       isSelected
@@ -304,7 +327,7 @@ export default function BookingCalendar({
           )}
         </div>
       </div>
-    </div>
+    </ModalDialog>
   );
 }
 
@@ -324,6 +347,7 @@ function SlotButton({ slot, isSelected, onClick, isLight }) {
     <button
       type="button"
       onClick={() => onClick(slot)}
+      aria-pressed={isSelected}
       className={[
         'relative min-h-9 rounded-full border py-2 text-sm uppercase font-normal text-center transition-colors',
         slot.isRaio && !isSelected ? 'pl-4 pr-7' : 'px-4',
