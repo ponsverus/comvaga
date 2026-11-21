@@ -101,7 +101,7 @@ export default function VitrineTopSection({ header, business, actions }) {
 		filled: header.isFavorito,
 		size: 20,
 		className: header.isFavorito ? "text-red-500" : ""
-	}))))), /* @__PURE__ */ React.createElement("section", { className: `relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${header.heroBg}` }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col sm:flex-row items-start gap-6" }, business.logoUrl ? /* @__PURE__ */ React.createElement("div", { className: "w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-vborder bg-vcard" }, /* @__PURE__ */ React.createElement("img", {
+	})))))), /* @__PURE__ */ React.createElement("section", { className: `relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${header.heroBg}` }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col sm:flex-row items-start gap-6" }, business.logoUrl ? /* @__PURE__ */ React.createElement("div", { className: "w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-vborder bg-vcard" }, /* @__PURE__ */ React.createElement("img", {
 		src: business.logoUrl,
 		alt: "Logo",
 		className: "w-full h-full object-cover"
