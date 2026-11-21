@@ -86,20 +86,22 @@ export default function VitrineTopSection({ header, business, actions }) {
 		type: "button",
 		onClick: actions.onAbrirDepoimento,
 		disabled: !!header.isProfessional || !!header.loading,
-		className: `flex items-center gap-2 h-7 sm:h-9 px-5 rounded-button transition-all border uppercase focus:outline-none focus:ring-0 ${header.depoimentoBtn}`
+		"aria-label": "Deixar depoimento",
+		className: `flex items-center justify-center h-7 w-7 sm:h-9 sm:w-9 transition-colors ${header.depoimentoBtn}`
 	}, /* @__PURE__ */ React.createElement(StarChar, {
 		size: 18,
 		className: "text-primary"
-	}), /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline" }, "Depoimento")), /* @__PURE__ */ React.createElement("button", {
+	})), /* @__PURE__ */ React.createElement("button", {
 		type: "button",
 		onClick: actions.onToggleFavorito,
 		disabled: !!header.isProfessional || !!header.favoritoLoading || !!header.loading,
-		className: `h-7 sm:h-9 flex items-center gap-2 px-5 rounded-button transition-all uppercase border focus:outline-none focus:ring-0 disabled:opacity-60 ${header.favoritoBtn}`
+		"aria-label": header.isProfessional ? "Somente clientes podem favoritar" : header.favoritoLoading ? "Salvando favorito" : header.isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos",
+		className: `flex items-center justify-center h-7 w-7 sm:h-9 sm:w-9 transition-colors disabled:opacity-60 ${header.favoritoBtn}`
 	}, /* @__PURE__ */ React.createElement(HeartIcon, {
 		filled: header.isFavorito,
 		size: 20,
 		className: header.isFavorito ? "text-red-500" : ""
-	}), /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline" }, header.isProfessional ? "Somente Cliente" : header.favoritoLoading ? "Salvando" : header.isFavorito ? "Favoritado" : "Favoritar")))))), /* @__PURE__ */ React.createElement("section", { className: `relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${header.heroBg}` }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col sm:flex-row items-start gap-6" }, business.logoUrl ? /* @__PURE__ */ React.createElement("div", { className: "w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-vborder bg-vcard" }, /* @__PURE__ */ React.createElement("img", {
+	}))))), /* @__PURE__ */ React.createElement("section", { className: `relative py-12 sm:py-16 px-4 sm:px-6 lg:px-8 ${header.heroBg}` }, /* @__PURE__ */ React.createElement("div", { className: "max-w-7xl mx-auto" }, /* @__PURE__ */ React.createElement("div", { className: "flex flex-col sm:flex-row items-start gap-6" }, business.logoUrl ? /* @__PURE__ */ React.createElement("div", { className: "w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-vborder bg-vcard" }, /* @__PURE__ */ React.createElement("img", {
 		src: business.logoUrl,
 		alt: "Logo",
 		className: "w-full h-full object-cover"
