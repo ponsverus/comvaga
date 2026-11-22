@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, LogOut, Plus } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useFeedback } from '../feedback/useFeedback';
 import { withAuthRetry } from '../utils/authSession';
@@ -189,7 +189,18 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
-          <img src="/comvaga-logo.png" alt="COMVAGA" className="h-12 w-auto object-contain" />
+          <div className="flex items-center gap-3">
+            <img src="/comvaga-logo.png" alt="COMVAGA" className="h-12 w-auto object-contain" />
+            <button
+              type="button"
+              onClick={() => onLogout?.()}
+              aria-label="Sair"
+              className="inline-flex items-center justify-center gap-2 rounded-button bg-red-600 px-4 py-1.5 text-sm font-normal uppercase transition-colors hover:bg-red-700 sm:py-2"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
         </div>
 
         <div className="mb-8">
