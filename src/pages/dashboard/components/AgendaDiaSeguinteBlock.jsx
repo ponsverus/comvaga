@@ -132,9 +132,9 @@ export default function AgendaDiaSeguinteBlock({
           value={metricsAgendaDiaSeguinteLoading ? '...' : formatDurationFromMinutes(data?.minutos_ocupados)}
         />
         <MetricCard
-          label="TAXA DE OCUPA."
+          label="AGENDA RESERVADA"
           tone="text-primary"
-          value={metricsAgendaDiaSeguinteLoading ? '...' : formatPercent(data?.taxa_ocupacao)}
+          value={metricsAgendaDiaSeguinteLoading ? '...' : formatPercent(data?.percentual_tempo_reservado)}
         />
         <MetricCard
           label="TEMPO TOTAL"
@@ -176,14 +176,14 @@ export default function AgendaDiaSeguinteBlock({
                     <div className="mt-1 font-normal text-white leading-snug uppercase">{String(item?.nome || 'PROFISSIONAL')}</div>
                   </div>
                   <div className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-normal text-primary">
-                    {formatPercent(item?.taxa_ocupacao)}
+                    {formatPercent(item?.percentual_tempo_reservado)}
                   </div>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   <ProfessionalMetricBar label="" value={formatDurationFromMinutes(minutosOciosos)} percent={minutosDisponiveis > 0 ? (minutosOciosos / minutosDisponiveis) * 100 : 0} barClass="bg-yellow-400" />
                   <ProfessionalMetricBar label="" value={formatDurationFromMinutes(minutosOcupados)} percent={minutosDisponiveis > 0 ? (minutosOcupados / minutosDisponiveis) * 100 : 0} barClass="bg-green-400" />
-                  <ProfessionalMetricBar label="" value={formatPercent(item?.taxa_ocupacao)} percent={item?.taxa_ocupacao} barClass="bg-primary" />
+                  <ProfessionalMetricBar label="" value={formatPercent(item?.percentual_tempo_reservado)} percent={item?.percentual_tempo_reservado} barClass="bg-primary" />
                   <ProfessionalMetricBar label="" value={formatDurationFromMinutes(minutosDisponiveis)} percent={minutosDisponiveis > 0 ? 100 : 0} barClass="bg-gray-300" />
                   <div className="flex items-center gap-2 pt-1">
                     <ProfessionalCountPill label="Válidos" value={validos} />
@@ -212,8 +212,8 @@ export default function AgendaDiaSeguinteBlock({
                   type="button"
                   key={index}
                   onClick={() => goToDesktopPage(index)}
-                  aria-label={"Ir para a página " + (index + 1)}
-                  title={"Ir para a página " + (index + 1)}
+                  aria-label={"Ir para a pagina " + (index + 1)}
+                  title={"Ir para a pagina " + (index + 1)}
                   className={index === desktopActivePage ? 'h-1.5 w-4 rounded-full bg-primary' : 'h-1.5 w-1.5 rounded-full bg-gray-600'}
                 />
               ))}
