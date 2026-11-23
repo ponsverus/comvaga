@@ -59,8 +59,8 @@ jobs:
       - run: npm ci
       - run: npm run test:components
 
-  integration:
-    name: Integração simulada
+  flows:
+    name: Testes de fluxos simulados
     runs-on: ubuntu-latest
     env:
       VITE_SUPABASE_URL: ''
@@ -72,4 +72,4 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run test:integration
+      - run: npm run test:flows

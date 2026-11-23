@@ -11,10 +11,10 @@
     "build": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "npm run test:unit && npm run test:components && npm run test:integration",
+    "test": "npm run test:unit && npm run test:components && npm run test:flows",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:components": "vitest run --project components",
-    "test:integration": "vitest run --project integration"
+    "test:flows": "vitest run --project flows"
   },
   "dependencies": {
     "@sentry/react": "^11.6.0",

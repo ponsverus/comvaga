@@ -9,4 +9,4 @@ fi
 npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
 npm run test:unit
 npm run test:components
-npm run test:integration
+npm run test:flows
