@@ -1,5 +1,6 @@
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import { hasPaymentHistory, isCancellationScheduled } from '../utils';
+import { formatMoneyBR } from '../../../utils/money';
 
 function getByPath(obj, path) {
   const parts = String(path || '').split('.');
@@ -39,7 +40,7 @@ export function billingRateLimitMessage(error) {
 }
 
 export function formatCurrencyFromCents(value) {
-  return `R$ ${(Number(value || 0) / 100).toFixed(2).replace('.', ',')}`;
+  return `R$ ${formatMoneyBR(Number(value || 0) / 100)}`;
 }
 
 export function getAccessEndDate(status) {
