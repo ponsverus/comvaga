@@ -10,14 +10,14 @@ const domains = {
   concluir_agendamento_profissional: 'agendamentos',
   create_depoimento_negocio: 'depoimentos',
   create_depoimento_profissional: 'depoimentos',
-  aprovar_parceiro_profissional: 'gestao',
-  ativar_entrega_segura: 'gestao',
-  inativar_entrega_segura: 'gestao',
-  excluir_entrega_segura: 'gestao',
-  excluir_profissional_parceiro_seguro: 'gestao',
-  excluir_negocio_seguro: 'gestao',
-  excluir_conta_cliente_seguro: 'gestao',
-  excluir_conta_profissional_seguro: 'gestao',
+  aprovar_parceiro_profissional: 'cadastros',
+  ativar_entrega_segura: 'cadastros',
+  inativar_entrega_segura: 'cadastros',
+  excluir_entrega_segura: 'cadastros',
+  excluir_profissional_parceiro_seguro: 'cadastros',
+  excluir_negocio_seguro: 'cadastros',
+  excluir_conta_cliente_seguro: 'cadastros',
+  excluir_conta_profissional_seguro: 'cadastros',
 };
 
 export async function invokeProtectedAction(action, params = {}) {

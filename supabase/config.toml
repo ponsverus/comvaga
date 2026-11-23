@@ -34,7 +34,7 @@ verify_jwt = true
 [functions.protected-depoimentos]
 verify_jwt = true
 
-[functions.protected-gestao]
+[functions.protected-cadastros]
 verify_jwt = true
 
 [functions.asaas-reactivate-subscription]

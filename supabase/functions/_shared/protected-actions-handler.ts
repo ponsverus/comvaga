@@ -1,6 +1,6 @@
 import { jsonResponse } from './cors.ts';
 
-export type ProtectedDomain = 'agendamentos' | 'depoimentos' | 'gestao';
+export type ProtectedDomain = 'agendamentos' | 'depoimentos' | 'gestao' | 'cadastros';
 type DatabaseError = { code?: string; message: string; details?: string; hint?: string };
 type AttemptResult = { allowed: boolean; action_allowed: boolean; retry_after: number };
 type Dependencies = {
@@ -58,10 +58,9 @@ export function createProtectedActionHandler(domain: ProtectedDomain, deps: Depe
       const { payload, invalid, tooLarge } = await readBody(req);
       const action = typeof payload?.action === 'string' ? payload.action : null;
 
-      // This awaited RPC is a separate transaction, completed before business validation.
       const attempt = await deps.consume(actor, domain, action);
       if (attempt.error || !attempt.data) {
-        return jsonResponse({ code: 'attempt_counter_unavailable', message: 'Protecao temporariamente indisponivel. Tente novamente.' }, 503, req);
+        return jsonResponse({ code: 'attempt_counter_unavailable', message: 'Controle de tentativas temporariamente indisponível. Tente novamente.' }, 503, req);
       }
       if (!attempt.data.allowed) {
         const response = jsonResponse({
@@ -85,7 +84,6 @@ export function createProtectedActionHandler(domain: ProtectedDomain, deps: Depe
       if (result.error) {
         const error = result.error;
         let status = error.code === 'RATE_LIMIT_EXCEEDED' ? 429 : error.code === '42501' ? 403 : 400;
-        // Existing trigger quotas use PostgREST's structured 429 exception.
         if (error.code === 'PGRST') {
           try {
             const structured = JSON.parse(error.message);
@@ -99,7 +97,7 @@ export function createProtectedActionHandler(domain: ProtectedDomain, deps: Depe
       }
       return jsonResponse(result.data, 200, req);
     } catch {
-      return jsonResponse({ code: 'protected_action_unavailable', message: 'Operacao temporariamente indisponivel. Tente novamente.' }, 503, req);
+      return jsonResponse({ code: 'protected_action_unavailable', message: 'Etapa temporariamente indisponível. Tente novamente.' }, 503, req);
     }
   };
 }
