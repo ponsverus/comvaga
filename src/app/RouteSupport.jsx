@@ -100,7 +100,7 @@ export function ProfileRouteGate({ fatalError, inRecovery, isLoggedIn, userType,
 
 const ROUTE_LOAD_FAILED_MESSAGE =
   ptBR.alerts?.route_load_failed?.body ||
-  'O carregamento da tela falhou. Por favor, atualize a pagina e tente novamente.';
+  'O carregamento da tela falhou. Por favor, atualize a página e tente novamente.';
 
 class RouteErrorBoundary extends Component {
   constructor(props) {
