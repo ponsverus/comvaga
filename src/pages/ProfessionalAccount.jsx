@@ -19,7 +19,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [savingDados, setSavingDados] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
-  const [hasOwnedBusiness, setHasOwnedBusiness] = useState(false);
+  const [ownedBusinessStatus, setOwnedBusinessStatus] = useState('loading');
 
   const uiAlert = useCallback(async (key, variant = 'info') => {
     if (feedback?.showMessage) return feedback.showMessage(key, { variant });
@@ -35,11 +35,11 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
 
   useEffect(() => {
     let active = true;
-    setHasOwnedBusiness(false);
+    setOwnedBusinessStatus('loading');
     if (professionalRole === 'owner' && user?.id) {
       fetchOwnerBusinessCount(user.id)
-        .then((count) => { if (active) setHasOwnedBusiness(count > 0); })
-        .catch(() => { if (active) setHasOwnedBusiness(false); });
+        .then((count) => { if (active) setOwnedBusinessStatus(count > 0 ? 'has' : 'none'); })
+        .catch(() => { if (active) setOwnedBusinessStatus('unknown'); });
     }
     return () => { active = false; };
   }, [professionalRole, user?.id]);
@@ -192,15 +192,22 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     }
   };
 
+  const backLoading = professionalRole === 'owner' && ownedBusinessStatus === 'loading';
   const backPath = professionalRole === 'partner'
     ? '/selecionar-negocio-parceiro'
-    : hasOwnedBusiness ? '/dashboard' : '/';
+    : ownedBusinessStatus === 'has' ? '/dashboard' : '/';
 
   return (
     <div className="min-h-screen bg-black px-4 py-10 text-white">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-8 flex items-center justify-between gap-4">
-          <Link to={backPath} className="inline-flex items-center gap-2 text-sm uppercase text-gray-400 transition-colors hover:text-primary">
+          <Link
+            to={backPath}
+            aria-disabled={backLoading}
+            tabIndex={backLoading ? -1 : undefined}
+            onClick={backLoading ? (event) => event.preventDefault() : undefined}
+            className={`inline-flex items-center gap-2 text-sm uppercase text-gray-400 transition-colors hover:text-primary ${backLoading ? 'pointer-events-none opacity-50' : ''}`}
+          >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
