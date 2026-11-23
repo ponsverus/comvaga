@@ -4,6 +4,7 @@ import { CalendarIcon } from '../../../components/icons';
 import ModalDialog from '../../../components/ModalDialog';
 import FeedbackPaginationActions from '../../../feedback/ui/FeedbackPaginationActions';
 import { getValorFinalEntrega } from '../utils';
+import { formatMoneyBR } from '../../../utils/money';
 
 function secondaryActionClass(isLight) {
   return isLight
@@ -99,7 +100,7 @@ export function SelectionBar({ itens, counterSingular, counterPlural, onConfirm,
           <div className="w-8 h-8 rounded-full bg-vprimary flex items-center justify-center text-vprimary-text text-xs font-normal shrink-0 tabular-nums">{qtd}</div>
           <div className="min-w-0">
             <div className={`text-sm font-normal truncate ${textMain}`}>{qtd} {label} SELECIONADO{qtd > 1 ? 's' : ''}</div>
-            <div className={`text-xs font-normal ${textSub}`}>{tempoTotalMinutos} MIN • R$ {valTotal.toFixed(2)}</div>
+            <div className={`text-xs font-normal ${textSub}`}>{tempoTotalMinutos} MIN • R$ {formatMoneyBR(valTotal)}</div>
           </div>
           <button type="button" onClick={onClear} className={`shrink-0 ml-1 ${clearBtn}`} title="Limpar"><X className="w-4 h-4" /></button>
         </div>
