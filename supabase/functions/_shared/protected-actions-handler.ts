@@ -1,6 +1,6 @@
 import { jsonResponse } from './cors.ts';
 
-export type ProtectedDomain = 'agendamentos' | 'depoimentos' | 'gestao' | 'cadastros';
+export type ProtectedDomain = 'agendamentos' | 'depoimentos' | 'cadastros';
 type DatabaseError = { code?: string; message: string; details?: string; hint?: string };
 type AttemptResult = { allowed: boolean; action_allowed: boolean; retry_after: number };
 type Dependencies = {
