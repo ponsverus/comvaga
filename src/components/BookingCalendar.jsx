@@ -7,6 +7,7 @@ import { ZapIcon } from '../components/icons';
 import { useBookingSlots } from './booking/useBookingSlots.js';
 import { useBookingConfirmation } from './booking/useBookingConfirmation.js';
 import ModalDialog from './ModalDialog.jsx';
+import { formatMoneyBR } from '../utils/money';
 
 function parseISO(iso) {
   if (!iso) return null;
@@ -108,9 +109,9 @@ export default function BookingCalendar({
 
   const canGoPrev    = !(viewYear === today?.year && viewMonth === today?.month);
   const diasTrabalho = getDiasTrabalho(profissional);
-  const valorExibido = entrega?.valor_oferta
-    ? Number(entrega.valor_oferta).toFixed(2)
-    : Number(entrega?.valor ?? 0).toFixed(2);
+  const valorExibido = formatMoneyBR(entrega?.valor_oferta
+    ? Number(entrega.valor_oferta)
+    : Number(entrega?.valor ?? 0));
 
   const totalDays = daysInMonth(viewYear, viewMonth);
   const startDow  = firstDow(viewYear, viewMonth);
