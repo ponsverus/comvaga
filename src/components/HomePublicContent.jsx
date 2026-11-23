@@ -23,6 +23,7 @@ export default function HomePublicContent({
   isLogged,
   loggedAreaLink,
   loggedAreaLabel,
+  showProfessionalAccountLink,
   supportHref = getSupportHref(),
   handleLogoutClick,
   appReviews,
@@ -61,6 +62,7 @@ export default function HomePublicContent({
         isLogged={isLogged}
         loggedAreaLink={loggedAreaLink}
         loggedAreaLabel={loggedAreaLabel}
+        showProfessionalAccountLink={showProfessionalAccountLink}
         supportHref={supportHref}
         handleLogoutClick={handleLogoutClick}
       />
