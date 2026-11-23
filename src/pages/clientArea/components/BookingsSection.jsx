@@ -6,6 +6,7 @@ import { withAuthRetry } from '../../../utils/authSession';
 import { ptBR } from '../../../feedback/messages/ptBR';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
+import { formatMoneyBR } from '../../../utils/money';
 import { CalendarIcon } from '../../../components/icons';
 import ReviewStar from './ReviewStar';
 import {
@@ -13,7 +14,6 @@ import {
   getStatusColor,
   getStatusText,
   getValorAgendamento,
-  moneyBR,
 } from '../utils';
 
 function BookingGroup({
@@ -92,7 +92,7 @@ function BookingGroup({
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">VALOR</div>
-                    <div className="text-sm text-white">R$ {moneyBR(getValorAgendamento(booking))}</div>
+                    <div className="text-sm text-white">R$ {formatMoneyBR(getValorAgendamento(booking))}</div>
                   </div>
                 </div>
                 <div className={`grid items-stretch gap-2 ${actionColumns}`}>
@@ -304,7 +304,7 @@ export default function BookingsSection({
           [ptBR.dashboard.business.item_singular[group].toUpperCase(), booking.entregas?.nome],
           ['DATA', formatDateBRFromISO(booking.data)],
           ['HOR\u00c1RIO', booking.hora_inicio],
-          ['VALOR', `R$ ${moneyBR(getValorAgendamento(booking))}`],
+          ['VALOR', `R$ ${formatMoneyBR(getValorAgendamento(booking))}`],
           ['STATUS', getStatusText(booking.status)],
         ],
       });
