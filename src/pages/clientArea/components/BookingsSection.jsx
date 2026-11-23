@@ -6,6 +6,7 @@ import { withAuthRetry } from '../../../utils/authSession';
 import { ptBR } from '../../../feedback/messages/ptBR';
 import { useFeedback } from '../../../feedback/useFeedback';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
+import { formatMoneyBR } from '../../../utils/money';
 import { CalendarIcon } from '../../../components/icons';
 import ReviewStar from './ReviewStar';
 import {
@@ -13,7 +14,6 @@ import {
   getStatusColor,
   getStatusText,
   getValorAgendamento,
-  moneyBR,
 } from '../utils';
 
 function BookingGroup({
@@ -73,9 +73,9 @@ function BookingGroup({
               <div className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-normal text-white mb-1">{booking.profissionais?.negocios?.nome || '\u2014'}</h3>
-                    <p className="text-sm text-gray-400 mb-2 uppercase">PROF: {booking.profissionais?.nome || '\u2014'}</p>
-                    <p className="text-sm text-primary">{booking.entregas?.nome || '\u2014'}</p>
+            <h3 className="text-lg font-normal text-white mb-1">{booking.profissionais?.negocios?.nome || '—'}</h3>
+            <p className="text-sm text-gray-400 mb-2 uppercase">PROF: {booking.profissionais?.nome || '—'}</p>
+            <p className="text-sm text-primary">{booking.entregas?.nome || '—'}</p>
                   </div>
                   <div className={`shrink-0 inline-flex px-3 py-1 rounded-button text-xs border ${getStatusColor(booking.status)}`}>
                     {getStatusText(booking.status)}
@@ -87,12 +87,12 @@ function BookingGroup({
                     <div className="text-sm text-white">{formatDateBRFromISO(booking.data)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">{'HOR\u00c1RIO'}</div>
-                    <div className="text-sm text-white">{booking.hora_inicio || '\u2014'}</div>
+              <div className="text-xs text-gray-500 mb-1">{'HORÁRIO'}</div>
+              <div className="text-sm text-white">{booking.hora_inicio || '—'}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">VALOR</div>
-                    <div className="text-sm text-white">R$ {moneyBR(getValorAgendamento(booking))}</div>
+                    <div className="text-sm text-white">R$ {formatMoneyBR(getValorAgendamento(booking))}</div>
                   </div>
                 </div>
                 <div className={`grid items-stretch gap-2 ${actionColumns}`}>
@@ -116,7 +116,7 @@ function BookingGroup({
                         className="inline-flex min-w-0 w-full items-center justify-center gap-2 px-2 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/50 text-primary rounded-button text-sm transition-all uppercase disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <Share2 size={16} className="shrink-0" aria-hidden="true" />
-                        <span className="min-w-0 whitespace-normal break-words">{shareState.sharingId === booking.id ? 'COMPARTILHANDO...' : shareState.failed ? 'PDF INDISPON\u00cdVEL' : !shareState.ready ? 'PREPARANDO PDF...' : 'COMPARTILHAR'}</span>
+                  <span className="min-w-0 whitespace-normal break-words">{shareState.sharingId === booking.id ? 'COMPARTILHANDO...' : shareState.failed ? 'PDF INDISPONÍVEL' : !shareState.ready ? 'PREPARANDO PDF...' : 'COMPARTILHAR'}</span>
                       </button>
                   )}
                   {booking.status === 'agendado' && (
@@ -179,7 +179,7 @@ function BookingGroup({
                     {commentOpen && (
                       <div className="order-2 flex min-w-0 items-center gap-2 sm:order-3 sm:w-full">
                         <label htmlFor={commentInputId} className="shrink-0 whitespace-nowrap text-sm font-normal uppercase text-gray-500 sm:tracking-wide">
-                          {'Coment\u00e1rio:'}
+                  {'Comentário:'}
                         </label>
                         <input
                           id={commentInputId}
@@ -298,13 +298,13 @@ export default function BookingsSection({
       const file = createHistoryPdfFile(renderer, {
         filename: `agendamento-${booking.id}.pdf`,
         fields: [
-          ['NEG\u00d3CIO', negocio?.nome],
+        ['NEGÓCIO', negocio?.nome],
           ['CLIENTE', clienteNome],
           ['PROFISSIONAL', booking.profissionais?.nome],
           [ptBR.dashboard.business.item_singular[group].toUpperCase(), booking.entregas?.nome],
           ['DATA', formatDateBRFromISO(booking.data)],
-          ['HOR\u00c1RIO', booking.hora_inicio],
-          ['VALOR', `R$ ${moneyBR(getValorAgendamento(booking))}`],
+        ['HORÁRIO', booking.hora_inicio],
+          ['VALOR', `R$ ${formatMoneyBR(getValorAgendamento(booking))}`],
           ['STATUS', getStatusText(booking.status)],
         ],
       });
@@ -347,7 +347,7 @@ export default function BookingsSection({
             onSubmitReview={onSubmitReview}
           />
           <BookingGroup
-            title={'CONCLU\u00cdDOS'}
+          title={'CONCLUÍDOS'}
             shareState={shareState}
             onShare={onShare}
             items={groups.concluidos}

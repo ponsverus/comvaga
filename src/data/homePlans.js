@@ -1,3 +1,5 @@
+import { formatMoneyBR } from '../utils/money.js';
+
 export const HOME_PLANS = [
   {
     code: 'essencial',
@@ -26,5 +28,5 @@ export const HOME_PLANS = [
 ];
 
 export function formatHomePlanPrice(priceCents) {
-  return `R$ ${(priceCents / 100).toFixed(2).replace('.', ',')}`;
+  return `R$ ${formatMoneyBR(priceCents / 100)}`;
 }

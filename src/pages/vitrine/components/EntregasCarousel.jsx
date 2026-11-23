@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CalendarIcon, CheckIcon, SelectIcon } from '../../../components/icons';
+import { formatMoneyBR } from '../../../utils/money';
 
 const ENTREGAS_POR_PAGINA = 6;
 
@@ -136,9 +137,9 @@ function EntregaCard({
           {entrega.tempo_minutos} MIN
         </span>
         {temOferta ? (
-          <div className="font-normal text-base text-voferta shrink-0">R$ {valorFinal.toFixed(2)}</div>
+          <div className="font-normal text-base text-voferta shrink-0">R$ {formatMoneyBR(valorFinal)}</div>
         ) : (
-          <div className="text-vprimary font-normal text-base shrink-0">R$ {valorFinal.toFixed(2)}</div>
+          <div className="text-vprimary font-normal text-base shrink-0">R$ {formatMoneyBR(valorFinal)}</div>
         )}
       </div>
       <div className="font-normal text-sm leading-tight mt-4">{entrega.nome}</div>

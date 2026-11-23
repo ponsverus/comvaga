@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import DatePicker from '../../../components/DatePicker';
 import { createHistoryPdfFile, loadHistoryPdfRenderer, shareHistoryPdf } from '../../../utils/agendamentoPdf';
+import { formatMoneyBR } from '../../../utils/money';
 import { ptBR } from '../../../feedback/messages/ptBR.js';
 import { useFeedback } from '../../../feedback/useFeedback';
 import {
@@ -127,7 +128,7 @@ export default function HistoricoSection({
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div><div className="text-xs text-gray-500">DATA</div><div className="text-sm">{formatDateBRFromISO(getAgDate(a))}</div></div>
                   <div><div className="text-xs text-gray-500">HORÁRIO</div><div className="text-sm">{getAgInicio(a)}</div></div>
-                  <div><div className="text-xs text-gray-500">VALOR</div><div className="text-sm">R$ {Number(valorReal).toFixed(2)}</div></div>
+                  <div><div className="text-xs text-gray-500">VALOR</div><div className="text-sm">R$ {formatMoneyBR(valorReal)}</div></div>
                 </div>
                 <button
                   type="button"

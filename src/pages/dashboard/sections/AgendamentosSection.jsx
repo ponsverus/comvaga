@@ -1,4 +1,5 @@
 import { formatPhoneForWhatsAppLink } from '../../../utils/phone';
+import { formatMoneyBR } from '../../../utils/money';
 import {
   computeStatusFromDb,
   formatDateBRFromISO,
@@ -83,7 +84,7 @@ export default function AgendamentosSection({
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div><div className="text-xs text-gray-500">DATA</div><div className="text-sm">{formatDateBRFromISO(getAgDate(a))}</div></div>
                         <div><div className="text-xs text-gray-500">HORÁRIO</div><div className="text-sm">{getAgInicio(a)}</div></div>
-                        <div><div className="text-xs text-gray-500">VALOR</div><div className="text-sm">R$ {Number(valorReal).toFixed(2)}</div></div>
+                        <div><div className="text-xs text-gray-500">VALOR</div><div className="text-sm">R$ {formatMoneyBR(valorReal)}</div></div>
                       </div>
                       {!isDone && !isCancel && (
                         isHoje ? (

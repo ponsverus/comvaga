@@ -8,12 +8,6 @@ export function formatDateBRFromISO(dateStr) {
   return `${d}.${m}.${y}`;
 }
 
-export const moneyBR = (v) => {
-  const n = Number(v ?? 0);
-  if (!Number.isFinite(n)) return '0,00';
-  return n.toFixed(2).replace('.', ',');
-};
-
 export const getValorFinalEntrega = (e) => {
   const valor = Number(e?.valor ?? 0);
   const ofertaRaw = e?.valor_oferta;
@@ -52,7 +46,7 @@ export const getStatusColor = (status) => {
 
 export const getStatusText = (status) => ({
   agendado:               'AGENDADO',
-  concluido:              'CONCLU\u00cdDO',
+  concluido:              'CONCLUÍDO',
   cancelado_cliente:      'CANCELADO',
   cancelado_profissional: 'CANCELADO',
 }[status] || String(status || '').toUpperCase());

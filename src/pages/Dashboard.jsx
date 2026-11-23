@@ -4,6 +4,7 @@ import { CalendarIcon, ProfessionalIcon, TrendingUpIcon, UsersIcon } from '../co
 import AppFooter from '../components/AppFooter';
 import { Eye, LogOut, AlertCircle } from 'lucide-react';
 import { formatPhoneForDisplay } from '../utils/phone';
+import { formatMoneyBR } from '../utils/money';
 import { NOW_RPC_SEQUENCE } from '../utils/officialDate';
 import { useFeedback } from '../feedback/useFeedback';
 import { useBusinessGroup } from '../businessTerms';
@@ -38,7 +39,7 @@ import { useDashboardMutations } from './dashboard/hooks/useDashboardMutations';
 import { useDashboardRealtime } from './dashboard/hooks/useDashboardRealtime';
 
 function formatCurrency(value) {
-  return `R$ ${Number(value || 0).toFixed(2)}`;
+  return `R$ ${formatMoneyBR(value)}`;
 }
 
 const BILLING_CHECKOUT_MESSAGE_KEYS = {
