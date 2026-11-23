@@ -4,6 +4,7 @@ export default function HomeFooter({
   isLogged,
   loggedAreaLink,
   loggedAreaLabel,
+  showProfessionalAccountLink,
   supportHref,
   handleLogoutClick,
 }) {
@@ -37,6 +38,13 @@ export default function HomeFooter({
                       {loggedAreaLabel}
                     </Link>
                   </li>
+                  {showProfessionalAccountLink && (
+                    <li>
+                      <Link to="/conta-profissional" className="text-gray-500 hover:text-primary transition-colors text-sm">
+                        MINHA CONTA
+                      </Link>
+                    </li>
+                  )}
                   <li>
                     <button
                       type="button"
