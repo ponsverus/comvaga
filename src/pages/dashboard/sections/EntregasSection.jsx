@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { formatMoneyBR } from '../../../utils/money';
 
 const ENTREGAS_PER_PAGE = 6;
 
@@ -100,8 +101,8 @@ function ProfissionalEntregasBlock({
                     <div className="flex justify-between items-start mb-4">
                       <span className="inline-flex items-center rounded-full border border-gray-700 bg-transparent px-3 py-1 text-xs text-gray-500">{s.tempo_minutos} MIN</span>
                       {oferta != null && oferta > 0 && oferta < valor ? (
-                        <div className="text-xl font-normal text-green-400">R$ {oferta.toFixed(2)}</div>
-                      ) : (<div className="text-xl font-normal text-primary">R$ {valor.toFixed(2)}</div>)}
+                        <div className="text-xl font-normal text-green-400">R$ {formatMoneyBR(oferta)}</div>
+                      ) : (<div className="text-xl font-normal text-primary">R$ {formatMoneyBR(valor)}</div>)}
                     </div>
                     <h3 className="flex items-center gap-2 text-sm font-normal text-white mb-0.5">
                       <span>{s.nome}</span>
