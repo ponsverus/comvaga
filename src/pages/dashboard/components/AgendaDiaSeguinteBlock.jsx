@@ -212,8 +212,8 @@ export default function AgendaDiaSeguinteBlock({
                   type="button"
                   key={index}
                   onClick={() => goToDesktopPage(index)}
-                  aria-label={"Ir para a pagina " + (index + 1)}
-                  title={"Ir para a pagina " + (index + 1)}
+                  aria-label={"Ir para a página " + (index + 1)}
+                  title={"Ir para a página " + (index + 1)}
                   className={index === desktopActivePage ? 'h-1.5 w-4 rounded-full bg-primary' : 'h-1.5 w-1.5 rounded-full bg-gray-600'}
                 />
               ))}

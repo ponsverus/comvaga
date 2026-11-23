@@ -280,14 +280,14 @@ export const cobranca = {
   },
   billing_checkout_reconciliation_pending: {
     title: 'Checkout em conferência',
-    body: 'Houve um erro ao verificar o status do checkout anterior. Estamos checando os dados para evitar debito duplicado. Aguarde antes de tentar novamente.',
+    body: 'Houve um erro ao verificar o status do checkout anterior. Estamos checando os dados para evitar débito duplicado. Aguarde antes de tentar novamente.',
     variant: 'warning',
     screen: 'dark',
     buttonText: 'ENTENDI',
   },
   billing_checkout_record_pending: {
     title: 'Registro do checkout em conferência',
-    body: 'O sistema de pagamento criou o checkout, porem o seu registro no sistema permanece pendente de validar. Aguarde antes de tentar novamente.',
+    body: 'O sistema de pagamento criou o checkout, porém o seu registro no sistema permanece pendente de validar. Aguarde antes de tentar novamente.',
     variant: 'warning',
     screen: 'dark',
     buttonText: 'ENTENDI',
@@ -322,7 +322,7 @@ export const cobranca = {
   },
   billing_upgrade_provider_rejected: {
     title: 'Troca recusada',
-    body: 'O sistema de pagamento recusou a troca da assinatura. Seu plano permanece como esta. Tente novamente mais tarde ou contate o suporte.',
+    body: 'O sistema de pagamento recusou a troca da assinatura. Seu plano permanece como está. Tente novamente mais tarde ou contate o suporte.',
     variant: 'warning',
     screen: 'dark',
     buttonText: 'ENTENDI',
