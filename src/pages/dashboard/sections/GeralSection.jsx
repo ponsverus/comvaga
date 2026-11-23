@@ -54,7 +54,7 @@ function ProfessionalRevenueCard({ nome, valor }) {
   );
 }
 
-export default function VisaoGeralSection({
+export default function GeralSection({
   metricsHoje,
   proximoAgendamento,
   souDono,
