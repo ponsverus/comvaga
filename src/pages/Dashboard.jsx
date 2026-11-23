@@ -355,13 +355,13 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
   const tabs = useMemo(() => (
     parceiroProfissional
-      ? ['visao-geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais']
+      ? ['geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais']
       : souDono
-        ? ['visao-geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais', 'info-negocio', 'planos']
-        : ['visao-geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais']
+        ? ['geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais', 'info-negocio', 'planos']
+        : ['geral', 'agendamentos', 'historico', 'clientes', 'entregas', 'profissionais']
   ), [parceiroProfissional, souDono]);
 
-  const TAB_LABELS = { 'visao-geral': 'GERAL', 'agendamentos': 'AGENDAMENTOS', 'historico': 'HISTÓRICO', 'clientes': 'CLIENTES', 'entregas': tabEntregasLabel, 'profissionais': 'PROFISSIONAIS', 'dados': 'DADOS', 'info-negocio': 'INFO DO NEGÓCIO', 'planos': 'PLANOS' };
+  const TAB_LABELS = { 'geral': 'GERAL', 'agendamentos': 'AGENDAMENTOS', 'historico': 'HISTÓRICO', 'clientes': 'CLIENTES', 'entregas': tabEntregasLabel, 'profissionais': 'PROFISSIONAIS', 'dados': 'DADOS', 'info-negocio': 'INFO DO NEGÓCIO', 'planos': 'PLANOS' };
   useEffect(() => {
     const searchParams = new URLSearchParams(location?.search || '');
     const queryTab = searchParams.get('tab');
@@ -582,11 +582,11 @@ export default function Dashboard({ user, onLogout, userType = 'professional', p
 
           <div className="p-6">
 
-            {!businessGroup && ['visao-geral', 'historico', 'clientes', 'entregas', 'profissionais'].includes(activeTab) && (
+            {!businessGroup && ['geral', 'historico', 'clientes', 'entregas', 'profissionais'].includes(activeTab) && (
               <BusinessGroupNotice status={businessGroupStatus} onRetry={retryBusinessGroup} />
             )}
 
-            {businessGroup && activeTab === 'visao-geral' && (
+            {businessGroup && activeTab === 'geral' && (
               <GeralSection
                 metricsHoje={metricsHoje}
                 proximoAgendamento={proximoAgendamento}
