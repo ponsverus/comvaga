@@ -4,14 +4,9 @@ import { useFeedback } from '../../../feedback/useFeedback';
 import { UsersIcon, CalendarIcon } from '../../../components/icons';
 import { formatDateBRFromISO } from '../utils';
 import { getPublicUrl } from '../api/dashboardApi';
+import { formatMoneyBR } from '../../../utils/money';
 
 const CLIENTES_PER_PAGE = 6;
-
-function moneyBR(value) {
-  const number = Number(value ?? 0);
-  if (!Number.isFinite(number)) return '0,00';
-  return number.toFixed(2).replace('.', ',');
-}
 
 function ClienteCard({ cliente, itemLabelText, onAgendarCliente }) {
   const avatarUrl = getPublicUrl('avatars', cliente.cliente_avatar_path);
@@ -45,7 +40,7 @@ function ClienteCard({ cliente, itemLabelText, onAgendarCliente }) {
           </div>
           <div className="min-w-0">
             <div className="text-xs text-gray-500 mb-1">VALOR</div>
-            <div className="text-white truncate">R$ {moneyBR(cliente.ultimo_valor)}</div>
+            <div className="text-white truncate">R$ {formatMoneyBR(cliente.ultimo_valor)}</div>
           </div>
         </div>
       </div>
