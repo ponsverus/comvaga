@@ -184,6 +184,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
   const appReviewRequestId = useRef(0);
   const isLogged = !!user && !!userType;
   const isPartner = userType === 'professional' && professionalRole === 'partner';
+  const showProfessionalAccountLink = userType === 'professional' && professionalRole === 'owner';
   const loggedAreaLink = userType === 'professional'
     ? isPartner ? '/selecionar-negocio-parceiro' : '/dashboard'
     : '/minha-area';
@@ -335,6 +336,7 @@ export default function Home({ user, userType, professionalRole = null, onLogout
       isLogged={isLogged}
       loggedAreaLink={loggedAreaLink}
       loggedAreaLabel={loggedAreaLabel}
+      showProfessionalAccountLink={showProfessionalAccountLink}
       supportHref={supportHref}
       handleLogoutClick={handleLogoutClick}
       appReviews={{

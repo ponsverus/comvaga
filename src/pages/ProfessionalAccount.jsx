@@ -6,6 +6,7 @@ import { useFeedback } from '../feedback/useFeedback';
 import { withAuthRetry } from '../utils/authSession';
 import { invokeProtectedAction } from '../utils/protectedAction';
 import { getRequestErrorKey } from '../utils/requestError';
+import { fetchOwnerBusinessCount } from '../api/negociosApi';
 import AccountDataSection from './dashboard/sections/AccountDataSection';
 
 export default function ProfessionalAccount({ user, onLogout, professionalRole = null }) {
@@ -18,6 +19,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [savingDados, setSavingDados] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [hasOwnedBusiness, setHasOwnedBusiness] = useState(false);
 
   const uiAlert = useCallback(async (key, variant = 'info') => {
     if (feedback?.showMessage) return feedback.showMessage(key, { variant });
@@ -30,6 +32,17 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
   }, [feedback]);
 
   useEffect(() => { setNovoEmail(user?.email || ''); }, [user?.email]);
+
+  useEffect(() => {
+    let active = true;
+    setHasOwnedBusiness(false);
+    if (professionalRole === 'owner' && user?.id) {
+      fetchOwnerBusinessCount(user.id)
+        .then((count) => { if (active) setHasOwnedBusiness(count > 0); })
+        .catch(() => { if (active) setHasOwnedBusiness(false); });
+    }
+    return () => { active = false; };
+  }, [professionalRole, user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -179,7 +192,9 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     }
   };
 
-  const backPath = professionalRole === 'partner' ? '/selecionar-negocio-parceiro' : '/dashboard';
+  const backPath = professionalRole === 'partner'
+    ? '/selecionar-negocio-parceiro'
+    : hasOwnedBusiness ? '/dashboard' : '/';
 
   return (
     <div className="min-h-screen bg-black px-4 py-10 text-white">
