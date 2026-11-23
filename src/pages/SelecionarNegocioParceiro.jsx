@@ -85,7 +85,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const [searchFailed, setSearchFailed] = useState(false);
   const [searchRefreshKey, setSearchRefreshKey] = useState(0);
   const [requestingId, setRequestingId] = useState(null);
-  const [nomeSolicitacao, setNomeSolicitacao] = useState('');
+  const [nomeSolicitante, setNomeSolicitante] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const desktopSearchRef = useRef(null);
   const desktopSearchInputRef = useRef(null);
@@ -98,7 +98,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const loadProfileName = useCallback(async () => {
     const fallback = String(user?.user_metadata?.nome || '').trim();
     if (fallback) {
-      setNomeSolicitacao(fallback);
+      setNomeSolicitante(fallback);
       return;
     }
 
@@ -110,7 +110,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       .maybeSingle(), 6000, 'partner-profile-name');
 
     const nome = String(data?.nome || '').trim();
-    if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitacao(nome);
+    if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitante(nome);
   }, [user?.id, user?.user_metadata?.nome]);
 
   const loadCenter = useCallback(async ({ silent = false } = {}) => {
@@ -162,7 +162,6 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     try {
       window.localStorage?.setItem(`comvaga:last-partner-negocio:${user.id}`, row.negocio_id);
     } catch {
-      // Sem armazenamento local, o state da rota ainda leva ao dashboard.
     }
     navigate('/dashboard', { state: { negocioId: row.negocio_id } });
   };
@@ -212,7 +211,7 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
 
   const requestAccess = async (row) => {
     const nome = (
-      nomeSolicitacao
+      nomeSolicitante
       || user?.user_metadata?.nome
       || String(user?.email || '').split('@')[0]
       || 'Profissional'
