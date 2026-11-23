@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     projects: [
       { extends: true, test: { ...dom, name: 'components', include: ['tests/components/**/*.test.jsx'] } },
-      { extends: true, test: { ...dom, name: 'integration', include: ['tests/integration/**/*.test.{js,jsx}'] } },
+      { extends: true, test: { ...dom, name: 'flows', include: ['tests/flows/**/*.test.{js,jsx}'] } },
     ],
   },
 });
