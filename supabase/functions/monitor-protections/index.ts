@@ -3,11 +3,11 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SUPPORT_EMAIL = "suporte@comvaga.com.br";
 const RULE_LABELS: Record<string, string> = {
-  billing_worker_transport_timeout: "Chamada do worker de cobrança expirou no pg_net",
-  billing_worker_http_error: "Worker de cobrança respondeu com erro HTTP",
-  billing_worker_no_http_result: "Chamada do worker de cobrança sem resposta HTTP",
-  billing_worker_unconfirmed: "Worker de cobrança respondeu, mas deixou de registrar o término",
-  billing_event_dead_letter: "Evento de cobrança esgotou 8 tentativas",
+  billing_worker_transport_timeout: "Chamada do worker de faturamento expirou no pg_net",
+  billing_worker_http_error: "Worker de faturamento respondeu com erro HTTP",
+  billing_worker_no_http_result: "Chamada do worker de faturamento sem resposta HTTP",
+  billing_worker_unconfirmed: "Worker de faturamento respondeu, mas deixou de registrar o término",
+  billing_event_dead_letter: "Evento de faturamento esgotou 8 tentativas",
   provider_sync_failed: "Sincronia da assinatura esgotou 8 tentativas",
   notification_error: "Falha no envio de email de aviso",
   auth_email_error: "Falha no envio de email de login",
@@ -21,13 +21,13 @@ const RULE_LABELS: Record<string, string> = {
   cancel_reconciliation_failed: "Cancelamento: falha local de acerto em 2 tentativas",
 };
 const SAFE_ACTIONS: Record<string, string> = {
-  billing_worker_transport_timeout: "Verifique o estado final da rodada e dos eventos; nunca repita a cobrança automaticamente.",
+  billing_worker_transport_timeout: "Verifique o estado final da rodada e dos eventos; nunca repita o faturamento automaticamente.",
   billing_worker_http_error: "Confira o código HTTP, os logs da rotina e os eventos pendentes antes de uma nova tentativa.",
-  billing_worker_no_http_result: "Confira se a rotina rodou e o estado dos eventos; nunca repita a cobrança automaticamente.",
+  billing_worker_no_http_result: "Confira se a rotina rodou e o estado dos eventos; nunca repita o faturamento automaticamente.",
   billing_worker_unconfirmed: "Confira o resumo da rotina e o registro da rodada antes de uma nova tentativa.",
-  reactivation_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; consulte a assinatura no painel e refaça a conferência. Nunca force o estado no banco.",
-  cancel_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; confirme a assinatura no painel e refaça a conferência. Nunca force o cancelamento no banco.",
-  reactivation_failed: "Confira a causa e as cobranças no Asaas; após corrigir, inicie uma nova retomada pelo fluxo próprio.",
+  reactivation_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; consulte a assinatura no painel e repita a conferência. Nunca force o estado no banco.",
+  cancel_verification_unavailable: "Verifique disponibilidade e credenciais do Asaas; confirme a assinatura no painel e repita a conferência. Nunca force o cancelamento no banco.",
+  reactivation_failed: "Confira a causa e as faturas no Asaas; após corrigir, inicie uma nova retomada pelo fluxo próprio.",
   reactivation_reconciliation_failed: "Confira o erro no banco e o estado confirmado no Asaas; repita o acerto pelo fluxo validado, sem editar o status diretamente.",
   cancel_reconciliation_failed: "Confira o erro no banco e confirme o estado no Asaas antes de repetir o acerto pelo fluxo validado.",
   cancel_db_sync_failed: "Confirme no Asaas que a assinatura foi removida e use o acerto validado para atualizar o banco.",
