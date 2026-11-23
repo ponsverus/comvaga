@@ -1,7 +1,8 @@
 import ScrollableCardsRow from './ScrollableCardsRow';
+import { formatMoneyBR } from '../../../utils/money';
 
 function formatCurrency(value) {
-  return `R$ ${Number(value || 0).toFixed(2)}`;
+  return `R$ ${formatMoneyBR(value)}`;
 }
 
 function formatDateDots(value) {
