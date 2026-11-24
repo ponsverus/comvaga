@@ -69,7 +69,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     expect(trigger).toHaveFocus();
   });
 
-  it('mantém o fechamento bloqueado durante uma confirmação pendente', async () => {
+  it('mantém o fechamento bloqueado enquanto aguarda retorno do agendamento', async () => {
     const pending = deferred();
     const onClose = vi.fn();
     invokeProtectedAction.mockReturnValue(pending.promise);
