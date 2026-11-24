@@ -1,6 +1,6 @@
 import DatePicker from '../../../components/DatePicker';
 import MesSelect from '../../../components/MesSelect';
-import AgendaDiaSeguinteBlock from '../components/AgendaDiaSeguinteBlock';
+import AgendaDiaSeguinte from '../components/AgendaDiaSeguinte';
 import FutureBookingsBlock from '../components/FutureBookingsBlock';
 import ScrollableCardsRow from '../components/ScrollableCardsRow';
 import { getAgInicio } from '../utils';
@@ -97,7 +97,7 @@ export default function GeralSection({
           renderItem={([nome, valor]) => <ProfessionalRevenueCard nome={nome} valor={valor} />}
         />
       )}
-      <AgendaDiaSeguinteBlock
+      <AgendaDiaSeguinte
         souDono={souDono}
         metricsAgendaDiaSeguinte={metricsAgendaDiaSeguinte}
         metricsAgendaDiaSeguinteLoading={metricsAgendaDiaSeguinteLoading}
