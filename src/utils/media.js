@@ -23,7 +23,7 @@ function loadImageFromFile(file) {
 
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error('Falha ao carregar imagem para conversao.'));
+      reject(new Error('Falha ao carregar a imagem para processamento.'));
     };
 
     image.src = objectUrl;
@@ -48,7 +48,7 @@ export async function convertImageToWebp(file, { quality = 0.9, maxDimension = n
 
   const context = canvas.getContext('2d');
   if (!context) {
-    throw new Error('Falha ao preparar canvas para conversao.');
+    throw new Error('Falha ao preparar o canvas para processamento da imagem.');
   }
 
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
