@@ -26,6 +26,6 @@ export function clearPasswordRecoveryState() {
   try {
     window.sessionStorage?.removeItem('comvaga-password-recovery');
   } catch (error) {
-    console.warn('Falha ao limpar estado de recuperacao de senha.', error);
+    console.warn('Falha ao limpar estado de troca de senha.', error);
   }
 }
