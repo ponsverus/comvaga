@@ -83,6 +83,22 @@
   outline-offset: 2px;
 }
 
+@supports selector(:has(*)) {
+  .focus-surface:has(:focus-visible) {
+    outline: 1px solid var(--keyboard-focus-color);
+    outline-offset: -2px;
+  }
+
+  .focus-surface input:focus-visible {
+    outline: none;
+  }
+
+  .focus-surface button:focus-visible {
+    border-radius: var(--radius-button);
+    outline-offset: -2px;
+  }
+}
+
 @media (forced-colors: active) {
   :root, .vitrine-light {
     --keyboard-focus-color: Highlight;
