@@ -57,7 +57,7 @@ function SearchBox({
     <div ref={wrapRef} className="relative">
       <div
         className={[
-          'relative flex items-center overflow-hidden rounded-full bg-black/40 backdrop-blur-md transition-all duration-300 ease-out',
+          'focus-surface relative flex items-center overflow-hidden rounded-full bg-black/40 backdrop-blur-md transition-all duration-300 ease-out',
           searchOpen
             ? 'w-[min(24rem,calc(100vw-2rem))] border border-white/10 shadow-[0_0_0_1px_rgba(255,209,26,0.18)]'
             : 'w-11 border border-transparent bg-transparent backdrop-blur-0',
@@ -85,9 +85,10 @@ function SearchBox({
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="BUSQUE UM PROFISSIONAL OU NEGÓCIO :)"
           className={[
-            'bg-transparent pr-4 text-sm text-white uppercase placeholder:text-gray-500 focus:outline-none transition-all duration-300',
+            'bg-transparent pr-4 text-sm text-white uppercase placeholder:text-gray-500 transition-all duration-300',
             searchOpen ? 'w-full opacity-100' : 'w-0 opacity-0',
           ].join(' ')}
+          tabIndex={searchOpen ? 0 : -1}
         />
 
         {buscando && searchTerm.trim().length >= 3 && (
