@@ -198,18 +198,18 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow, confirmatio
                   </div>
 
                   <div className="overflow-hidden rounded-custom border border-gray-800 bg-dark-100/50 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 border-b border-gray-800 px-5 py-3">
+                    <div className="focus-surface flex items-center gap-3 rounded-custom border-b border-gray-800 px-5 py-3">
                       <label className="w-[76px] shrink-0 text-sm tracking-wide text-white-500">E-MAIL</label>
                       <input
                         type="email"
                         placeholder="SEU E-MAIL"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-transparent px-0 py-2 text-sm uppercase text-white placeholder-gray-600 outline-none focus:text-white"
+                        className="w-full bg-transparent px-0 py-2 text-sm uppercase text-white placeholder-gray-600 focus:text-white"
                         required
                       />
                     </div>
-                    <div className="flex items-center gap-3 px-5 py-3">
+                    <div className="focus-surface flex items-center gap-3 rounded-custom px-5 py-3">
                       <label className="w-[76px] shrink-0 text-sm tracking-wide text-white-500">SENHA</label>
                       <div className="relative min-w-0 flex-1">
                       <input
@@ -217,7 +217,7 @@ export default function Login({ onLogin, beginAuthFlow, endAuthFlow, confirmatio
                         placeholder="••••••••"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full bg-transparent px-0 py-2 pr-10 text-sm text-white placeholder-gray-600 outline-none focus:text-white"
+                        className="w-full bg-transparent px-0 py-2 pr-10 text-sm text-white placeholder-gray-600 focus:text-white"
                         required
                       />
                       <button

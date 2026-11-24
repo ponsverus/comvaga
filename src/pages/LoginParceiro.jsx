@@ -12,14 +12,14 @@ const msgs = ptBR.parceiroLogin;
 
 function FieldRow({ label, children, last = false }) {
   return (
-    <div className={`flex items-center gap-3 px-5 py-3 ${last ? '' : 'border-b border-gray-800'}`}>
+    <div className={`focus-surface flex items-center gap-3 rounded-custom px-5 py-3 ${last ? '' : 'border-b border-gray-800'}`}>
       <label className="w-[76px] shrink-0 text-sm tracking-wide text-gray-500">{label}</label>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
 
-const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 outline-none focus:text-white';
+const fieldInputClass = 'w-full bg-transparent px-0 py-2 text-sm text-white placeholder-gray-600 focus:text-white';
 
 export default function LoginParceiro({ onLogin, beginAuthFlow, endAuthFlow, confirmationNotice }) {
   const navigate = useNavigate();

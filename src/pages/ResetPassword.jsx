@@ -95,7 +95,7 @@ export default function ResetPassword({ defaultRedirect = '/login' }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="overflow-hidden rounded-custom border border-gray-800 bg-dark-100/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 border-b border-gray-800 px-5 py-3">
+            <div className="focus-surface flex items-center gap-3 rounded-custom border-b border-gray-800 px-5 py-3">
               <label className="w-[86px] shrink-0 text-sm tracking-wide text-white-500">SENHA</label>
               <input
                 type="password"
@@ -107,7 +107,7 @@ export default function ResetPassword({ defaultRedirect = '/login' }) {
               />
             </div>
 
-            <div className="flex items-center gap-3 px-5 py-3">
+            <div className="focus-surface flex items-center gap-3 rounded-custom px-5 py-3">
               <label className="w-[86px] shrink-0 text-sm tracking-wide text-white-500">CONFIRM.</label>
               <input
                 type="password"
