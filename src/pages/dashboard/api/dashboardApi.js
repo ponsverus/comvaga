@@ -629,7 +629,7 @@ export async function deleteGalleryItem(itemId) {
 
 export async function insertEntrega(payload) {
   const { error } = await withAuthRetry(
-    () => supabase.from('entregas').insert([payload]),
+    () => supabase.from('services').insert([payload]),
     6000,
     'entrega-insert'
   );
@@ -638,7 +638,7 @@ export async function insertEntrega(payload) {
 
 export async function updateEntregaById(entregaId, negocioId, payload) {
   const { error } = await withAuthRetry(
-    () => supabase.from('entregas').update(payload).eq('id', entregaId).eq('negocio_id', negocioId),
+    () => supabase.from('services').update(payload).eq('id', entregaId).eq('business_id', negocioId),
     6000,
     'entrega-update'
   );
