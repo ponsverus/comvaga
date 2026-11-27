@@ -3,7 +3,7 @@ import {
   fetchAgendamentosNegocio,
   fetchEntregasFirstPages,
   fetchEntregasPage,
-  fetchGaleria,
+  fetchGallery,
   fetchNegocioById,
   fetchOfficialDate,
   fetchOwnerNegocio,
@@ -313,7 +313,7 @@ export function useDashboardBootstrap({
   const reloadGaleria = useCallback(async (negocioId) => {
     const id = negocioId || negocio?.id;
     if (!id) return;
-    const { data } = await fetchGaleria(id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
+    const { data } = await fetchGallery(id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
     applyGaleriaPage(data || []);
     return (data || []).slice(0, GALERIA_PAGE_SIZE);
   }, [applyGaleriaPage, negocio?.id]);
@@ -324,7 +324,7 @@ export function useDashboardBootstrap({
 
     try {
       setGaleriaLoadingMore(true);
-      const { data } = await fetchGaleria(id, {
+      const { data } = await fetchGallery(id, {
         limit: GALERIA_PAGE_SIZE + 1,
         cursor: getLastItem(galeriaItems),
       });
@@ -443,7 +443,7 @@ export function useDashboardBootstrap({
       setProfissionais(scopedProfs);
       setProfissionaisEquipe(equipe);
 
-      const galeriaResult = await fetchGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
+      const galeriaResult = await fetchGallery(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null });
       if (!isCurrentRun()) return;
       if (galeriaResult.error) {
         await uiAlert('dashboard.gallery_load_warning', 'warning');

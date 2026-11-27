@@ -274,20 +274,20 @@ export async function fetchPartnerNegocioIds(userId) {
   return [...new Set((data || []).map((item) => item.negocio_id).filter(Boolean))];
 }
 
-export async function fetchGaleria(negocioId, { limit = null, cursor = null } = {}) {
+export async function fetchGallery(businessId, { limit = null, cursor = null } = {}) {
   const buildGaleriaQuery = () => {
     let query = supabase
-      .from('galerias')
-      .select('id, path, ordem, created_at')
-      .eq('negocio_id', negocioId)
-      .order('ordem', { ascending: true })
+      .from('galleries')
+      .select('id, path, sort_order, created_at')
+      .eq('business_id', businessId)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
       .order('id', { ascending: true });
 
     if (cursor?.id) {
       const ordem = Number(cursor.ordem ?? 0);
       query = query.or(
-        `ordem.gt.${ordem},and(ordem.eq.${ordem},created_at.gt.${cursor.created_at}),and(ordem.eq.${ordem},created_at.eq.${cursor.created_at},id.gt.${cursor.id})`
+        `sort_order.gt.${ordem},and(sort_order.eq.${ordem},created_at.gt.${cursor.created_at}),and(sort_order.eq.${ordem},created_at.eq.${cursor.created_at},id.gt.${cursor.id})`
       );
     }
 
@@ -298,7 +298,7 @@ export async function fetchGaleria(negocioId, { limit = null, cursor = null } = 
 
   const { data, error } = await withAuthRetry(() => buildGaleriaQuery(), 6000, 'galerias-dashboard');
 
-  return { data: data || [], error };
+  return { data: (data || []).map(({ sort_order, ...row }) => ({ ...row, ordem: sort_order })), error };
 }
 
 export async function fetchProfissionaisComStatus(negocioId) {
@@ -602,14 +602,14 @@ export async function updateNegocioTema(negocioId, ownerId, tema) {
   return data.tema;
 }
 
-export async function insertGaleriaItem(negocioId, path) {
-  return insertWithStableId('galerias', { negocio_id: negocioId, path }, 6000, 'galeria-insert');
+export async function insertGalleryItem(businessId, path) {
+  return insertWithStableId('galleries', { business_id: businessId, path }, 6000, 'galeria-insert');
 }
 
-export async function enqueueGaleriaOrphanDelete(negocioId, path) {
+export async function enqueueGalleryOrphanDelete(businessId, path) {
   const { error } = await withAuthRetry(
-    () => supabase.rpc('enqueue_galeria_orphan_storage_delete', {
-      p_negocio_id: negocioId,
+    () => supabase.rpc('enqueue_gallery_orphan_storage_delete', {
+      p_business_id: businessId,
       p_path: path,
     }),
     6000,
@@ -618,9 +618,9 @@ export async function enqueueGaleriaOrphanDelete(negocioId, path) {
   if (error) throw error;
 }
 
-export async function deleteGaleriaItem(itemId) {
+export async function deleteGalleryItem(itemId) {
   const { error } = await withAuthRetry(
-    () => supabase.from('galerias').delete().eq('id', itemId),
+    () => supabase.from('galleries').delete().eq('id', itemId),
     6000,
     'galeria-delete'
   );

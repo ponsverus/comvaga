@@ -121,12 +121,12 @@ export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   };
 }
 
-export async function fetchVitrineGaleria(negocioId, { limit = null, cursor = null } = {}) {
+export async function fetchShowcaseGallery(businessId, { limit = null, cursor = null } = {}) {
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_galerias_vitrine', {
-      p_negocio_id: negocioId,
+    () => supabase.rpc('get_gallery_images', {
+      p_business_id: businessId,
       p_limit: limit == null ? null : Math.max(1, Number(limit) || 1),
-      p_cursor_ordem: cursor?.ordem ?? null,
+      p_cursor_sort_order: cursor?.ordem ?? null,
       p_cursor_created_at: cursor?.created_at ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
@@ -134,7 +134,7 @@ export async function fetchVitrineGaleria(negocioId, { limit = null, cursor = nu
     'galerias'
   );
   if (error) throw error;
-  return data || [];
+  return (data || []).map(({ sort_order, ...row }) => ({ ...row, ordem: sort_order }));
 }
 
 export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor = null } = {}) {

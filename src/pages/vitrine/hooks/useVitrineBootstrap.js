@@ -5,7 +5,7 @@ import {
   fetchVitrineDepoimentos,
   fetchVitrineEntregasFirstPages,
   fetchVitrineEntregasPage,
-  fetchVitrineGaleria,
+  fetchShowcaseGallery,
   fetchVitrineNegocioBySlug,
   fetchVitrineProfissionais,
 } from '../api/vitrineApi';
@@ -187,7 +187,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
 
     try {
       setGaleriaLoadingMore(true);
-      const rows = await fetchVitrineGaleria(negocio.id, {
+      const rows = await fetchShowcaseGallery(negocio.id, {
         limit: GALERIA_PAGE_SIZE + 1,
         cursor: getLastItem(galeriaItems),
       });
@@ -275,7 +275,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
         fetchVitrineEntregasFirstPages(negocioData.id, profissionalIds, {
           limit: ENTREGAS_PAGE_SIZE,
         }),
-        fetchVitrineGaleria(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null }),
+        fetchShowcaseGallery(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null }),
         fetchVitrineDepoimentos(negocioData.id, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
       ]);
       if (loadRunRef.current !== runId) return;
