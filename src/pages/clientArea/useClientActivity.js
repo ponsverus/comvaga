@@ -6,9 +6,9 @@ import {
   cancelarAgendamentoCliente,
   createBookingReview,
   fetchAgendamentosCliente,
-  fetchFavoritosCliente,
+  fetchClientFavorites,
   fetchReviewedBookings,
-  removerFavoritoCliente,
+  removeClientFavorite,
 } from './api/clientAreaApi';
 import { PAGE_SIZE, mergeById, sortByDateThenTimeDesc } from './utils';
 
@@ -62,18 +62,20 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
   }, [clienteId]);
 
   const fetchFavoritos = useCallback(async ({ cursor = null, limit = PAGE_SIZE, clienteId: clienteIdParam = clienteId } = {}) => {
-    const data = await fetchFavoritosCliente({
-      clienteId: clienteIdParam,
+    const data = await fetchClientFavorites({
+      clientId: clienteIdParam,
       limit,
       cursor,
     });
     return (data || []).map(f => ({
-      ...f,
-      negocios: f.tipo === 'negocio' && f.negocio_nome
-        ? { nome: f.negocio_nome, slug: f.negocio_slug, logo_path: f.negocio_logo_path, tipo_negocio: f.negocio_tipo }
+      id: f.id,
+      created_at: f.created_at,
+      tipo: f.favorite_type,
+      negocios: f.favorite_type === 'negocio' && f.business_name
+        ? { nome: f.business_name, slug: f.business_slug, logo_path: f.business_logo_path, tipo_negocio: f.business_type }
         : null,
-      profissionais: f.tipo === 'profissional' && f.profissional_nome
-        ? { nome: f.profissional_nome, negocios: f.profissional_negocio_slug ? { slug: f.profissional_negocio_slug } : null }
+      profissionais: f.favorite_type === 'profissional' && f.professional_name
+        ? { nome: f.professional_name, negocios: f.professional_business_slug ? { slug: f.professional_business_slug } : null }
         : null,
     }));
   }, [clienteId]);
@@ -255,7 +257,7 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
     try {
       removingFavoritoRef.current = true;
       setRemovingFavoritoId(favoritoId);
-      await removerFavoritoCliente({ favoritoId, clienteId });
+      await removeClientFavorite({ favoriteId: favoritoId, clientId: clienteId });
       setFavoritos(prev => prev.filter(f => f.id !== favoritoId));
       uiAlert('clientArea.favorite_removed', 'success');
     } catch {
