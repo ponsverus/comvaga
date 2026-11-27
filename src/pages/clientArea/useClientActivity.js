@@ -94,8 +94,8 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
     const reviews = await fetchReviewedBookings(concluidosIds);
     const nextMap = {};
     for (const review of reviews) {
-      if (!review?.agendamento_id) continue;
-      nextMap[review.agendamento_id] = review.id;
+      if (!review?.booking_id) continue;
+      nextMap[review.booking_id] = review.id;
     }
     setAvaliacoesPorAgendamento(nextMap);
   }, []);
@@ -223,9 +223,9 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
     try {
       setDepoimentoLoading(true);
       await createBookingReview({
-        agendamentoId: depoimentoAlvo.id,
-        nota: depoimentoNota,
-        comentario: depoimentoTexto,
+        bookingId: depoimentoAlvo.id,
+        rating: depoimentoNota,
+        comment: depoimentoTexto,
       });
       setAvaliacoesPorAgendamento((prev) => ({
         ...prev,

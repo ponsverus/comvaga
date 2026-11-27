@@ -66,15 +66,15 @@ export async function fetchClientFavorites({ clientId, limit, cursor = null }) {
   return data || [];
 }
 
-export async function fetchReviewedBookings(agendamentoIds) {
-  const ids = Array.isArray(agendamentoIds) ? agendamentoIds.filter(Boolean) : [];
+export async function fetchReviewedBookings(bookingIds) {
+  const ids = Array.isArray(bookingIds) ? bookingIds.filter(Boolean) : [];
   if (!ids.length) return [];
 
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('depoimentos')
-      .select('id, agendamento_id')
-      .in('agendamento_id', ids),
+      .from('reviews')
+      .select('id, booking_id')
+      .in('booking_id', ids),
     6000,
     'depoimentos-avaliados'
   );
@@ -83,12 +83,12 @@ export async function fetchReviewedBookings(agendamentoIds) {
   return data || [];
 }
 
-export async function createBookingReview({ agendamentoId, nota, comentario }) {
+export async function createBookingReview({ bookingId, rating, comment }) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('create_depoimento_profissional', {
-      p_agendamento_id: agendamentoId,
-      p_nota: nota,
-      p_comentario: comentario ?? null,
+    () => invokeProtectedAction('create_professional_review', {
+      p_booking_id: bookingId,
+      p_rating: rating,
+      p_comment: comment ?? null,
     }),
     6500,
     'enviar-depoimento'

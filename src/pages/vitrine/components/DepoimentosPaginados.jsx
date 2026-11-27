@@ -90,7 +90,7 @@ export default function DepoimentosPaginados({
         {itens.map((dep) => (
           <div key={dep.id} className="mb-4 w-full break-inside-avoid bg-vcard border border-vborder rounded-custom p-4 relative">
             <div className="absolute top-3 right-3">
-              {dep.profissional_id && dep.profissionais?.nome ? (
+              {dep.professional_id && dep.profissionais?.nome ? (
                 <span className="inline-flex items-center justify-center min-h-5 px-2.5 py-1 bg-vprimary/10 border border-vprimary/30 rounded-button text-[10px] leading-none text-vprimary font-normal uppercase">
                   {dep.profissionais.nome}
                 </span>
@@ -112,10 +112,10 @@ export default function DepoimentosPaginados({
               )}
               <div className="flex-1">
                 <p className="text-sm font-normal uppercase">{dep.users?.nome || 'Cliente'}</p>
-                <Stars5Char value={dep.nota} size={14} />
+                <Stars5Char value={dep.rating} size={14} />
               </div>
             </div>
-            {dep.comentario && <p className={`text-sm font-normal ${comentCl}`}>{dep.comentario}</p>}
+            {dep.comment && <p className={`text-sm font-normal ${comentCl}`}>{dep.comment}</p>}
           </div>
         ))}
       </div>
