@@ -14,7 +14,7 @@ const PATH_REFERENCES: Record<string, Array<{ table: string; column: string }>> 
   avatars: [
     { table: 'clients', column: 'avatar_path' },
   ],
-  logos: [{ table: 'negocios', column: 'logo_path' }],
+  logos: [{ table: 'businesses', column: 'logo_path' }],
   galerias: [{ table: 'galleries', column: 'path' }],
 };
 
