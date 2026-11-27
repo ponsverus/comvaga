@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  addFavoritoNegocio,
+  addBusinessFavorite,
   createDepoimento,
   fetchCurrentClienteId,
-  fetchFavoritoNegocio,
-  removeFavoritoNegocio,
+  fetchBusinessFavorite,
+  removeBusinessFavorite,
 } from '../api/vitrineApi';
 
 export function useVitrineInteractions({
@@ -44,7 +44,7 @@ export function useVitrineInteractions({
     try {
       const currentClienteId = await ensureClienteId();
       if (!currentClienteId) return false;
-      const favorito = await fetchFavoritoNegocio({ clienteId: currentClienteId, negocioId });
+      const favorito = await fetchBusinessFavorite({ clientId: currentClienteId, businessId: negocioId });
       setIsFavorito(favorito);
       return favorito;
     } catch {
@@ -62,11 +62,11 @@ export function useVitrineInteractions({
       const currentClienteId = await ensureClienteId();
       if (!currentClienteId) return false;
       if (isFavorito) {
-        await removeFavoritoNegocio({ clienteId: currentClienteId, negocioId });
+        await removeBusinessFavorite({ clientId: currentClienteId, businessId: negocioId });
         setIsFavorito(false);
         return false;
       }
-      await addFavoritoNegocio({ clienteId: currentClienteId, negocioId });
+      await addBusinessFavorite({ clientId: currentClienteId, businessId: negocioId });
       setIsFavorito(true);
       return true;
     } finally {
