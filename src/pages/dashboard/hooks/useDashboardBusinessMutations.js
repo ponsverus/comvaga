@@ -3,10 +3,10 @@ import { SEO_TITLE_LIMIT, SEO_DESCRIPTION_LIMIT, normalizeSeoText } from '../../
 import { supabase } from '../../../supabase';
 import { toUpperClean } from '../utils';
 import {
-  deleteGaleriaItem,
-  enqueueGaleriaOrphanDelete,
+  deleteGalleryItem,
+  enqueueGalleryOrphanDelete,
   excluirNegocioSeguramente,
-  insertGaleriaItem,
+  insertGalleryItem,
   updateNegocioInfo,
   updateNegocioLogo,
   updateNegocioTema,
@@ -266,7 +266,7 @@ export function useDashboardBusinessMutations({
           );
           if (upErr) throw upErr;
           uploaded = true;
-          await insertGaleriaItem(negocio.id, filePath);
+          await insertGalleryItem(negocio.id, filePath);
           addedCount += 1;
         } catch (uploadError) {
           failedCount += 1;
@@ -280,7 +280,7 @@ export function useDashboardBusinessMutations({
             if (removeError) throw removeError;
           } catch (removeError) {
             try {
-              await enqueueGaleriaOrphanDelete(negocio.id, filePath);
+              await enqueueGalleryOrphanDelete(negocio.id, filePath);
             } catch (queueError) {
               console.warn('Falha ao enfileirar limpeza de imagem orfa da galeria.', queueError || removeError || uploadError);
             }
@@ -324,7 +324,7 @@ export function useDashboardBusinessMutations({
       return;
     }
     try {
-      await deleteGaleriaItem(item.id);
+      await deleteGalleryItem(item.id);
       setGaleriaItems((prev) => prev.filter((x) => x.id !== item.id));
       await uiAlert('dashboard.gallery_image_deleted', 'success');
     } catch {
