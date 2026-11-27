@@ -341,7 +341,7 @@ Deno.serve(async (req) => {
 
     const [{ data: plan, error: planFetchError }, { data: negocio, error: negocioError }] = await Promise.all([
       admin.from('billing_plans').select('code, name, price_cents, max_profissionais, sort_order').eq('code', planCode).eq('active', true).maybeSingle(),
-      admin.from('negocios').select('id, owner_id, nome').eq('id', negocioId).maybeSingle(),
+      admin.from('businesses').select('id, owner_id, name').eq('id', negocioId).maybeSingle(),
     ]);
 
     if (planFetchError) throw planFetchError;
@@ -353,9 +353,9 @@ Deno.serve(async (req) => {
 
     if (selectedPlan.max_profissionais != null) {
       const { count, error: countError } = await admin
-        .from('profissionais')
+        .from('professionals')
         .select('id', { count: 'exact', head: true })
-        .eq('negocio_id', negocioId)
+        .eq('business_id', negocioId)
         .in('status', ['ativo', 'pendente']);
       if (countError) throw countError;
       if (Number(count || 0) > selectedPlan.max_profissionais) {
