@@ -95,10 +95,10 @@ async function updateNotificationState(
 
   if (status === 'sent' && event === 'lembrete_30min' && agendamentoId) {
     await supabase
-      .from('agendamentos')
-      .update({ lembrete_enviado: true })
+      .from('appointments')
+      .update({ reminder_sent: true })
       .eq('id', agendamentoId)
-      .eq('lembrete_enviado', false);
+      .eq('reminder_sent', false);
   }
 }
 
@@ -192,8 +192,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const { data: ag, error } = await supabase
-    .from('agendamentos')
-    .select(`id, data, horario_inicio, status, valor_final, services (name, price, offer_price), professionals (id, name, user_id, business_id), cliente:clients!agendamentos_cliente_id_fkey (id, user_id, name), negocios (id, owner_id, nome)`)
+    .from('appointments')
+    .select(`id, date, start_time, status, final_price, services (name, price, offer_price), professionals (id, name, user_id, business_id), cliente:clients!appointments_client_id_fkey (id, user_id, name), businesses (id, owner_id, name)`)
     .eq('id', agendamentoId)
     .single();
 
@@ -204,11 +204,11 @@ Deno.serve(async (req: Request) => {
   }
 
   const professional = ag.professionals as Record<string, unknown>;
-  const negocio = ag.negocios as Record<string, unknown>;
+  const negocio = ag.businesses as Record<string, unknown>;
   const cliente = ag.cliente as Record<string, unknown>;
   const service = ag.services as Record<string, unknown>;
 
-  const valorFinal = ag.valor_final == null ? null : Number(ag.valor_final);
+  const valorFinal = ag.final_price == null ? null : Number(ag.final_price);
   const valorReal = valorFinal != null && Number.isFinite(valorFinal)
     ? valorFinal
     : Number(service?.offer_price || service?.price || 0);
@@ -216,12 +216,12 @@ Deno.serve(async (req: Request) => {
   const entregaNomeRaw = (service?.name as string | null | undefined) ?? null;
 
   const d: AgData = {
-    dataBR: formatDateBR(ag.data),
-    horario: String(ag.horario_inicio || '').slice(0, 5),
+    dataBR: formatDateBR(ag.date),
+    horario: String(ag.start_time || '').slice(0, 5),
     clienteNome: (cliente?.name as string) || 'Cliente',
     profNome: (professional?.name as string) || 'Profissional',
     entregaNome: entregaNomeRaw && entregaNomeRaw.trim() ? entregaNomeRaw.trim() : null,
-    negocioNome: (negocio?.nome as string) || 'Negócio',
+    negocioNome: (negocio?.name as string) || 'Negócio',
     valorStr: formatBRL(valorReal),
   };
 
