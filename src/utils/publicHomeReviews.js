@@ -12,10 +12,10 @@ export function publicHomeReviewsSnapshot(value, supabaseUrl) {
   return {
     items: value.items.slice(0, 12).map((row) => ({
       id: row.id,
-      nota: row.nota,
-      comentario: row.comentario,
+      nota: row.rating,
+      comentario: row.comment,
       created_at: row.created_at,
-      users: { nome: row.nome_publico },
+      users: { nome: row.public_name },
       avatarClienteUrl: base && row.avatar_path
         ? `${base}/storage/v1/object/public/avatars/${String(row.avatar_path).replace(/^avatars\//, '')}`
         : null,
