@@ -31,7 +31,7 @@ export function useDashboardEntregaMutations({
   const isEntregaDuplicateNameError = (error) => {
     const raw = `${error?.code || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
     return raw.includes('23505')
-      || raw.includes('ux_entregas_ativas_profissional_nome_normalizado')
+      || raw.includes('ux_services_active_professional_normalized_name')
       || raw.includes('duplicate key');
   };
 
@@ -57,17 +57,17 @@ export function useDashboardEntregaMutations({
       }
       if (oferta != null && oferta >= valor) throw new Error('Valor da oferta deve ser menor.');
       const payload = {
-        nome: toUpperClean(formEntrega.nome),
-        profissional_id: profId,
-        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
-        valor,
-        valor_oferta: oferta,
-        ativo: true,
-        negocio_id: negocio.id,
+        name: toUpperClean(formEntrega.nome),
+        professional_id: profId,
+        duration_minutes: toNumberOrNull(formEntrega.tempo_minutos),
+        price: valor,
+        offer_price: oferta,
+        is_active: true,
+        business_id: negocio.id,
       };
-      if (!payload.nome) throw new Error('Nome da entrega e obrigatorio.');
-      if (!payload.profissional_id) throw new Error('Selecione um profissional.');
-      if (!payload.tempo_minutos) throw new Error('Tempo inválido.');
+      if (!payload.name) throw new Error('Nome da entrega e obrigatorio.');
+      if (!payload.professional_id) throw new Error('Selecione um profissional.');
+      if (!payload.duration_minutes) throw new Error('Tempo inválido.');
       await insertEntrega(payload);
       await uiAlert(`dashboard.business.${businessGroup}.entrega_created`, 'success');
       resetEntregaForm();
@@ -104,17 +104,17 @@ export function useDashboardEntregaMutations({
       }
       if (oferta != null && oferta >= valor) throw new Error('Valor da oferta deve ser menor.');
       const payload = {
-        nome: toUpperClean(formEntrega.nome),
-        tempo_minutos: toNumberOrNull(formEntrega.tempo_minutos),
-        valor,
-        valor_oferta: oferta,
-        profissional_id: profId,
+        name: toUpperClean(formEntrega.nome),
+        duration_minutes: toNumberOrNull(formEntrega.tempo_minutos),
+        price: valor,
+        offer_price: oferta,
+        professional_id: profId,
       };
       const entregaAtual = (entregas || []).find((item) => item.id === editingEntregaId);
       const mudouProfissional = entregaAtual?.profissional_id && entregaAtual.profissional_id !== profId;
 
       if (mudouProfissional) {
-        await insertEntrega({ ...payload, ativo: true, negocio_id: negocio.id });
+        await insertEntrega({ ...payload, is_active: true, business_id: negocio.id });
         await uiAlert(`dashboard.business.${businessGroup}.entrega_created`, 'success');
       } else {
         await updateEntregaById(editingEntregaId, negocio.id, payload);
