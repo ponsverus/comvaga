@@ -50,10 +50,10 @@ export async function fetchAgendamentosCliente({ clienteId, limit, cursor = null
   return data || [];
 }
 
-export async function fetchFavoritosCliente({ clienteId, limit, cursor = null }) {
+export async function fetchClientFavorites({ clientId, limit, cursor = null }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_favoritos_cliente', {
-      p_cliente_id: clienteId,
+    () => supabase.rpc('get_client_favorites', {
+      p_client_id: clientId,
       p_limit: limit,
       p_cursor_created_at: cursor?.created_at ?? null,
       p_cursor_id: cursor?.id ?? null,
@@ -120,13 +120,13 @@ export async function excluirContaCliente() {
   return data;
 }
 
-export async function removerFavoritoCliente({ favoritoId, clienteId }) {
+export async function removeClientFavorite({ favoriteId, clientId }) {
   const { error } = await withAuthRetry(
     () => supabase
-      .from('favoritos')
+      .from('favorites')
       .delete()
-      .eq('id', favoritoId)
-      .eq('cliente_id', clienteId),
+      .eq('id', favoriteId)
+      .eq('client_id', clientId),
     6000,
     'remover-favorito-cliente'
   );
