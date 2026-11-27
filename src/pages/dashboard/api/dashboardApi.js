@@ -261,8 +261,8 @@ export async function recoverAsaasSubscriptionPayment(negocioId) {
 export async function fetchPartnerNegocioIds(userId) {
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('profissionais')
-      .select('negocio_id, created_at')
+      .from('professionals')
+      .select('business_id, created_at')
       .eq('user_id', userId)
       .eq('status', 'ativo')
       .order('created_at', { ascending: false }),
@@ -271,7 +271,7 @@ export async function fetchPartnerNegocioIds(userId) {
   );
 
   if (error) throw error;
-  return [...new Set((data || []).map((item) => item.negocio_id).filter(Boolean))];
+  return [...new Set((data || []).map((item) => item.business_id).filter(Boolean))];
 }
 
 export async function fetchGallery(businessId, { limit = null, cursor = null } = {}) {
@@ -648,10 +648,10 @@ export async function updateEntregaById(entregaId, negocioId, payload) {
 export async function updateProfissionalStatus(profissionalId, negocioId, status) {
   const { error } = await withAuthRetry(
     () => supabase
-      .from('profissionais')
+      .from('professionals')
       .update({ status })
       .eq('id', profissionalId)
-      .eq('negocio_id', negocioId),
+      .eq('business_id', negocioId),
     6000,
     'profissional-status-update'
   );
