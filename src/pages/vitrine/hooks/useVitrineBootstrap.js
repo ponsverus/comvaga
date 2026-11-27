@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchBusinessBookingAvailability,
   fetchOfficialDate,
-  fetchVitrineDepoimentos,
+  fetchShowcaseReviews,
   fetchVitrineEntregasFirstPages,
   fetchVitrineEntregasPage,
   fetchShowcaseGallery,
@@ -132,7 +132,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
 
   const refreshDepoimentos = useCallback(async (negocioId) => {
     const [deps, profile] = await Promise.all([
-      fetchVitrineDepoimentos(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
+      fetchShowcaseReviews(negocioId, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
       fetchVitrineNegocioBySlug(slug),
     ]);
     if (profile?.id === negocioId) {
@@ -202,7 +202,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
 
     try {
       setDepoimentosLoadingMore(true);
-      const rows = await fetchVitrineDepoimentos(negocio.id, {
+      const rows = await fetchShowcaseReviews(negocio.id, {
         limit: DEPOIMENTOS_PAGE_SIZE + 1,
         cursor: getLastItem(depoimentos),
       });
@@ -276,7 +276,7 @@ export function useVitrineBootstrap({ slug, rpcSequence, getMsg, authUserId = nu
           limit: ENTREGAS_PAGE_SIZE,
         }),
         fetchShowcaseGallery(negocioData.id, { limit: GALERIA_PAGE_SIZE + 1, cursor: null }),
-        fetchVitrineDepoimentos(negocioData.id, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
+        fetchShowcaseReviews(negocioData.id, { limit: DEPOIMENTOS_PAGE_SIZE + 1, cursor: null }),
       ]);
       if (loadRunRef.current !== runId) return;
 
