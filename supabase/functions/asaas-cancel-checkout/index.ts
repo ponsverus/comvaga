@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     if (authError || !authData?.user?.id) return jsonResponse({ error: 'not_authenticated' }, 401, req);
 
     const { data: negocio, error: negocioError } = await admin
-      .from('negocios')
+      .from('businesses')
       .select('id, owner_id')
       .eq('id', negocioId)
       .maybeSingle();
