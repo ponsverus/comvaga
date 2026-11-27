@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const { data: authData, error: authError } = await userClient.auth.getUser();
     if (authError || !authData?.user?.id) return jsonResponse({ error: 'not_authenticated' }, 401, req);
 
-    const { data: negocio, error: negocioError } = await admin.from('negocios')
+    const { data: negocio, error: negocioError } = await admin.from('businesses')
       .select('owner_id').eq('id', negocioId).maybeSingle();
     if (negocioError) throw negocioError;
     if (!negocio || negocio.owner_id !== authData.user.id) return jsonResponse({ error: 'acesso_negado' }, 403, req);

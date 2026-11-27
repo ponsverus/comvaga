@@ -1,5 +1,6 @@
 import { supabase } from '../../supabase';
 import { withAuthRetry } from '../../utils/authSession';
+import { mapBusinessRow } from '../../api/negociosApi';
 
 export async function createOwnerBusiness({ nomeNegocio, slug, telefone, tipoNegocio, formData }) {
   return withAuthRetry(() => supabase.rpc('create_owner_business', {
@@ -25,8 +26,8 @@ export async function fetchOwnerResumeData(userId) {
       'resume-user-profile'
     ),
     withAuthRetry(
-      () => supabase.from('negocios')
-        .select('id, nome, slug, tipo_negocio, telefone, cep, rua, numero, complemento, bairro, cidade, estado, created_at')
+      () => supabase.from('businesses')
+        .select('id, name, slug, business_type, phone, zip_code, street, number, complement, neighborhood, city, state, created_at')
         .eq('owner_id', userId)
         .order('created_at', { ascending: true }),
       6000,
@@ -35,7 +36,7 @@ export async function fetchOwnerResumeData(userId) {
   ]);
   if (userResult.error) throw userResult.error;
   if (negociosResult.error) throw negociosResult.error;
-  return { userData: userResult.data, negocioRows: negociosResult.data || [] };
+  return { userData: userResult.data, negocioRows: (negociosResult.data || []).map(mapBusinessRow) };
 }
 
 export async function completeOwnerBusinessOnboarding({ negocioId, nome, nomeNegocio, slug, telefone, tipoNegocio, local }) {

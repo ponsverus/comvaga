@@ -7,6 +7,7 @@ import { ptBR } from '../feedback/messages/ptBR.js';
 import { getSupportHref } from '../support';
 import PublicBusinessPreview from '../components/PublicBusinessPreview.js';
 import { SelecionarNegocio } from './lazyPages';
+import { mapBusinessRow } from '../api/negociosApi';
 
 const PRIVATE_PROFILE_PATHS = new Set([
   '/cadastro/profissional/retomada', '/dashboard', '/minha-area',
@@ -184,8 +185,8 @@ export function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, 
       try {
         const { data, error } = await withAuthRetry(
           () => supabase
-            .from('negocios')
-            .select('id, nome, slug, logo_path, tipo_negocio, cep, rua, numero, complemento, bairro, cidade, estado')
+            .from('businesses')
+            .select('id, name, slug, logo_path, business_type, zip_code, street, number, complement, neighborhood, city, state')
             .eq('owner_id', user.id)
             .order('created_at', { ascending: true }),
           7000,
@@ -195,7 +196,7 @@ export function SelecionarNegocioRouteGuard({ user, onLogout, onSessionExpired, 
         if (!active) return;
         if (error) throw error;
         if (!Array.isArray(data)) throw new Error('business_list_invalid_response');
-        setBusinessLoad({ status: 'ready', negocios: data });
+        setBusinessLoad({ status: 'ready', negocios: data.map(mapBusinessRow) });
       } catch (error) {
         if (!active) return;
         if (isAuthSessionError(error)) {

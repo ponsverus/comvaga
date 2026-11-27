@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
     if (authError || !authData?.user?.id) return jsonResponse({ error: 'not_authenticated' }, 401, req);
 
     const [{ data: negocio, error: negocioError }, { data: subscription, error: subscriptionError }] = await Promise.all([
-      admin.from('negocios').select('id, owner_id').eq('id', negocioId).maybeSingle(),
+      admin.from('businesses').select('id, owner_id').eq('id', negocioId).maybeSingle(),
       admin
         .from('business_subscriptions')
         .select('id, negocio_id, provider, provider_customer_id, provider_subscription_id, provider_status, provider_status_revision, status, payment_method_status, canceled_at')

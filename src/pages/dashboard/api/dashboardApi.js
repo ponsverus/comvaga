@@ -2,6 +2,7 @@ import { supabase } from '../../../supabase';
 import { withAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
 import { fetchOfficialDatePayload } from '../../../utils/officialDate';
+import { BUSINESS_SELECT_FIELDS, mapBusinessRow, toBusinessDbPatch } from '../../../api/negociosApi';
 export { getPublicUrl } from '../../../utils/storage';
 
 function isAdminExcludedProfessional(row) {
@@ -114,8 +115,8 @@ export async function fetchOfficialDate(rpcNames) {
 export async function fetchNegocioById(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('negocios')
-      .select('*')
+      .from('businesses')
+      .select(BUSINESS_SELECT_FIELDS)
       .eq('id', negocioId)
       .maybeSingle(),
     6000,
@@ -123,14 +124,14 @@ export async function fetchNegocioById(negocioId) {
   );
 
   if (error) throw error;
-  return data || null;
+  return mapBusinessRow(data);
 }
 
 export async function fetchOwnerNegocio(ownerId) {
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('negocios')
-      .select('*')
+      .from('businesses')
+      .select(BUSINESS_SELECT_FIELDS)
       .eq('owner_id', ownerId)
       .maybeSingle(),
     6000,
@@ -138,7 +139,7 @@ export async function fetchOwnerNegocio(ownerId) {
   );
 
   if (error) throw error;
-  return data || null;
+  return mapBusinessRow(data);
 }
 
 export async function fetchBillingPlans() {
@@ -575,7 +576,7 @@ export async function insertProfessional(payload) {
 
 export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
   const { data, error } = await withAuthRetry(
-    () => supabase.from('negocios').update(logoPatch).eq('id', negocioId).eq('owner_id', ownerId).select('id').maybeSingle(),
+    () => supabase.from('businesses').update(toBusinessDbPatch(logoPatch)).eq('id', negocioId).eq('owner_id', ownerId).select('id').maybeSingle(),
     6000,
     'negocio-logo-update'
   );
@@ -585,7 +586,7 @@ export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
 
 export async function updateNegocioInfo(negocioId, ownerId, payload) {
   const { error } = await withAuthRetry(
-    () => supabase.from('negocios').update(payload).eq('id', negocioId).eq('owner_id', ownerId),
+    () => supabase.from('businesses').update(toBusinessDbPatch(payload)).eq('id', negocioId).eq('owner_id', ownerId),
     6000,
     'negocio-info-update'
   );
@@ -594,12 +595,12 @@ export async function updateNegocioInfo(negocioId, ownerId, payload) {
 
 export async function updateNegocioTema(negocioId, ownerId, tema) {
   const { data, error } = await withAuthRetry(
-    () => supabase.from('negocios').update({ tema }).eq('id', negocioId).eq('owner_id', ownerId).select('tema').single(),
+    () => supabase.from('businesses').update({ theme: tema }).eq('id', negocioId).eq('owner_id', ownerId).select('theme').single(),
     6000,
     'negocio-tema-update'
   );
   if (error) throw error;
-  return data.tema;
+  return data.theme;
 }
 
 export async function insertGalleryItem(businessId, path) {
