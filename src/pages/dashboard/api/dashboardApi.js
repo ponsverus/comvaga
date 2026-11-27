@@ -569,8 +569,8 @@ export async function fetchUserNome(userId) {
   return data || null;
 }
 
-export async function insertProfissional(payload) {
-  return insertWithStableId('profissionais', payload, 6000, 'profissional-insert');
+export async function insertProfessional(payload) {
+  return insertWithStableId('professionals', payload, 6000, 'professional-insert');
 }
 
 export async function updateNegocioLogo(negocioId, ownerId, logoPatch) {
