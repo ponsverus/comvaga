@@ -97,21 +97,31 @@ export async function fetchVitrineEntregasFirstPages(negocioId, profissionalIds,
 
 export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
   if (!entregaId || !profissionalId) return null;
-  const { data, error } = await withPublicAuthRetry(
+  const { data: service, error } = await withPublicAuthRetry(
     () => supabase
-      .from('entregas')
-      .select('id, negocio_id, profissional_id, nome, tempo_minutos, valor, valor_oferta, ativo')
+      .from('services')
+      .select('id, business_id, professional_id, name, duration_minutes, price, offer_price, is_active')
       .eq('id', entregaId)
-      .eq('profissional_id', profissionalId)
-      .eq('ativo', true)
-      .is('excluido_em', null)
-      .is('motivo_excluido', null)
+      .eq('professional_id', profissionalId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .is('deletion_reason', null)
       .maybeSingle(),
     7000,
     'entrega-vitrine-id'
   );
   if (error) throw error;
-  if (!data) return null;
+  if (!service) return null;
+  const data = {
+    id: service.id,
+    negocio_id: service.business_id,
+    profissional_id: service.professional_id,
+    nome: service.name,
+    tempo_minutos: service.duration_minutes,
+    valor: service.price,
+    valor_oferta: service.offer_price,
+    ativo: service.is_active,
+  };
   const valor = Number(data.valor ?? 0);
   const oferta = Number(data.valor_oferta ?? 0);
   const temOferta = Number.isFinite(oferta) && oferta > 0 && oferta < valor;
