@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   addBusinessFavorite,
-  createDepoimento,
+  createBusinessReview,
   fetchCurrentClienteId,
   fetchBusinessFavorite,
   removeBusinessFavorite,
@@ -81,10 +81,10 @@ export function useVitrineInteractions({
     if (!currentClienteId) return false;
     setDepoimentoLoading(true);
     try {
-      await createDepoimento({
-        negocioId,
-        nota: depoimentoNota,
-        comentario: depoimentoTexto || null,
+      await createBusinessReview({
+        businessId: negocioId,
+        rating: depoimentoNota,
+        comment: depoimentoTexto || null,
       });
       await refreshDepoimentos(negocioId);
       return true;
