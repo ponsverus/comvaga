@@ -55,8 +55,11 @@ test('Vitrine pública: preserva local e publica seus dados estruturados', () =>
 });
 test('reviews da Home: rejeita contagem incoerente', () => assert.throws(() => publicHomeReviewsSnapshot({ items: [{ id: 1 }], rating_count: 0 }), /Invalid/));
 test('reviews da Home: limita a 12 e prepara rating', () => {
-  const snap = publicHomeReviewsSnapshot({ items: Array.from({ length: 13 }, (_, i) => ({ id: i })), rating_count: 13, rating_value: 4.5 }, 'https://teste.supabase.co');
+  const snap = publicHomeReviewsSnapshot({ items: Array.from({ length: 13 }, (_, i) => ({ id: i, public_name: 'Ana', rating: 5, comment: 'Ótimo' })), rating_count: 13, rating_value: 4.5 }, 'https://teste.supabase.co');
   assert.equal(snap.items.length, 12);
   assert.equal(snap.hasMore, true);
   assert.deepEqual(snap.rating, { count: 13, value: 4.5 });
+  assert.deepEqual(snap.items[0].users, { nome: 'Ana' });
+  assert.equal(snap.items[0].nota, 5);
+  assert.equal(snap.items[0].comentario, 'Ótimo');
 });

@@ -25,7 +25,7 @@ async function fetchHomeReviews() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || env.SUPABASE_URL || env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error('Public Supabase configuration missing for home reviews');
-  const response = await fetch(`${url.replace(/\/$/, '')}/rest/v1/rpc/get_depoimentos_app_home`, {
+  const response = await fetch(`${url.replace(/\/$/, '')}/rest/v1/rpc/get_home_app_reviews`, {
     method: 'POST',
     headers: {
       apikey: key,

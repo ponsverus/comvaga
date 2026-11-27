@@ -16,8 +16,11 @@ import { APP_REVIEWS_PAGE_SIZE, fetchAppReviews, fetchAppReviewsHome, createAppR
 
 function toAppReviewItem(row) {
   return {
-    ...row,
-    users: { nome: row.nome_publico },
+    id: row.id,
+    created_at: row.created_at,
+    nota: row.rating,
+    comentario: row.comment,
+    users: { nome: row.public_name },
     avatarClienteUrl: getPublicUrl('avatars', row.avatar_path),
   };
 }
