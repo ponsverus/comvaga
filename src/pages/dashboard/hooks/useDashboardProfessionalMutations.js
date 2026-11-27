@@ -4,7 +4,7 @@ import {
   aprovarParceiroProfissional,
   excluirProfissionalParceiroSeguramente,
   fetchUserNome,
-  insertProfissional,
+  insertProfessional,
   updateProfissionalComHorarios,
   updateProfissionalStatus,
 } from '../api/dashboardApi';
@@ -35,11 +35,11 @@ export function useDashboardProfessionalMutations({
     try {
       setSubmittingAdminProf(true);
       const userData = await fetchUserNome(userId);
-      const nome = String(userData?.nome || '').trim() || 'PROFISSIONAL';
-      await insertProfissional({
-        negocio_id: negocio.id,
+      const name = String(userData?.nome || '').trim() || 'PROFISSIONAL';
+      await insertProfessional({
+        business_id: negocio.id,
         user_id: userId,
-        nome,
+        name,
         status: 'ativo',
       });
       await uiAlert('dashboard.professional_updated', 'success');
