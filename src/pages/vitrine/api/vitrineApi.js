@@ -137,8 +137,8 @@ export async function fetchShowcaseGallery(businessId, { limit = null, cursor = 
   return (data || []).map(({ sort_order, ...row }) => ({ ...row, ordem: sort_order }));
 }
 
-export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor = null } = {}) {
-  const params = { p_negocio_id: negocioId };
+export async function fetchShowcaseReviews(businessId, { limit = null, cursor = null } = {}) {
+  const params = { p_business_id: businessId };
   if (limit != null) params.p_limit = Math.max(1, Number(limit) || 1);
   if (cursor?.id) {
     params.p_cursor_created_at = cursor.created_at ?? null;
@@ -146,19 +146,23 @@ export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor 
   }
 
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_depoimentos_vitrine', params),
+    () => supabase.rpc('get_showcase_reviews', params),
     7000,
     'depoimentos'
   );
   if (error) throw error;
-  return (data || []).map((d) => ({
-    ...d,
-    users: d.cliente_nome
-      ? { nome: d.cliente_nome, avatar_path: d.cliente_avatar_path, type: d.cliente_type }
+  return (data || []).map((review) => ({
+    id: review.id,
+    professional_id: review.professional_id,
+    rating: review.rating,
+    comment: review.comment,
+    created_at: review.created_at,
+    users: review.client_name
+      ? { nome: review.client_name, avatar_path: review.client_avatar_path, type: review.client_type }
       : null,
-    profissionais: d.profissional_nome ? { nome: d.profissional_nome } : null,
-    entrega_nome: d.entrega_nome || null,
-    agendamento_data: d.agendamento_data || null,
+    profissionais: review.professional_name ? { nome: review.professional_name } : null,
+    entrega_nome: review.service_name || null,
+    agendamento_data: review.booking_date || null,
   }));
 }
 
@@ -213,12 +217,12 @@ export async function removeBusinessFavorite({ clientId, businessId }) {
   if (error) throw error;
 }
 
-export async function createDepoimento({ negocioId, nota, comentario }) {
+export async function createBusinessReview({ businessId, rating, comment }) {
   const { error } = await withAuthRetry(
-    () => invokeProtectedAction('create_depoimento_negocio', {
-      p_negocio_id: negocioId,
-      p_nota: nota,
-      p_comentario: comentario ?? null,
+    () => invokeProtectedAction('create_business_review', {
+      p_business_id: businessId,
+      p_rating: rating,
+      p_comment: comment ?? null,
     }),
     7000,
     'enviar-depoimento'
