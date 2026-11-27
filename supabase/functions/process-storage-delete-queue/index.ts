@@ -12,10 +12,10 @@ const PATH_RULES: Record<string, RegExp> = {
 };
 const PATH_REFERENCES: Record<string, Array<{ table: string; column: string }>> = {
   avatars: [
-    { table: 'clientes', column: 'avatar_path' },
+    { table: 'clients', column: 'avatar_path' },
   ],
   logos: [{ table: 'negocios', column: 'logo_path' }],
-  galerias: [{ table: 'galerias', column: 'path' }],
+  galerias: [{ table: 'galleries', column: 'path' }],
 };
 
 Deno.serve(async (req: Request) => {
