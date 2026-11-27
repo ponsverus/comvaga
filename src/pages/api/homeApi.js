@@ -5,7 +5,7 @@ export const APP_REVIEWS_PAGE_SIZE = 12;
 
 export async function fetchAppReviews(cursor = null) {
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_depoimentos_app', {
+    () => supabase.rpc('get_app_reviews', {
       p_limit: APP_REVIEWS_PAGE_SIZE + 1,
       p_cursor_created_at: cursor?.created_at ?? null,
       p_cursor_id: cursor?.id ?? null,
@@ -19,7 +19,7 @@ export async function fetchAppReviews(cursor = null) {
 
 export async function fetchAppReviewsHome() {
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_depoimentos_app_home'),
+    () => supabase.rpc('get_home_app_reviews'),
     7000,
     'depoimentos-app-home'
   );
@@ -36,12 +36,12 @@ export async function fetchAppReviewsHome() {
   return { items: data.items, rating: count > 0 ? { count, value } : null };
 }
 
-export async function createAppReview(nota, comentario) {
+export async function createAppReview(rating, comment) {
   return withAuthRetry(
-    () => supabase.rpc('create_depoimento_app', {
-      p_nota: nota,
-      p_comentario: comentario || null,
-      p_consentimento: true,
+    () => supabase.rpc('create_app_review', {
+      p_rating: rating,
+      p_comment: comment || null,
+      p_consent: true,
     }),
     7000,
     'enviar-depoimento-app'
