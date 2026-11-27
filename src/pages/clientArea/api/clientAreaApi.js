@@ -5,8 +5,8 @@ import { invokeProtectedAction } from '../../../utils/protectedAction';
 export async function fetchClientePerfil(userId) {
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('clientes')
-      .select('nome, avatar_path, telefone')
+      .from('clients')
+      .select('name, avatar_path, phone')
       .eq('user_id', userId)
       .eq('status', 'ativo')
       .maybeSingle(),
@@ -16,9 +16,9 @@ export async function fetchClientePerfil(userId) {
 
   if (error) throw error;
   return {
-    nome: String(data?.nome || '').trim(),
+    nome: String(data?.name || '').trim(),
     avatarPath: data?.avatar_path || null,
-    telefone: String(data?.telefone || '').trim(),
+    telefone: String(data?.phone || '').trim(),
   };
 }
 
@@ -146,7 +146,7 @@ export async function salvarAvatarCliente({ userId, path, file }) {
     uploadedPath = path;
 
     const { data: updatedClient, error: updateError } = await withAuthRetry(
-      () => supabase.from('clientes')
+      () => supabase.from('clients')
         .update({ avatar_path: path })
         .eq('user_id', userId)
         .eq('status', 'ativo')
@@ -205,8 +205,8 @@ export async function salvarEmailCliente(email) {
 
 export async function salvarTelefoneCliente(userId, telefone) {
   const { error } = await withAuthRetry(
-    () => supabase.from('clientes')
-      .update({ telefone: telefone || null })
+    () => supabase.from('clients')
+      .update({ phone: telefone || null })
       .eq('user_id', userId)
       .eq('status', 'ativo'),
     6000,
