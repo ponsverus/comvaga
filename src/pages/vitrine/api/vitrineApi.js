@@ -162,14 +162,14 @@ export async function fetchVitrineDepoimentos(negocioId, { limit = null, cursor 
   }));
 }
 
-export async function fetchFavoritoNegocio({ clienteId, negocioId }) {
+export async function fetchBusinessFavorite({ clientId, businessId }) {
   const { data, error } = await withAuthRetry(
     () => supabase
-      .from('favoritos')
+      .from('favorites')
       .select('id')
-      .eq('cliente_id', clienteId)
-      .eq('tipo', 'negocio')
-      .eq('negocio_id', negocioId)
+      .eq('client_id', clientId)
+      .eq('favorite_type', 'negocio')
+      .eq('business_id', businessId)
       .maybeSingle(),
     6000,
     'favorito'
@@ -188,25 +188,25 @@ export async function fetchCurrentClienteId() {
   return data || null;
 }
 
-export async function addFavoritoNegocio({ clienteId, negocioId }) {
+export async function addBusinessFavorite({ clientId, businessId }) {
   const { error } = await withAuthRetry(
     () => supabase
-      .from('favoritos')
-      .insert({ cliente_id: clienteId, tipo: 'negocio', negocio_id: negocioId, profissional_id: null }),
+      .from('favorites')
+      .insert({ client_id: clientId, favorite_type: 'negocio', business_id: businessId, professional_id: null }),
     6000,
     'favorito-insert'
   );
   if (error) throw error;
 }
 
-export async function removeFavoritoNegocio({ clienteId, negocioId }) {
+export async function removeBusinessFavorite({ clientId, businessId }) {
   const { error } = await withAuthRetry(
     () => supabase
-      .from('favoritos')
+      .from('favorites')
       .delete()
-      .eq('cliente_id', clienteId)
-      .eq('tipo', 'negocio')
-      .eq('negocio_id', negocioId),
+      .eq('client_id', clientId)
+      .eq('favorite_type', 'negocio')
+      .eq('business_id', businessId),
     6000,
     'favorito-delete'
   );
