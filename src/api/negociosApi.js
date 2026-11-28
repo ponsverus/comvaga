@@ -83,7 +83,7 @@ export async function fetchOwnerBusinessCount(ownerId) {
 export async function setBusinessPlan(negocioId, planCode, requestLabel = 'set-plan') {
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('set_business_plan', {
-      p_negocio_id: negocioId,
+      p_business_id: negocioId,
       p_plan_code: planCode,
     }),
     6500,

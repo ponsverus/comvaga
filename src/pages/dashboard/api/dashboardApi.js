@@ -10,7 +10,7 @@ function isAdminExcludedProfessional(row) {
 }
 
 function getClienteTelefone(row) {
-  return String(row?.cliente_telefone ?? '').trim();
+  return String(row?.client_phone ?? row?.cliente_telefone ?? '').trim();
 }
 
 function newStableRowId() {
@@ -70,32 +70,205 @@ async function normalizeFunctionError(error) {
 }
 
 
+function mapDashboardAvailabilityRow(row) {
+  return {
+    id: row.id,
+    dia_semana: row.day_of_week,
+    ativo: row.is_active,
+    horario_inicio: row.start_time,
+    horario_fim: row.end_time,
+    pausa_inicio: row.break_start_time,
+    pausa_fim: row.break_end_time,
+  };
+}
+
+function mapAvailabilityToDb(row) {
+  return {
+    day_of_week: row.dia_semana,
+    is_active: row.ativo,
+    start_time: row.horario_inicio,
+    end_time: row.horario_fim,
+    break_start_time: row.pausa_inicio,
+    break_end_time: row.pausa_fim,
+  };
+}
+
+function mapDashboardDayMetrics(d) {
+  if (!d) return null;
+  return {
+    date: d.date,
+    total: d.total,
+    cancelados: d.canceled,
+    concluidos: d.completed,
+    faturamento: d.revenue,
+    faturamento_str: d.revenue_str,
+    ticket_medio: d.average_ticket,
+    ticket_medio_str: d.average_ticket_str,
+    taxa_cancelamento: d.cancellation_rate,
+    taxa_cancelamento_str: d.cancellation_rate_str,
+    taxa_fechamento: d.completion_rate,
+    taxa_fechamento_str: d.completion_rate_str,
+    por_profissional: Array.isArray(d.by_professional)
+      ? d.by_professional.map((p) => ({
+          nome: p.name,
+          faturamento: p.revenue,
+          faturamento_str: p.revenue_str,
+        }))
+      : [],
+  };
+}
+
+function mapDashboardTopCards(tc) {
+  if (!tc) return null;
+  return {
+    faturamento_hoje: tc.revenue_today
+      ? { valor: tc.revenue_today.amount, comparativo_percentual: tc.revenue_today.delta_percent }
+      : null,
+    agendamentos_hoje: tc.appointments_today
+      ? { total: tc.appointments_today.total, comparativo_percentual: tc.appointments_today.delta_percent }
+      : null,
+    profissionais: tc.professionals
+      ? {
+          total: tc.professionals.total,
+          ativos: tc.professionals.active,
+          ...(tc.professionals.inactive !== undefined ? { inativos: tc.professionals.inactive } : {}),
+          ...(tc.professionals.pending !== undefined ? { pendentes: tc.professionals.pending } : {}),
+        }
+      : null,
+    entregas: tc.services
+      ? { total: tc.services.total, valor_medio: tc.services.average_price }
+      : null,
+  };
+}
+
+function mapDashboardPeriodMetrics(p) {
+  if (!p) return null;
+  return {
+    ref_date: p.ref_date,
+    periodo: p.period,
+    month: p.month,
+    month_label: p.month_label,
+    start_date: p.start_date,
+    end_date: p.end_date,
+    previous_start_date: p.previous_start_date,
+    previous_end_date: p.previous_end_date,
+    total: p.total,
+    cancelados: p.canceled,
+    concluidos: p.completed,
+    faturamento: p.revenue,
+    faturamento_str: p.revenue_str,
+    media_por_atendimento: p.average_per_appointment,
+    media_por_atendimento_str: p.average_per_appointment_str,
+    por_profissional: Array.isArray(p.by_professional)
+      ? p.by_professional.map((item) => ({
+          profissional_id: item.professional_id,
+          nome: item.name,
+          concluidos: item.completed,
+          faturamento: item.revenue,
+          faturamento_str: item.revenue_str,
+          faturamento_anterior: item.previous_revenue,
+          comparativo_percentual: item.delta_percent,
+        }))
+      : [],
+  };
+}
+
+function mapDashboardNextDaySchedule(n) {
+  if (!n) return null;
+  return {
+    ref_date: n.ref_date,
+    amanha: n.tomorrow_date,
+    minutos_totais: n.total_minutes,
+    minutos_disponiveis: n.available_minutes,
+    minutos_ocupados: n.occupied_minutes,
+    minutos_ociosos: n.idle_minutes,
+    horas_totais: n.total_hours,
+    horas_disponiveis: n.available_hours,
+    horas_ocupadas: n.occupied_hours,
+    horas_ociosas: n.idle_hours,
+    agendamentos_validos: n.valid_appointments,
+    cancelados: n.canceled_appointments,
+    percentual_tempo_reservado: n.reserved_time_percent,
+    percentual_tempo_reservado_str: n.reserved_time_percent_str,
+    por_profissional: Array.isArray(n.by_professional)
+      ? n.by_professional.map((pp) => ({
+          profissional_id: pp.professional_id,
+          nome: pp.name,
+          minutos_totais: pp.total_minutes,
+          minutos_disponiveis: pp.available_minutes,
+          minutos_ocupados: pp.occupied_minutes,
+          minutos_ociosos: pp.idle_minutes,
+          horas_totais: pp.total_hours,
+          horas_disponiveis: pp.available_hours,
+          horas_ocupadas: pp.occupied_hours,
+          horas_ociosas: pp.idle_hours,
+          agendamentos_validos: pp.valid_appointments,
+          cancelados: pp.canceled_appointments,
+          percentual_tempo_reservado: pp.reserved_time_percent,
+          percentual_tempo_reservado_str: pp.reserved_time_percent_str,
+        }))
+      : [],
+  };
+}
+
+function mapDashboardFutureBookings(f) {
+  if (!f) return null;
+  return {
+    ref_date: f.ref_date,
+    amanha: f.tomorrow_date,
+    total_agendamentos: f.total_appointments,
+    receita_projetada: f.projected_revenue,
+    receita_projetada_str: f.projected_revenue_str,
+    ticket_medio: f.average_ticket,
+    ticket_medio_str: f.average_ticket_str,
+    por_profissional: Array.isArray(f.by_professional)
+      ? f.by_professional.map((pp) => ({
+          profissional_id: pp.professional_id,
+          nome: pp.name,
+          total_agendamentos: pp.total_appointments,
+          receita_projetada: pp.projected_revenue,
+          receita_projetada_str: pp.projected_revenue_str,
+        }))
+      : [],
+  };
+}
+
 export function normalizeAgRow(a) {
-  const profId = a?.prof_id ?? a?.profissional_id ?? null;
-  const profNome = a?.prof_nome ?? a?.profissional_nome ?? null;
-  const valorFinal = a?.valor_final ?? a?.valor ?? null;
+  const profId = a?.prof_id ?? a?.professional_id ?? a?.profissional_id ?? null;
+  const profNome = a?.professional_name ?? a?.prof_nome ?? a?.profissional_nome ?? null;
+  const valorFinal = a?.final_price ?? a?.valor_final ?? a?.valor ?? null;
 
   return {
-    ...a,
-    data: a?.data ?? null,
-    horario_inicio: a?.horario_inicio ?? null,
-    horario_fim: a?.horario_fim ?? null,
+    id: a?.id ?? null,
+    negocio_id: a?.business_id ?? a?.negocio_id ?? null,
+    profissional_id: a?.professional_id ?? a?.profissional_id ?? null,
+    cliente_id: a?.client_id ?? a?.cliente_id ?? null,
+    entrega_id: a?.service_id ?? a?.entrega_id ?? null,
+    data: a?.date ?? a?.data ?? null,
+    horario_inicio: a?.start_time ?? a?.horario_inicio ?? null,
+    horario_fim: a?.end_time ?? a?.horario_fim ?? null,
+    status: a?.status ?? null,
+    created_at: a?.created_at ?? null,
+    cancelado_em: a?.canceled_at ?? a?.cancelado_em ?? null,
+    concluido_em: a?.completed_at ?? a?.concluido_em ?? null,
     valor_final: valorFinal,
+    updated_at: a?.updated_at ?? null,
+    lembrete_enviado: a?.reminder_sent ?? a?.lembrete_enviado ?? null,
     entregas: {
-      nome: a?.entrega_nome ?? null,
-      valor: a?.entrega_valor ?? null,
-      valor_oferta: a?.entrega_valor_oferta ?? null,
+      nome: a?.service_name ?? a?.entrega_nome ?? null,
+      valor: a?.service_price ?? a?.entrega_valor ?? null,
+      valor_oferta: a?.service_offer_price ?? a?.entrega_valor_oferta ?? null,
     },
     profissionais: {
       id: profId,
       nome: profNome,
     },
     cliente: {
-      id: a?.cliente_id ?? null,
-      nome: a?.cliente_nome ?? null,
+      id: a?.client_id ?? a?.cliente_id ?? null,
+      nome: a?.client_name ?? a?.cliente_nome ?? null,
       telefone: getClienteTelefone(a),
-      avatar_path: a?.cliente_avatar ?? null,
-      type: a?.cliente_type ?? null,
+      avatar_path: a?.client_avatar_path ?? a?.cliente_avatar ?? null,
+      type: a?.client_type ?? a?.cliente_type ?? null,
     },
   };
 }
@@ -160,7 +333,7 @@ export async function fetchBillingPlans() {
 export async function fetchBusinessBillingStatus(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('get_business_billing_status', {
-      p_negocio_id: negocioId,
+      p_business_id: negocioId,
     }),
     6000,
     'billing-status'
@@ -173,7 +346,7 @@ export async function createAsaasCheckout(negocioId, planCode) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-create-checkout', {
       body: {
-        negocio_id: negocioId,
+        business_id: negocioId,
         plan_code: planCode,
       },
     }),
@@ -189,7 +362,7 @@ export async function createAsaasCheckout(negocioId, planCode) {
 export async function reactivateAsaasSubscription(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-reactivate-subscription', {
-      body: { negocio_id: negocioId },
+      body: { business_id: negocioId },
     }),
     40000,
     'asaas-reactivate-subscription'
@@ -203,7 +376,7 @@ export async function cancelAsaasSubscription(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-cancel-subscription', {
       body: {
-        negocio_id: negocioId,
+        business_id: negocioId,
       },
     }),
     40000,
@@ -218,7 +391,7 @@ export async function cancelAsaasPlanDowngrade(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-cancel-downgrade', {
       body: {
-        negocio_id: negocioId,
+        business_id: negocioId,
       },
     }),
     25000,
@@ -234,7 +407,7 @@ export async function cancelAsaasCheckout(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-cancel-checkout', {
       body: {
-        negocio_id: negocioId,
+        business_id: negocioId,
       },
     }),
     25000,
@@ -249,7 +422,7 @@ export async function cancelAsaasCheckout(negocioId) {
 export async function recoverAsaasSubscriptionPayment(negocioId) {
   const { data, error } = await withAuthRetry(
     () => supabase.functions.invoke('asaas-recover-subscription-payment', {
-      body: { negocio_id: negocioId },
+      body: { business_id: negocioId },
     }),
     12000,
     'asaas-subscription-payment-recovery'
@@ -304,27 +477,54 @@ export async function fetchGallery(businessId, { limit = null, cursor = null } =
 
 export async function fetchProfissionaisComStatus(negocioId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_profissionais_com_status', { p_negocio_id: negocioId }),
+    () => supabase.rpc('get_professionals_with_status', { p_business_id: negocioId }),
     6000,
     'profissionais-status'
   );
   if (error) throw error;
-  return (data || []).filter((row) => !isAdminExcludedProfessional(row));
+  return (data || [])
+    .map((row) => ({
+      id: row.id,
+      negocio_id: row.business_id,
+      nome: row.name,
+      oficio: row.occupation,
+      anos_experiencia: row.years_experience,
+      horarios: Array.isArray(row.availability) ? row.availability.map(mapDashboardAvailabilityRow) : [],
+      status: row.status,
+      motivo_inativo: row.inactive_reason,
+      created_at: row.created_at,
+      user_id: row.user_id,
+      status_label: row.status_label,
+      status_key: row.status_key,
+    }))
+    .filter((row) => !isAdminExcludedProfessional(row));
 }
 
 export async function fetchProfissionaisEquipe(negocioId) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_profissionais_equipe_dashboard', { p_negocio_id: negocioId }),
+    () => supabase.rpc('get_dashboard_team_professionals', { p_business_id: negocioId }),
     6000,
     'profissionais-equipe'
   );
   if (error) throw error;
-  return data || [];
+  return (data || []).map((row) => ({
+    id: row.id,
+    negocio_id: row.business_id,
+    nome: row.name,
+    oficio: row.occupation,
+    anos_experiencia: row.years_experience,
+    horarios: Array.isArray(row.availability) ? row.availability.map(mapDashboardAvailabilityRow) : [],
+    status: row.status,
+    created_at: row.created_at,
+    status_label: row.status_label,
+    status_key: row.status_key,
+    total_entregas: row.total_services,
+  }));
 }
 
 export async function excluirProfissionalParceiroSeguramente(profissionalId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('excluir_profissional_parceiro_seguro', { p_profissional_id: profissionalId }),
+    () => invokeProtectedAction('delete_partner_professional', { p_professional_id: profissionalId }),
     6500,
     'excluir-profissional-parceiro'
   );
@@ -334,7 +534,7 @@ export async function excluirProfissionalParceiroSeguramente(profissionalId) {
 
 export async function excluirNegocioSeguramente(negocioId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('excluir_negocio_seguro', { p_negocio_id: negocioId }),
+    () => invokeProtectedAction('delete_business', { p_business_id: negocioId }),
     6500,
     'excluir-negocio'
   );
@@ -344,7 +544,7 @@ export async function excluirNegocioSeguramente(negocioId) {
 
 export async function excluirEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('excluir_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('delete_service', { p_service_id: entregaId }),
     6500,
     'excluir-entrega'
   );
@@ -354,7 +554,7 @@ export async function excluirEntregaSeguramente(entregaId) {
 
 export async function inativarEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('inativar_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('deactivate_service', { p_service_id: entregaId }),
     6500,
     'inativar-entrega'
   );
@@ -364,7 +564,7 @@ export async function inativarEntregaSeguramente(entregaId) {
 
 export async function ativarEntregaSeguramente(entregaId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('ativar_entrega_segura', { p_entrega_id: entregaId }),
+    () => invokeProtectedAction('activate_service', { p_service_id: entregaId }),
     6500,
     'ativar-entrega'
   );
@@ -374,9 +574,9 @@ export async function ativarEntregaSeguramente(entregaId) {
 
 export async function aprovarParceiroProfissional(profissionalId, negocioId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('aprovar_parceiro_profissional', {
-      p_profissional_id: profissionalId,
-      p_negocio_id: negocioId,
+    () => invokeProtectedAction('approve_partner_professional', {
+      p_professional_id: profissionalId,
+      p_business_id: negocioId,
     }),
     6500,
     'aprovar-parceiro'
@@ -387,7 +587,7 @@ export async function aprovarParceiroProfissional(profissionalId, negocioId) {
 
 export async function concluirAgendamentoProfissional(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('concluir_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('complete_professional_booking', { p_appointment_id: agendamentoId }),
     6500,
     'concluir-agendamento'
   );
@@ -397,7 +597,7 @@ export async function concluirAgendamentoProfissional(agendamentoId) {
 
 export async function cancelarAgendamentoProfissional(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('cancelar_agendamento_profissional', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('cancel_professional_booking', { p_appointment_id: agendamentoId }),
     6500,
     'cancelar-agendamento-profissional'
   );
@@ -413,12 +613,12 @@ export async function fetchEntregasPage({
 }) {
   if (!negocioId || !profissionalId) return { rows: [], totalCount: 0 };
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_entregas_dashboard_paginadas', {
-      p_negocio_id: negocioId,
-      p_profissional_id: profissionalId,
+    () => supabase.rpc('get_dashboard_services_page', {
+      p_business_id: negocioId,
+      p_professional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
-      p_cursor_ativo: cursor?.ativo ?? null,
-      p_cursor_valor: cursor?.valor ?? null,
+      p_cursor_is_active: cursor?.ativo ?? null,
+      p_cursor_price: cursor?.valor ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
     7000,
@@ -426,14 +626,18 @@ export async function fetchEntregasPage({
   );
 
   if (error) throw error;
-  const rows = (data || []).map((item) => {
-    const { prof_id: profId, prof_nome: profNome, ...row } = item;
-    delete row.total_count;
-    return {
-      ...row,
-      profissionais: { id: profId, nome: profNome },
-    };
-  });
+  const rows = (data || []).map((item) => ({
+    id: item.id,
+    negocio_id: item.business_id,
+    profissional_id: item.professional_id,
+    nome: item.name,
+    tempo_minutos: item.duration_minutes,
+    valor: item.price,
+    valor_oferta: item.offer_price,
+    ativo: item.is_active,
+    created_at: item.created_at,
+    profissionais: { id: item.prof_id ?? item.professional_id, nome: item.professional_name },
+  }));
   return {
     rows,
     totalCount: Number(data?.[0]?.total_count || 0),
@@ -449,9 +653,9 @@ export async function fetchEntregasFirstPages({
   if (!negocioId || !ids.length) return [];
 
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_entregas_dashboard_primeiras_paginas', {
-      p_negocio_id: negocioId,
-      p_profissional_ids: ids,
+    () => supabase.rpc('get_dashboard_services_initial_pages', {
+      p_business_id: negocioId,
+      p_professional_ids: ids,
       p_limit: Math.max(1, Number(limit) || 1),
     }),
     7000,
@@ -459,15 +663,19 @@ export async function fetchEntregasFirstPages({
   );
 
   if (error) throw error;
-  return (data || []).map((item) => {
-    const { prof_id: profId, prof_nome: profNome, ...row } = item;
-    delete row.total_count;
-    return {
-      ...row,
-      profissionais: { id: profId, nome: profNome },
-      total_count: item.total_count,
-    };
-  });
+  return (data || []).map((item) => ({
+    id: item.id,
+    negocio_id: item.business_id,
+    profissional_id: item.professional_id,
+    nome: item.name,
+    tempo_minutos: item.duration_minutes,
+    valor: item.price,
+    valor_oferta: item.offer_price,
+    ativo: item.is_active,
+    created_at: item.created_at,
+    profissionais: { id: item.prof_id ?? item.professional_id, nome: item.professional_name },
+    total_count: item.total_count,
+  }));
 }
 
 export async function fetchAgendamentosNegocio({
@@ -479,14 +687,14 @@ export async function fetchAgendamentosNegocio({
   cursor = null,
 }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_agendamentos_negocio', {
-      p_negocio_id: negocioId,
-      p_profissional_ids: profissionalIds,
-      p_data_inicio: dataInicio,
-      p_data_fim: dataFim,
+    () => supabase.rpc('get_business_bookings', {
+      p_business_id: negocioId,
+      p_professional_ids: profissionalIds,
+      p_start_date: dataInicio,
+      p_end_date: dataFim,
       p_limit: limit,
-      p_cursor_data: cursor?.data ?? null,
-      p_cursor_horario: cursor?.horario_inicio ?? null,
+      p_cursor_date: cursor?.data ?? null,
+      p_cursor_start_time: cursor?.horario_inicio ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
     7000,
@@ -504,22 +712,34 @@ export async function fetchClientesDashboard({
   cursor = null,
 }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_clientes_dashboard', {
-      p_negocio_id: negocioId,
+    () => supabase.rpc('get_dashboard_clients', {
+      p_business_id: negocioId,
       p_limit: limit,
       p_search: search,
-      p_cursor_ultimo_data: cursor?.ultimo_data ?? null,
-      p_cursor_ultimo_horario: cursor?.ultimo_horario_inicio ?? null,
-      p_cursor_ultimo_created_at: cursor?.ultimo_created_at ?? null,
-      p_cursor_ultimo_agendamento_id: cursor?.ultimo_agendamento_id ?? null,
-      p_cursor_cliente_id: cursor?.cliente_id ?? null,
+      p_cursor_latest_date: cursor?.ultimo_data ?? null,
+      p_cursor_latest_start_time: cursor?.ultimo_horario_inicio ?? null,
+      p_cursor_latest_created_at: cursor?.ultimo_created_at ?? null,
+      p_cursor_latest_appointment_id: cursor?.ultimo_agendamento_id ?? null,
+      p_cursor_client_id: cursor?.cliente_id ?? null,
     }),
     7000,
     'clientes-dashboard'
   );
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((row) => ({
+    cliente_id: row.client_id,
+    cliente_nome: row.client_name,
+    cliente_avatar_path: row.client_avatar_path,
+    ultimo_agendamento_id: row.latest_appointment_id,
+    ultimo_profissional_id: row.latest_professional_id,
+    ultimo_profissional_nome: row.latest_professional_name,
+    ultimo_data: row.latest_date,
+    ultimo_horario_inicio: row.latest_start_time,
+    ultimo_created_at: row.latest_created_at,
+    ultimo_entrega_nome: row.latest_service_name,
+    ultimo_valor: row.latest_price,
+  }));
 }
 
 export async function fetchDashboardOverview({
@@ -530,12 +750,12 @@ export async function fetchDashboardOverview({
   profissionalId = null,
 }) {
   const params = {
-    p_negocio_id: negocioId,
+    p_business_id: negocioId,
     p_ref_date: refDateISO,
-    p_faturamento_date: faturamentoDateISO || refDateISO,
-    p_periodo: periodo || '7d',
+    p_revenue_date: faturamentoDateISO || refDateISO,
+    p_period: periodo || '7d',
   };
-  if (profissionalId) params.p_profissional_id = profissionalId;
+  if (profissionalId) params.p_professional_id = profissionalId;
 
   const { data, error } = await withAuthRetry(
     () => supabase.rpc('get_dashboard_overview', params),
@@ -546,13 +766,13 @@ export async function fetchDashboardOverview({
   if (data?.error) throw new Error(String(data.error));
 
   return {
-    metricsHoje: { today: data?.today || null },
-    metricsTopCards: data?.top_cards || null,
-    metricsDia: { selected_day: data?.selected_day || null },
-    metricsPeriodoData: { period: data?.period || null },
-    metricsAgendaDiaSeguinte: { agenda_dia_seguinte: data?.agenda_dia_seguinte || null },
-    metricsFutureBookings: { future_bookings: data?.future_bookings || null },
-    proximoAgendamento: data?.proximo_agendamento ? normalizeAgRow(data.proximo_agendamento) : null,
+    metricsHoje: { today: mapDashboardDayMetrics(data?.today) },
+    metricsTopCards: mapDashboardTopCards(data?.top_cards),
+    metricsDia: { selected_day: mapDashboardDayMetrics(data?.selected_day) },
+    metricsPeriodoData: { period: mapDashboardPeriodMetrics(data?.period) },
+    metricsAgendaDiaSeguinte: { agenda_dia_seguinte: mapDashboardNextDaySchedule(data?.next_day_schedule) },
+    metricsFutureBookings: { future_bookings: mapDashboardFutureBookings(data?.future_bookings) },
+    proximoAgendamento: data?.next_appointment ? normalizeAgRow(data.next_appointment) : null,
   };
 }
 
@@ -661,12 +881,12 @@ export async function updateProfissionalStatus(profissionalId, negocioId, status
 
 export async function updateProfissionalComHorarios(profissionalId, payload) {
   const { error } = await withAuthRetry(
-    () => supabase.rpc('update_profissional_com_horarios', {
-      p_profissional_id: profissionalId,
-      p_nome: payload.nome,
-      p_oficio: payload.oficio,
-      p_anos_experiencia: payload.anos_experiencia,
-      p_horarios: payload.horarios,
+    () => supabase.rpc('update_professional_with_availability', {
+      p_professional_id: profissionalId,
+      p_name: payload.nome,
+      p_occupation: payload.oficio,
+      p_years_experience: payload.anos_experiencia,
+      p_availability: Array.isArray(payload.horarios) ? payload.horarios.map(mapAvailabilityToDb) : payload.horarios,
     }),
     6500,
     'update-profissional-horarios'

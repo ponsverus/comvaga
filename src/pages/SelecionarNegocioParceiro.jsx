@@ -12,11 +12,11 @@ import { getPublicUrl } from '../utils/storage';
 const msgs = ptBR.partnerBusinessCenter;
 
 function formatBusinessAddress(negocio) {
-  const rua = String(negocio?.rua || '').trim();
-  const numero = String(negocio?.numero || '').trim();
-  const bairro = String(negocio?.bairro || '').trim();
-  const cidade = String(negocio?.cidade || '').trim();
-  const estado = String(negocio?.estado || '').trim().toUpperCase();
+  const rua = String(negocio?.street || '').trim();
+  const numero = String(negocio?.number || '').trim();
+  const bairro = String(negocio?.neighborhood || '').trim();
+  const cidade = String(negocio?.city || '').trim();
+  const estado = String(negocio?.state || '').trim().toUpperCase();
 
   return [
     rua && numero ? `${rua}, ${numero}` : rua,
@@ -48,7 +48,7 @@ function BusinessAvatar({ negocio }) {
   return (
     <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-700 bg-dark-200 shrink-0 flex items-center justify-center">
       {logoUrl ? (
-        <img src={logoUrl} alt={negocio?.nome || 'Negócio'} className="w-full h-full rounded-full object-cover" />
+        <img src={logoUrl} alt={negocio?.name || 'Negócio'} className="w-full h-full rounded-full object-cover" />
       ) : (
         <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-yellow-600 flex items-center justify-center">
           <ProfessionalIcon className="w-6 h-6 text-black" />
@@ -62,9 +62,9 @@ function BusinessInfo({ negocio }) {
   const local = formatBusinessAddress(negocio);
   return (
     <div className="flex-1 min-w-0">
-      <div className="font-normal text-white truncate">{negocio?.nome}</div>
-      {negocio?.tipo_negocio && (
-        <div className="text-xs text-gray-500 uppercase mt-0.5">{negocio.tipo_negocio}</div>
+      <div className="font-normal text-white truncate">{negocio?.name}</div>
+      {negocio?.business_type && (
+        <div className="text-xs text-gray-500 uppercase mt-0.5">{negocio.business_type}</div>
       )}
       {local && (
         <div className="text-xs text-gray-600 uppercase mt-0.5">{local}</div>
@@ -158,12 +158,12 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   }, [searchOpen]);
 
   const selectBusiness = (row) => {
-    if (!row?.can_open_dashboard || !row?.negocio_id || !user?.id) return;
+    if (!row?.can_open_dashboard || !row?.business_id || !user?.id) return;
     try {
-      window.localStorage?.setItem(`comvaga:last-partner-negocio:${user.id}`, row.negocio_id);
+      window.localStorage?.setItem(`comvaga:last-partner-negocio:${user.id}`, row.business_id);
     } catch {
     }
-    navigate('/dashboard', { state: { negocioId: row.negocio_id } });
+    navigate('/dashboard', { state: { negocioId: row.business_id } });
   };
 
   useEffect(() => {
@@ -217,12 +217,12 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
       || 'Profissional'
     ).trim().replace(/\s+/g, ' ');
 
-    setRequestingId(row.negocio_id);
+    setRequestingId(row.business_id);
     try {
       const { data, error } = await withAuthRetry(
-        () => supabase.rpc('solicitar_acesso_parceiro', {
-          p_negocio_id: row.negocio_id,
-          p_nome: nome,
+        () => supabase.rpc('request_partner_access', {
+          p_business_id: row.business_id,
+          p_name: nome,
         }),
         8000,
         'partner-access-request'
@@ -275,13 +275,13 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
   const renderBusinessRow = (row, { searchResult = false } = {}) => {
     const canOpen = !searchResult && row?.can_open_dashboard;
     const canRequest = searchResult && row?.can_request === true;
-    const unavailable = searchResult && !canRequest && !row.profissional_id;
+    const unavailable = searchResult && !canRequest && !row.professional_id;
     const showAction = canOpen || canRequest;
     const pillLabel = unavailable ? 'INDISPONÍVEL' : normalizeTag(row);
     const pillClass = unavailable ? 'border-gray-500/30 bg-gray-500/10 text-gray-300' : tagClass(row);
     return (
       <div
-        key={`${searchResult ? 'search' : 'link'}:${row.negocio_id}:${row.profissional_id || 'none'}`}
+        key={`${searchResult ? 'search' : 'link'}:${row.business_id}:${row.professional_id || 'none'}`}
         className="w-full bg-dark-100 border border-gray-800 rounded-custom p-4 transition-all text-left"
       >
         <div className="flex items-start gap-4">
@@ -307,12 +307,12 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
             {canRequest && (
               <button
                 type="button"
-                disabled={requestingId === row.negocio_id}
+                disabled={requestingId === row.business_id}
                 onClick={() => requestAccess(row)}
                 className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-primary/30 px-6 text-xs font-normal uppercase text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-60"
               >
                 <Send className="h-3.5 w-3.5" />
-                {requestingId === row.negocio_id ? 'Enviando' : 'Solicitar'}
+                {requestingId === row.business_id ? 'Enviando' : 'Solicitar'}
               </button>
             )}
           </div>

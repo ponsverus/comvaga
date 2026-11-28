@@ -24,7 +24,7 @@ export async function fetchClientePerfil(userId) {
 
 export async function fetchCurrentClienteId() {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_current_cliente_id'),
+    () => supabase.rpc('get_current_client_id'),
     6000,
     'cliente-atual'
   );
@@ -35,11 +35,11 @@ export async function fetchCurrentClienteId() {
 
 export async function fetchAgendamentosCliente({ clienteId, limit, cursor = null }) {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_agendamentos_cliente', {
-      p_cliente_id: clienteId,
+    () => supabase.rpc('get_client_bookings', {
+      p_client_id: clienteId,
       p_limit: limit,
-      p_cursor_data: cursor?.data ?? null,
-      p_cursor_horario: cursor?.horario_inicio ?? null,
+      p_cursor_date: cursor?.data ?? null,
+      p_cursor_start_time: cursor?.horario_inicio ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
     7000,
@@ -47,7 +47,27 @@ export async function fetchAgendamentosCliente({ clienteId, limit, cursor = null
   );
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((row) => ({
+    id: row.id,
+    negocio_id: row.business_id,
+    profissional_id: row.professional_id,
+    entrega_id: row.service_id,
+    cliente_id: row.client_id,
+    data: row.date,
+    horario_inicio: row.start_time,
+    horario_fim: row.end_time,
+    status: row.status,
+    valor_final: row.final_price,
+    created_at: row.created_at,
+    entrega_nome: row.service_name,
+    entrega_valor: row.service_price,
+    entrega_valor_oferta: row.service_offer_price,
+    profissional_nome: row.professional_name,
+    negocio_nome: row.business_name,
+    negocio_slug: row.business_slug,
+    negocio_logo_path: row.business_logo_path,
+    negocio_tipo: row.business_type,
+  }));
 }
 
 export async function fetchClientFavorites({ clientId, limit, cursor = null }) {
@@ -100,7 +120,7 @@ export async function createBookingReview({ bookingId, rating, comment }) {
 
 export async function cancelarAgendamentoCliente(agendamentoId) {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('cancelar_agendamento', { p_agendamento_id: agendamentoId }),
+    () => invokeProtectedAction('cancel_client_booking', { p_appointment_id: agendamentoId }),
     6500,
     'cancelar-agendamento'
   );
@@ -111,7 +131,7 @@ export async function cancelarAgendamentoCliente(agendamentoId) {
 
 export async function excluirContaCliente() {
   const { data, error } = await withAuthRetry(
-    () => invokeProtectedAction('excluir_conta_cliente_seguro'),
+    () => invokeProtectedAction('delete_client_account'),
     6500,
     'excluir-conta'
   );

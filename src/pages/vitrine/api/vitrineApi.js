@@ -2,6 +2,7 @@ import { supabase } from '../../../supabase';
 import { withAuthRetry, withPublicAuthRetry } from '../../../utils/authSession';
 import { invokeProtectedAction } from '../../../utils/protectedAction';
 import { fetchOfficialDatePayload } from '../../../utils/officialDate';
+import { mapPublicBusinessProfile } from '../../../utils/publicBusinessPage';
 
 export { getPublicUrl } from '../../../utils/storage';
 
@@ -20,6 +21,48 @@ export async function fetchOfficialDate(rpcSequence) {
   };
 }
 
+function mapShowcaseAvailabilityRow(row) {
+  return {
+    id: row.id,
+    dia_semana: row.day_of_week,
+    ativo: row.is_active,
+    horario_inicio: row.start_time,
+    horario_fim: row.end_time,
+    pausa_inicio: row.break_start_time,
+    pausa_fim: row.break_end_time,
+  };
+}
+
+function mapShowcaseProfessionalRow(row) {
+  return {
+    id: row.id,
+    negocio_id: row.business_id,
+    nome: row.name,
+    oficio: row.occupation,
+    anos_experiencia: row.years_experience,
+    horarios: Array.isArray(row.availability) ? row.availability.map(mapShowcaseAvailabilityRow) : [],
+    avatar_path: row.avatar_path,
+    status: row.status,
+    status_label: row.status_label,
+    status_key: row.status_key,
+    created_at: row.created_at,
+  };
+}
+
+function mapShowcaseServiceRow(row) {
+  return {
+    id: row.id,
+    negocio_id: row.business_id,
+    profissional_id: row.professional_id,
+    nome: row.name,
+    tempo_minutos: row.duration_minutes,
+    valor: row.price,
+    valor_oferta: row.offer_price,
+    valor_final: row.effective_price,
+    ativo: row.is_active,
+  };
+}
+
 export async function fetchVitrineNegocioBySlug(slug) {
   const { data, error } = await withPublicAuthRetry(
     () => supabase.rpc('get_public_business_profile', { p_slug: slug }),
@@ -27,22 +70,22 @@ export async function fetchVitrineNegocioBySlug(slug) {
     'negocio'
   );
   if (error) throw error;
-  return data || null;
+  return mapPublicBusinessProfile(data);
 }
 
 export async function fetchVitrineProfissionais(negocioId) {
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_profissionais_vitrine', { p_negocio_id: negocioId }),
+    () => supabase.rpc('get_showcase_professionals', { p_business_id: negocioId }),
     7000,
     'profissionais'
   );
   if (error) throw error;
-  return data || [];
+  return (data || []).map(mapShowcaseProfessionalRow);
 }
 
 export async function fetchBusinessBookingAvailability(negocioId) {
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_business_booking_availability', { p_negocio_id: negocioId }),
+    () => supabase.rpc('get_business_booking_availability', { p_business_id: negocioId }),
     7000,
     'booking-availability'
   );
@@ -50,22 +93,14 @@ export async function fetchBusinessBookingAvailability(negocioId) {
   return data || null;
 }
 
-function normalizeEntregaPageRows(rows) {
-  return (rows || []).map((row) => {
-    const normalized = { ...row };
-    delete normalized.total_count;
-    return normalized;
-  });
-}
-
 export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, cursor = null } = {}) {
   if (!profissionalId) return { rows: [], totalCount: 0 };
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_entregas_vitrine_paginadas', {
-      p_profissional_id: profissionalId,
+    () => supabase.rpc('get_showcase_services_page', {
+      p_professional_id: profissionalId,
       p_limit: Math.max(1, Number(limit) || 1),
-      p_cursor_valor_final: cursor?.valor_final ?? null,
-      p_cursor_nome: cursor?.nome ?? null,
+      p_cursor_effective_price: cursor?.valor_final ?? null,
+      p_cursor_name: cursor?.nome ?? null,
       p_cursor_id: cursor?.id ?? null,
     }),
     7000,
@@ -73,7 +108,7 @@ export async function fetchVitrineEntregasPage(profissionalId, { limit = 4, curs
   );
   if (error) throw error;
   return {
-    rows: normalizeEntregaPageRows(data),
+    rows: (data || []).map(mapShowcaseServiceRow),
     totalCount: Number(data?.[0]?.total_count || 0),
   };
 }
@@ -83,16 +118,16 @@ export async function fetchVitrineEntregasFirstPages(negocioId, profissionalIds,
   if (!negocioId || !ids.length) return [];
 
   const { data, error } = await withPublicAuthRetry(
-    () => supabase.rpc('get_entregas_vitrine_primeiras_paginas', {
-      p_negocio_id: negocioId,
-      p_profissional_ids: ids,
+    () => supabase.rpc('get_showcase_services_initial_pages', {
+      p_business_id: negocioId,
+      p_professional_ids: ids,
       p_limit: Math.max(1, Number(limit) || 1),
     }),
     7000,
     'entregas-vitrine-first-pages'
   );
   if (error) throw error;
-  return data || [];
+  return (data || []).map(mapShowcaseServiceRow);
 }
 
 export async function fetchVitrineEntregaById({ entregaId, profissionalId }) {
@@ -194,7 +229,7 @@ export async function fetchBusinessFavorite({ clientId, businessId }) {
 
 export async function fetchCurrentClienteId() {
   const { data, error } = await withAuthRetry(
-    () => supabase.rpc('get_current_cliente_id'),
+    () => supabase.rpc('get_current_client_id'),
     6000,
     'cliente-atual'
   );

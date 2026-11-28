@@ -5,7 +5,7 @@ import { isIP } from 'node:net';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import PublicBusinessPreview from '../src/components/PublicBusinessPreview.js';
-import { PUBLIC_BUSINESS_DATA_ID, publicBusinessSnapshot } from '../src/utils/publicBusinessPage.js';
+import { PUBLIC_BUSINESS_DATA_ID, mapPublicBusinessProfile, publicBusinessSnapshot } from '../src/utils/publicBusinessPage.js';
 import { BUSINESS_SCHEMA_ID, buildBusinessStructuredData } from '../src/utils/businessSeo.js';
 import { serializePublicJson } from '../src/utils/structuredData.js';
 import { NOT_FOUND_TITLE } from '../src/utils/notFoundSeo.js';
@@ -141,7 +141,7 @@ export async function serveVitrine(req, res, options = {}) {
   }
   try {
     const rpc = options.rpc || createPublicRpc(options.env || process.env, fetch, req);
-    const negocio = await rpc('get_public_business_profile', { p_slug: slug });
+    const negocio = mapPublicBusinessProfile(await rpc('get_public_business_profile', { p_slug: slug }));
     if (!negocio) {
       await serveNotFound(req, res, options);
       return;

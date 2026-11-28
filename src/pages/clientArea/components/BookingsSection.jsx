@@ -264,7 +264,7 @@ export default function BookingsSection({
     Promise.all(types.map((type) => {
       if (!typeRequests.current.has(type)) {
         typeRequests.current.set(type, withAuthRetry(
-          () => supabase.rpc('tipo_negocio_grupo', { p_tipo: type }),
+          () => supabase.rpc('business_type_group', { p_type: type }),
           6000,
           'grupo-do-negocio'
         )

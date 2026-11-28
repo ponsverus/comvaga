@@ -164,7 +164,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setDeletingAccount(true);
       const { error } = await withAuthRetry(
-        () => invokeProtectedAction('excluir_conta_profissional_seguro'),
+        () => invokeProtectedAction('delete_professional_account'),
         8000,
         'professional-account-delete'
       );

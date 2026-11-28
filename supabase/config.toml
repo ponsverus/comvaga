@@ -28,13 +28,13 @@ verify_jwt = true
 [functions.asaas-recover-subscription-payment]
 verify_jwt = true
 
-[functions.protected-agendamentos]
+[functions.protected-bookings]
 verify_jwt = true
 
-[functions.protected-depoimentos]
+[functions.protected-reviews]
 verify_jwt = true
 
-[functions.protected-cadastros]
+[functions.protected-management]
 verify_jwt = true
 
 [functions.asaas-reactivate-subscription]

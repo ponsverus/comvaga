@@ -231,7 +231,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
         return;
       }
 
-      if (!data?.negocio_id) {
+      if (!data?.business_id) {
         console.error('complete_owner_business_onboarding incomplete payload:', data);
         showMessage('signupProfessional.business_create_error');
         return;
@@ -241,7 +241,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
         || getSelectedPlanIntent()
         || DEFAULT_PLAN_CODE;
       try {
-        await setBusinessPlan(data.negocio_id, selectedPlanCode, 'resume-set-plan');
+        await setBusinessPlan(data.business_id, selectedPlanCode, 'resume-set-plan');
         clearSelectedPlanIntent();
       } catch (planError) {
         console.warn('set_business_plan error:', planError);
@@ -255,7 +255,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
       }
 
       onLogin(user, profile.type, profile.onboardingStatus, profile.accessState, profile.professionalRole);
-      navigate('/dashboard', { state: { negocioId: data.negocio_id } });
+      navigate('/dashboard', { state: { negocioId: data.business_id } });
     } catch (err) {
       console.error('SignupProfessionalResume error:', err);
       showMessage('signupProfessional.resume_error');
