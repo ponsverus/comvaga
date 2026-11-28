@@ -43,31 +43,31 @@ export function useBookingConfirmation({
     try {
       const isMultiplo = entregaIds.length > 1;
       const bookingRequest = () => isMultiplo
-        ? invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamentos_multiplos_assistido' : 'rpc_criar_agendamentos_multiplos', {
-            ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
-            p_negocio_id: negocioId,
-            p_profissional_id: profissional.id,
-            p_entrega_ids: entregaIds,
-            p_data: selectedDay,
-            p_horario_inicio: selectedSlot.hora,
+        ? invokeProtectedAction(assistedBooking ? 'create_multiple_assisted_bookings' : 'create_multiple_bookings', {
+            ...(assistedBooking ? { p_client_id: clienteIdAssistido } : {}),
+            p_business_id: negocioId,
+            p_professional_id: profissional.id,
+            p_service_ids: entregaIds,
+            p_date: selectedDay,
+            p_start_time: selectedSlot.hora,
           })
-        : invokeProtectedAction(assistedBooking ? 'rpc_criar_agendamento_assistido' : 'rpc_criar_agendamento', {
-            ...(assistedBooking ? { p_cliente_id: clienteIdAssistido } : {}),
-            p_negocio_id: negocioId,
-            p_profissional_id: profissional.id,
-            p_entrega_id: entregaIds[0],
-            p_data: selectedDay,
-            p_horario_inicio: selectedSlot.hora,
+        : invokeProtectedAction(assistedBooking ? 'create_assisted_booking' : 'create_booking', {
+            ...(assistedBooking ? { p_client_id: clienteIdAssistido } : {}),
+            p_business_id: negocioId,
+            p_professional_id: profissional.id,
+            p_service_id: entregaIds[0],
+            p_date: selectedDay,
+            p_start_time: selectedSlot.hora,
           });
       const { data, error } = await withAuthRetry(bookingRequest, 8000, 'booking-confirm');
       if (error) throw error;
 
       const rows = Array.isArray(data) ? data : (data ? [data] : []);
-      const primeiroResultado = rows[0];
-      const ultimoResultado = rows[rows.length - 1];
+      const firstResult = rows[0];
+      const lastResult = rows[rows.length - 1];
       onConfirm?.({
-        inicio: primeiroResultado?.inicio ?? selectedSlot.hora,
-        fim: ultimoResultado?.fim ?? null,
+        inicio: firstResult?.start_time ?? selectedSlot.hora,
+        fim: lastResult?.end_time ?? null,
         label: selectedSlot.hora,
         dataISO: selectedDay,
       });
