@@ -19,8 +19,8 @@ const base = {
 };
 
 const slots = (hora = '09:00') => ({
-  label: hora, is_heat: false, is_raio: false,
-  horario_inicio: hora, horario_fim: '09:30',
+  label: hora, is_heat: false, is_lightning: false,
+  start_time: hora, end_time: '09:30',
 });
 
 function deferred() {
@@ -33,7 +33,7 @@ function deferred() {
 beforeEach(() => {
   vi.clearAllMocks();
   supabase.rpc.mockResolvedValue({ data: [slots()], error: null });
-  invokeProtectedAction.mockResolvedValue({ data: [{ inicio: '09:00', fim: '09:30' }], error: null });
+  invokeProtectedAction.mockResolvedValue({ data: [{ start_time: '09:00', end_time: '09:30' }], error: null });
 });
 
 describe('Calendário de agendamento com backend totalmente simulado', () => {
@@ -87,7 +87,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
     expect(onClose).not.toHaveBeenCalled();
 
-    await act(async () => { pending.resolve({ data: [{ inicio: '09:00', fim: '09:30' }], error: null }); });
+    await act(async () => { pending.resolve({ data: [{ start_time: '09:00', end_time: '09:30' }], error: null }); });
     expect(closeButton).toHaveAttribute('aria-disabled', 'false');
   });
 
@@ -100,8 +100,8 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
   it('consulta horários simulados após escolher uma data', async () => {
     render(<BookingCalendar {...base} />);
     fireEvent.click(screen.getByRole('button', { name: /16 de novembro de 2026/i }));
-    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('rpc_get_slots_v4', {
-      p_profissional_id: 'p1', p_dia: '2026-11-16', p_entrega_min: 30, p_margem_min: 5, p_modo: 'todos',
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('get_booking_slots', {
+      p_professional_id: 'p1', p_date: '2026-11-16', p_service_minutes: 30, p_margin_minutes: 5, p_mode: 'all',
     }));
     expect(await screen.findByRole('button', { name: /09:00/ })).toBeInTheDocument();
   });
@@ -112,8 +112,8 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     fireEvent.click(screen.getByRole('button', { name: /16 de novembro de 2026/i }));
     fireEvent.click(await screen.findByRole('button', { name: /09:00/ }));
     fireEvent.click(screen.getByRole('button', { name: /confirmar agendamento/i }));
-    await waitFor(() => expect(invokeProtectedAction).toHaveBeenCalledWith('rpc_criar_agendamento', {
-      p_negocio_id: 'n1', p_profissional_id: 'p1', p_entrega_id: 'e1', p_data: '2026-11-16', p_horario_inicio: '09:00',
+    await waitFor(() => expect(invokeProtectedAction).toHaveBeenCalledWith('create_booking', {
+      p_business_id: 'n1', p_professional_id: 'p1', p_service_id: 'e1', p_date: '2026-11-16', p_start_time: '09:00',
     }));
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({ inicio: '09:00', fim: '09:30', label: '09:00', dataISO: '2026-11-16' }));
   });
@@ -198,7 +198,7 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
   it('confirma agendamento assistido com vários trabalhos e usa o fim do último', async () => {
     const onConfirm = vi.fn();
     invokeProtectedAction.mockResolvedValue({
-      data: [{ inicio: '09:00', fim: '09:30' }, { inicio: '09:30', fim: '10:00' }], error: null,
+      data: [{ start_time: '09:00', end_time: '09:30' }, { start_time: '09:30', end_time: '10:00' }], error: null,
     });
     render(<BookingCalendar
       {...base}
@@ -208,9 +208,9 @@ describe('Calendário de agendamento com backend totalmente simulado', () => {
     fireEvent.click(screen.getByRole('button', { name: /16 de novembro de 2026/i }));
     fireEvent.click(await screen.findByRole('button', { name: /09:00/ }));
     fireEvent.click(screen.getByRole('button', { name: /confirmar agendamento/i }));
-    await waitFor(() => expect(invokeProtectedAction).toHaveBeenCalledWith('rpc_criar_agendamentos_multiplos_assistido', {
-      p_cliente_id: 'cliente-assistido', p_negocio_id: 'n1', p_profissional_id: 'p1',
-      p_entrega_ids: ['e1', 'e2'], p_data: '2026-11-16', p_horario_inicio: '09:00',
+    await waitFor(() => expect(invokeProtectedAction).toHaveBeenCalledWith('create_multiple_assisted_bookings', {
+      p_client_id: 'cliente-assistido', p_business_id: 'n1', p_professional_id: 'p1',
+      p_service_ids: ['e1', 'e2'], p_date: '2026-11-16', p_start_time: '09:00',
     }));
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({
       inicio: '09:00', fim: '10:00', label: '09:00', dataISO: '2026-11-16',
