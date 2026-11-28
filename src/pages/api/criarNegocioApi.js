@@ -21,7 +21,7 @@ export async function createOwnerBusiness({ nomeNegocio, slug, telefone, tipoNeg
 export async function fetchOwnerResumeData(userId) {
   const [userResult, negociosResult] = await Promise.all([
     withAuthRetry(
-      () => supabase.from('users').select('nome').eq('id', userId).maybeSingle(),
+      () => supabase.from('users').select('name').eq('id', userId).maybeSingle(),
       6000,
       'resume-user-profile'
     ),
