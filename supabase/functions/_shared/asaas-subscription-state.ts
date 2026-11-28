@@ -79,7 +79,7 @@ export async function reconcileAsaasSubscriptionState(
   const { data: current, error: currentError } = await admin
     .from('business_subscriptions')
     .select('provider, provider_subscription_id, provider_customer_id, provider_status, provider_status_source, provider_status_revision')
-    .eq('negocio_id', negocioId)
+    .eq('business_id', negocioId)
     .maybeSingle();
   if (currentError) throw currentError;
   if (String(current?.provider || '').toLowerCase() !== 'asaas'
