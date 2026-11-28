@@ -18,7 +18,7 @@ export function useBusinessGroup(tipoNegocio, publicGroup = null, businessId = n
     setResolution((previous) => pendingBusinessGroup(context, previous));
     resolveBusinessGroup(context, async (type) => {
       const { data, error } = await withPublicAuthRetry(
-        () => supabase.rpc('tipo_negocio_grupo', { p_tipo: type }),
+        () => supabase.rpc('business_type_group', { p_type: type }),
         6000,
         'grupo-do-negocio'
       );
@@ -30,7 +30,7 @@ export function useBusinessGroup(tipoNegocio, publicGroup = null, businessId = n
       })
       .catch((error) => {
         if (!active) return;
-        console.warn('Falha ao resolver tipo_negocio_grupo.', error);
+        console.warn('Falha ao resolver business_type_group.', error);
         setResolution((previous) => ({ ...pendingBusinessGroup(context, previous), status: 'error', error }));
       });
 
