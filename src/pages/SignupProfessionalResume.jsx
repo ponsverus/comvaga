@@ -95,7 +95,7 @@ export default function SignupProfessionalResume({ user, onLogin }) {
         const initialContext = contexts[0] || null;
         const local = negocioLocalFields(initialContext?.negocio);
 
-        setProfileName(onlyTrim(userData?.nome || user?.user_metadata?.nome || ''));
+        setProfileName(onlyTrim(userData?.name || user?.user_metadata?.nome || ''));
         setResumeContexts(contexts);
         setSelectedNegocioId(initialContext?.negocio?.id || '');
         setFormData({
