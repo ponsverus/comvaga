@@ -58,12 +58,12 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
     try {
       const tempoMinutos = Number(entrega.tempo_minutos);
       const { data, error } = await withAuthRetry(
-        () => supabase.rpc('rpc_get_slots_v4', {
-          p_profissional_id: profissional.id,
-          p_dia: dayISO,
-          p_entrega_min: tempoMinutos,
-          p_margem_min: 5,
-          p_modo: 'todos',
+        () => supabase.rpc('get_booking_slots', {
+          p_professional_id: profissional.id,
+          p_date: dayISO,
+          p_service_minutes: tempoMinutos,
+          p_margin_minutes: 5,
+          p_mode: 'all',
         }),
         7000,
         'booking-slots'
@@ -74,9 +74,9 @@ export function useBookingSlots({ profissional, entrega, todayISO, todayValid, o
       const list = (data || []).map((slot) => ({
         hora: String(slot.label || '').slice(0, 5),
         isHeat: !!slot.is_heat,
-        isRaio: !!slot.is_raio,
-        horario_inicio: slot.horario_inicio || null,
-        horario_fim: slot.horario_fim || null,
+        isRaio: !!slot.is_lightning,
+        horario_inicio: slot.start_time || null,
+        horario_fim: slot.end_time || null,
       }));
       const rank = (slot) => slot.isRaio ? 3 : slot.isHeat ? 2 : 1;
       const uniq = new Map();
