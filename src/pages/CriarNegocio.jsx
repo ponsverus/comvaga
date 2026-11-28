@@ -147,7 +147,7 @@ export default function CriarNegocio({ user }) {
         throw error;
       }
 
-      if (!data?.negocio_id) throw new Error('create_owner_business payload incompleto');
+      if (!data?.business_id) throw new Error('create_owner_business payload incompleto');
 
       await sleep(300);
       navigate('/selecionar-negocio');
