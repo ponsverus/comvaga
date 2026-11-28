@@ -35,7 +35,7 @@ export function useDashboardProfessionalMutations({
     try {
       setSubmittingAdminProf(true);
       const userData = await fetchUserNome(userId);
-      const name = String(userData?.nome || '').trim() || 'PROFISSIONAL';
+      const name = String(userData?.name || '').trim() || 'PROFISSIONAL';
       await insertProfessional({
         business_id: negocio.id,
         user_id: userId,

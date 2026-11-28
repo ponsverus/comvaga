@@ -180,7 +180,7 @@ export async function salvarAvatarCliente({ userId, path, file }) {
 
 export async function salvarNomeCliente(userId, nome) {
   const { error } = await withAuthRetry(
-    () => supabase.from('users').update({ nome }).eq('id', userId),
+    () => supabase.from('users').update({ name: nome }).eq('id', userId),
     6000,
     'cliente-nome-update'
   );

@@ -105,11 +105,11 @@ export default function SelecionarNegocioParceiro({ user, onLogout }) {
     if (!user?.id) return;
     const { data } = await withAuthRetry(() => supabase
       .from('users')
-      .select('nome')
+      .select('name')
       .eq('id', user.id)
       .maybeSingle(), 6000, 'partner-profile-name');
 
-    const nome = String(data?.nome || '').trim();
+    const nome = String(data?.name || '').trim();
     if (nome && nome.toLowerCase() !== 'sem nome') setNomeSolicitante(nome);
   }, [user?.id, user?.user_metadata?.nome]);
 

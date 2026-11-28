@@ -54,14 +54,14 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
         const { data, error } = await withAuthRetry(
           () => supabase
             .from('users')
-            .select('nome')
+            .select('name')
             .eq('id', user.id)
             .maybeSingle(),
           6000,
           'professional-account-name'
         );
         if (error) throw error;
-        if (active) setNomePerfil(String(data?.nome || fallback).trim());
+        if (active) setNomePerfil(String(data?.name || fallback).trim());
       } catch {
         if (active) setNomePerfil(fallback);
       }
@@ -79,7 +79,7 @@ export default function ProfessionalAccount({ user, onLogout, professionalRole =
     try {
       setSavingPerfil(true);
       const { error: updErr } = await withAuthRetry(
-        () => supabase.from('users').update({ nome }).eq('id', user.id),
+        () => supabase.from('users').update({ name: nome }).eq('id', user.id),
         6000,
         'professional-account-name-update'
       );

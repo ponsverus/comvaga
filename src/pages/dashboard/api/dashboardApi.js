@@ -560,7 +560,7 @@ export async function fetchUserNome(userId) {
   const { data, error } = await withAuthRetry(
     () => supabase
       .from('users')
-      .select('nome')
+      .select('name')
       .eq('id', userId)
       .maybeSingle(),
     6000,
