@@ -1,23 +1,23 @@
 import { supabase } from '../supabase';
 
 const domains = {
-  rpc_criar_agendamento: 'agendamentos',
-  rpc_criar_agendamentos_multiplos: 'agendamentos',
-  rpc_criar_agendamento_assistido: 'agendamentos',
-  rpc_criar_agendamentos_multiplos_assistido: 'agendamentos',
-  cancelar_agendamento: 'agendamentos',
-  cancelar_agendamento_profissional: 'agendamentos',
-  concluir_agendamento_profissional: 'agendamentos',
+  create_booking: 'bookings',
+  create_multiple_bookings: 'bookings',
+  create_assisted_booking: 'bookings',
+  create_multiple_assisted_bookings: 'bookings',
+  cancel_client_booking: 'bookings',
+  cancel_professional_booking: 'bookings',
+  complete_professional_booking: 'bookings',
   create_business_review: 'reviews',
   create_professional_review: 'reviews',
-  aprovar_parceiro_profissional: 'cadastros',
-  ativar_entrega_segura: 'cadastros',
-  inativar_entrega_segura: 'cadastros',
-  excluir_entrega_segura: 'cadastros',
-  excluir_profissional_parceiro_seguro: 'cadastros',
-  excluir_negocio_seguro: 'cadastros',
-  excluir_conta_cliente_seguro: 'cadastros',
-  excluir_conta_profissional_seguro: 'cadastros',
+  approve_partner_professional: 'management',
+  activate_service: 'management',
+  deactivate_service: 'management',
+  delete_service: 'management',
+  delete_partner_professional: 'management',
+  delete_business: 'management',
+  delete_client_account: 'management',
+  delete_professional_account: 'management',
 };
 
 export async function invokeProtectedAction(action, params = {}) {
