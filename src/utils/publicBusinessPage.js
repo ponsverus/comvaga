@@ -2,6 +2,63 @@ import { VALID_BUSINESS_SLUG, DEFAULT_SEO_IMAGE } from './seoMetadata.js';
 
 export const PUBLIC_BUSINESS_DATA_ID = 'comvaga-public-business';
 
+export function mapPublicBusinessProfile(row) {
+  if (!row || typeof row !== 'object') return null;
+  if ('nome' in row && !('name' in row)) return row;
+  return {
+    id: row.id,
+    nome: row.name,
+    slug: row.slug,
+    sobre: row.about,
+    telefone: row.phone,
+    tipo_negocio: row.business_type,
+    instagram: row.instagram,
+    facebook: row.facebook,
+    logo_path: row.logo_path,
+    tema: row.theme,
+    anuncio: row.announcement,
+    local: row.formatted_address,
+    cidade: row.city,
+    estado: row.state,
+    rua: row.street,
+    numero: row.number,
+    complemento: row.complement,
+    bairro: row.neighborhood,
+    cep: row.zip_code,
+    business_group: row.business_group,
+    meta_title: row.meta_title,
+    meta_description: row.meta_description,
+    preview_today_dow: row.preview_today_dow,
+    preview_rating: row.preview_rating,
+    professional_ratings: row.professional_ratings,
+    preview_professionals: Array.isArray(row.preview_professionals)
+      ? row.preview_professionals.map((prof) => ({
+          id: prof.id,
+          nome: prof.name,
+          oficio: prof.occupation,
+          anos_experiencia: prof.years_experience,
+          avatar_path: prof.avatar_path,
+          status_key: prof.status_key,
+          horarios: Array.isArray(prof.availability)
+            ? prof.availability.map((item) => ({
+                dia_semana: item.day_of_week,
+                ativo: item.is_active,
+                horario_inicio: item.start_time,
+                horario_fim: item.end_time,
+                pausa_inicio: item.break_start_time,
+                pausa_fim: item.break_end_time,
+              }))
+            : [],
+          total_entregas: prof.total_services,
+          rating: prof.rating,
+        }))
+      : [],
+    seo_services: Array.isArray(row.seo_services)
+      ? row.seo_services.map((srv) => ({ nome: srv.name, ativo: srv.is_active }))
+      : [],
+  };
+}
+
 const TEXT_FIELDS = [
   'id', 'nome', 'slug', 'sobre', 'telefone', 'tipo_negocio', 'instagram', 'facebook',
   'logo_path', 'tema', 'anuncio', 'local', 'cep', 'rua', 'numero', 'complemento',
