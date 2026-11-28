@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     const { data: sessions, error: sessionError } = await admin
       .from('billing_checkout_sessions')
       .select('id, status, provider, provider_checkout_id, action, plan_code, expires_at, updated_at')
-      .eq('negocio_id', negocioId)
+      .eq('business_id', negocioId)
       .in('action', ['subscription', 'upgrade_proration'])
       .in('status', ['active', 'creating', 'unknown'])
       .gt('expires_at', now);
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       const { data: paidSession, error: paidError } = await admin
         .from('billing_checkout_sessions')
         .select('id')
-        .eq('negocio_id', negocioId)
+        .eq('business_id', negocioId)
         .in('action', ['subscription', 'upgrade_proration'])
         .eq('status', 'paid')
         .gt('expires_at', now)
