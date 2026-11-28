@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     const { data: subscription, error: subscriptionError } = await admin
       .from('business_subscriptions')
       .select('provider, provider_subscription_id')
-      .eq('negocio_id', negocioId)
+      .eq('business_id', negocioId)
       .maybeSingle();
     if (subscriptionError) throw subscriptionError;
     if (
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const { data: historicalSessions, error: historicalError } = await admin
       .from('billing_checkout_sessions')
       .select('origin_provider_subscription_id')
-      .eq('negocio_id', negocioId)
+      .eq('business_id', negocioId)
       .eq('action', 'subscription')
       .eq('status', 'paid')
       .eq('origin_provider_status', 'EXPIRED')
