@@ -46,37 +46,37 @@ Deno.serve(async (req) => {
     if ((!checkoutSessionId || !negocioId) && providerCheckoutId) {
       const { data: session, error: sessionError } = await admin
         .from('billing_checkout_sessions')
-        .select('id, negocio_id')
+        .select('id, business_id')
         .eq('provider', ASAAS_PROVIDER)
         .eq('provider_checkout_id', providerCheckoutId)
         .maybeSingle();
       if (sessionError) throw sessionError;
       checkoutSessionId ||= session?.id || null;
-      negocioId ||= session?.negocio_id || null;
+      negocioId ||= session?.business_id || null;
     }
 
     if (!negocioId && subscriptionId) {
       const { data: subscription, error: subscriptionError } = await admin
         .from('business_subscriptions')
-        .select('negocio_id')
+        .select('business_id')
         .eq('provider', ASAAS_PROVIDER)
         .eq('provider_subscription_id', subscriptionId)
         .limit(1)
         .maybeSingle();
       if (subscriptionError) throw subscriptionError;
-      negocioId = subscription?.negocio_id || null;
+      negocioId = subscription?.business_id || null;
     }
 
     if (!negocioId && customerId) {
       const { data: subscription, error: customerError } = await admin
         .from('business_subscriptions')
-        .select('negocio_id')
+        .select('business_id')
         .eq('provider', ASAAS_PROVIDER)
         .eq('provider_customer_id', customerId)
         .limit(1)
         .maybeSingle();
       if (customerError) throw customerError;
-      negocioId = subscription?.negocio_id || null;
+      negocioId = subscription?.business_id || null;
     }
 
     const { data: eventId, error: recordError } = await admin.rpc('record_gateway_event', {

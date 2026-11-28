@@ -37,7 +37,7 @@ type Occurrence = {
   claim_token: string;
   email_idempotency_key: string;
   rule_code: string;
-  negocio_id: string | null;
+  business_id: string | null;
   evidence: Record<string, unknown>;
   opened_at: string;
 };
@@ -55,7 +55,7 @@ function emailText(item: Occurrence): string {
     "Comvaga - salvaguarda para conferência humana",
     "",
     "Motivo: " + (RULE_LABELS[item.rule_code] || item.rule_code),
-    "Negócio: " + (item.negocio_id || "inaplicável"),
+    "Negócio: " + (item.business_id || "inaplicável"),
     "Ocorrência: " + item.occurrence_id,
     "Detectado em: " + item.opened_at,
     ...(SAFE_ACTIONS[item.rule_code] ? ["Medida segura: " + SAFE_ACTIONS[item.rule_code]] : []),

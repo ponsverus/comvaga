@@ -138,18 +138,18 @@ async function runOverdueSubscriptionSuspension(admin: ReturnType<typeof createA
   while (true) {
     const { data: subscriptions, error } = await admin
       .from('business_subscriptions')
-      .select('negocio_id, provider_subscription_id, provider_status, provider_sync_status, reactivation_request_id, cancel_at, canceled_at')
+      .select('business_id, provider_subscription_id, provider_status, provider_sync_status, reactivation_request_id, cancel_at, canceled_at')
       .eq('provider', 'asaas')
       .not('provider_subscription_id', 'is', null)
       .in('provider_status', ['ACTIVE', 'INACTIVE'])
-      .order('negocio_id', { ascending: true })
+      .order('business_id', { ascending: true })
       .range(offset, offset + pageSize - 1);
     if (error) throw error;
     if (!subscriptions?.length) break;
 
     for (const subscription of subscriptions) {
       summary.inspected += 1;
-      const negocioId = String(subscription.negocio_id || '');
+      const negocioId = String(subscription.business_id || '');
       const subscriptionId = String(subscription.provider_subscription_id || '');
       const localProviderStatus = String(subscription.provider_status || '').toUpperCase();
       if (!negocioId || !subscriptionId || subscription.provider_sync_status !== 'synced'
@@ -242,7 +242,7 @@ async function reconcilePendingOwnerBillingActions(admin: ReturnType<typeof crea
   const summary = { checked: 0, finalized: 0, released: 0, pending: 0 };
   const cutoff = new Date(Date.now() - 2 * 60_000).toISOString();
   const { data: actions, error } = await admin.from('business_subscriptions')
-    .select('negocio_id, provider_subscription_id, provider_customer_id, billing_action_kind, billing_action_request_id, billing_action_started_at, billing_action_target_plan_code')
+    .select('business_id, provider_subscription_id, provider_customer_id, billing_action_kind, billing_action_request_id, billing_action_started_at, billing_action_target_plan_code')
     .not('billing_action_kind', 'is', null)
     .lt('billing_action_started_at', cutoff)
     .order('billing_action_started_at', { ascending: true })
@@ -253,7 +253,7 @@ async function reconcilePendingOwnerBillingActions(admin: ReturnType<typeof crea
     summary.checked += 1;
     const monitorRequestId = String(action.billing_action_request_id || '');
     try {
-      const negocioId = String(action.negocio_id);
+      const negocioId = String(action.business_id);
       const subscriptionId = String(action.provider_subscription_id || '');
       const requestId = String(action.billing_action_request_id || '');
       if (!requestId) throw new Error('pending_billing_action_identity_missing');
@@ -349,11 +349,11 @@ async function reconcilePendingOwnerBillingActions(admin: ReturnType<typeof crea
       else summary.pending += 1;
     } catch (actionError) {
       if (action.billing_action_kind === 'cancel' && monitorRequestId) {
-        await recordVerificationFailure(admin, 'cancel', String(action.negocio_id), monitorRequestId,
+        await recordVerificationFailure(admin, 'cancel', String(action.business_id), monitorRequestId,
           actionError instanceof AsaasObservationUnavailable ? 'provider_unavailable' : 'local_reconciliation_failed', actionError);
       }
       summary.pending += 1;
-      console.error('owner billing action reconciliation pending:', action.negocio_id, actionError);
+      console.error('owner billing action reconciliation pending:', action.business_id, actionError);
     }
   }
   return summary;
@@ -362,7 +362,7 @@ async function reconcilePendingOwnerBillingActions(admin: ReturnType<typeof crea
 async function reconcilePaidUpgradeCheckouts(admin: ReturnType<typeof createAdminClient>) {
   const summary = { checked: 0, queued: 0, pending: 0 };
   const { data: sessions, error } = await admin.from('billing_checkout_sessions')
-    .select('id, negocio_id, subscription_id, provider_checkout_id, external_reference, status, upgrade_reconcile_checked_at')
+    .select('id, business_id, subscription_id, provider_checkout_id, external_reference, status, upgrade_reconcile_checked_at')
     .eq('action', 'upgrade_proration')
     .is('upgrade_applied_at', null)
     .not('provider_checkout_id', 'is', null)
@@ -401,7 +401,7 @@ async function reconcilePaidUpgradeCheckouts(admin: ReturnType<typeof createAdmi
       }
       const providerEventId = `payment_reconcile:${payment.id}`;
       const { error: eventError } = await admin.from('billing_events').insert({
-        negocio_id: session.negocio_id,
+        business_id: session.business_id,
         subscription_id: session.subscription_id,
         provider: 'asaas',
         provider_event_id: providerEventId,
@@ -446,7 +446,7 @@ function dateInSaoPaulo(value: string): string {
 async function reconcileDuePlanDowngrades(admin: ReturnType<typeof createAdminClient>) {
   const summary = { checked: 0, applied: 0, deferred: 0, pending: 0, failed: 0 };
   const { data: subscriptions, error } = await admin.from('business_subscriptions')
-    .select('id, negocio_id, provider_subscription_id, pending_plan_effective_at')
+    .select('id, business_id, provider_subscription_id, pending_plan_effective_at')
     .eq('provider', 'asaas')
     .eq('pending_plan_change_type', 'downgrade')
     .not('pending_plan_effective_at', 'is', null)
@@ -466,7 +466,7 @@ async function reconcileDuePlanDowngrades(admin: ReturnType<typeof createAdminCl
       const dueDate = dateInSaoPaulo(String(subscription.pending_plan_effective_at));
       const provider = await readAsaasSubscriptionDetails(subscriptionId);
       const charges = await listAsaasSubscriptionCharges(subscriptionId, 'worker');
-      await reconcileAsaasSubscriptionCharges(admin, subscription.negocio_id, subscriptionId, charges);
+      await reconcileAsaasSubscriptionCharges(admin, subscription.business_id, subscriptionId, charges);
       const matching = charges.filter((charge) => charge.dueDate === dueDate && charge.status !== 'DELETED');
       if (matching.length !== 1) {
         summary.pending += 1;
@@ -503,7 +503,7 @@ async function reconcileDuePlanDowngrades(admin: ReturnType<typeof createAdminCl
       else summary.pending += 1;
     } catch (error) {
       summary.failed += 1;
-      console.error('Due Asaas downgrade reconciliation failed:', subscription.negocio_id, error);
+      console.error('Due Asaas downgrade reconciliation failed:', subscription.business_id, error);
     }
   }
   return summary;
@@ -640,7 +640,7 @@ Deno.serve(async (req) => {
   const staleBefore = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
   const { data: pendingReactivations, error: pendingReactivationsError } = await admin
     .from('business_subscriptions')
-    .select('negocio_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
+    .select('business_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
     .eq('provider', 'asaas')
     .not('reactivation_request_id', 'is', null)
     .order('reactivation_requested_at', { ascending: true })
@@ -649,7 +649,7 @@ Deno.serve(async (req) => {
   const { data: unconfirmedSubscriptions, error: unconfirmedError } = unconfirmedLimit > 0
     ? await admin
       .from('business_subscriptions')
-      .select('negocio_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
+      .select('business_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
       .eq('provider', 'asaas')
       .not('provider_subscription_id', 'is', null)
       .is('provider_status', null)
@@ -660,7 +660,7 @@ Deno.serve(async (req) => {
   const { data: staleSubscriptions, error: staleError } = remaining > 0
     ? await admin
       .from('business_subscriptions')
-      .select('negocio_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
+      .select('business_id, provider_subscription_id, reactivation_request_id, reactivation_requested_at')
       .eq('provider', 'asaas')
       .not('provider_subscription_id', 'is', null)
       .is('reactivation_request_id', null)
@@ -683,13 +683,13 @@ Deno.serve(async (req) => {
       let completedWithoutError = false;
       try {
         const observed = await reconcileAsaasSubscriptionState(
-          admin, subscription.negocio_id, subscription.provider_subscription_id,
+          admin, subscription.business_id, subscription.provider_subscription_id,
         );
         providerConfirmed = true;
         if (observed === 'INACTIVE' && subscription.reactivation_request_id
           && Date.now() - Date.parse(subscription.reactivation_requested_at || '') > 10 * 60 * 1000) {
           const { error: abortError } = await admin.rpc('abort_asaas_subscription_reactivation', {
-            p_negocio_id: subscription.negocio_id,
+            p_negocio_id: subscription.business_id,
             p_request_id: subscription.reactivation_request_id,
             p_reason: 'provider_still_inactive_after_timeout',
           });
@@ -699,14 +699,14 @@ Deno.serve(async (req) => {
         summary.subscription_reconciliation.confirmed += 1;
       } catch (error) {
         if (subscription.reactivation_request_id) {
-          await recordVerificationFailure(admin, 'reactivation', String(subscription.negocio_id), String(subscription.reactivation_request_id),
+          await recordVerificationFailure(admin, 'reactivation', String(subscription.business_id), String(subscription.reactivation_request_id),
             error instanceof AsaasObservationUnavailable ? 'provider_unavailable' : 'local_reconciliation_failed', error);
         }
         summary.subscription_reconciliation.pending += 1;
-        console.error('Asaas subscription reconciliation pending:', subscription.negocio_id, error);
+        console.error('Asaas subscription reconciliation pending:', subscription.business_id, error);
       } finally {
         if (providerConfirmed && completedWithoutError && subscription.reactivation_request_id) {
-          await recordPendingReturn(admin, 'reactivation', String(subscription.negocio_id), String(subscription.reactivation_request_id));
+          await recordPendingReturn(admin, 'reactivation', String(subscription.business_id), String(subscription.reactivation_request_id));
         }
       }
     }

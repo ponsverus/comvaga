@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
     const { data: subscription, error: subscriptionCustomerError } = await admin
       .from('business_subscriptions')
       .select('id, plan_code, provider, provider_customer_id, provider_subscription_id, provider_status_revision, current_period_start, current_period_end, current_period_price_cents, provider_current_period_end')
-      .eq('negocio_id', negocioId)
+      .eq('business_id', negocioId)
       .maybeSingle();
     if (subscriptionCustomerError) throw subscriptionCustomerError;
 
@@ -827,7 +827,7 @@ Deno.serve(async (req) => {
     }
     try {
       await adminForDebug?.from('billing_events').insert({
-        negocio_id: debugNegocioId,
+        business_id: debugNegocioId,
         provider: ASAAS_PROVIDER,
         provider_event_id: `checkout_error:${crypto.randomUUID()}`,
         event_type: 'CHECKOUT_CREATE_FAILED',

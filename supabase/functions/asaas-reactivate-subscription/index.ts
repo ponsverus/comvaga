@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     if (limited) return limited;
     if (status?.reactivation_pending) {
       const { data: pendingRow, error: pendingError } = await admin.from('business_subscriptions')
-        .select('reactivation_request_id').eq('negocio_id', negocioId).maybeSingle();
+        .select('reactivation_request_id').eq('business_id', negocioId).maybeSingle();
       if (pendingError) console.error('Pending reactivation monitor identity lookup failed:', pendingError);
       const pendingRequestId = asText(pendingRow?.reactivation_request_id);
       let observedState: string | null = null;
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     }
     const nextDueDate = chooseNextDueDate(providerSubscription, charges, paidAccessEnd(status), today);
     const { data: current, error: currentError } = await admin.from('business_subscriptions')
-      .select('provider_status_revision').eq('negocio_id', negocioId)
+      .select('provider_status_revision').eq('business_id', negocioId)
       .eq('provider_subscription_id', subscriptionId).maybeSingle();
     if (currentError) throw currentError;
     requestId = crypto.randomUUID();
