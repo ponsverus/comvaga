@@ -154,10 +154,10 @@ export function useClientActivity({ clienteId, uiAlert, uiConfirm, feedback, nav
     };
 
     const channel = supabase
-      .channel(`agendamentos_cliente:${clienteId}`)
+      .channel(`appointments_client:${clienteId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'agendamentos', filter: `cliente_id=eq.${clienteId}` },
+        { event: '*', schema: 'public', table: 'appointments', filter: `client_id=eq.${clienteId}` },
         scheduleRefresh
       )
       .subscribe();

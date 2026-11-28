@@ -78,13 +78,13 @@ export function useDashboardRealtime({
     };
 
     const channelName = parceiroProfissionalId
-      ? `agendamentos:${negocio.id}:${parceiroProfissionalId}`
-      : `agendamentos:${negocio.id}`;
+      ? `appointments:${negocio.id}:${parceiroProfissionalId}`
+      : `appointments:${negocio.id}`;
     const channelFilter = parceiroProfissionalId
-      ? `profissional_id=eq.${parceiroProfissionalId}`
-      : `negocio_id=eq.${negocio.id}`;
+      ? `professional_id=eq.${parceiroProfissionalId}`
+      : `business_id=eq.${negocio.id}`;
     const channel = supabase.channel(channelName)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos', filter: channelFilter }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: channelFilter }, (payload) => {
         const ev = payload?.eventType;
         const novo = payload?.new;
         if (ev === 'INSERT') {
