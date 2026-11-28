@@ -200,7 +200,7 @@ async function referenceFromCheckoutSession(admin: AdminClient, providerCheckout
 
   const { data: session, error: sessionError } = await admin
     .from('billing_checkout_sessions')
-    .select('id, negocio_id, plan_code, action, metadata')
+    .select('id, business_id, plan_code, action, metadata')
     .eq('provider', ASAAS_PROVIDER)
     .eq('provider_checkout_id', providerCheckoutId)
     .maybeSingle();
@@ -208,7 +208,7 @@ async function referenceFromCheckoutSession(admin: AdminClient, providerCheckout
   if (session) {
     return {
       checkoutSessionId: session.id,
-      negocioId: session.negocio_id,
+      negocioId: session.business_id,
       planCode: session.plan_code,
       action: session.action,
       request: ((session.metadata || {}).checkout_request || null) as Record<string, unknown> | null,
@@ -217,7 +217,7 @@ async function referenceFromCheckoutSession(admin: AdminClient, providerCheckout
 
   const { data: event, error: eventError } = await admin
     .from('billing_events')
-    .select('negocio_id, payload')
+    .select('business_id, payload')
     .eq('provider', ASAAS_PROVIDER)
     .eq('provider_event_id', `checkout:${providerCheckoutId}`)
     .maybeSingle();
@@ -230,7 +230,7 @@ async function referenceFromCheckoutSession(admin: AdminClient, providerCheckout
 
   return {
     checkoutSessionId: parsed.checkoutSessionId,
-    negocioId: event?.negocio_id || parsed.negocioId,
+    negocioId: event?.business_id || parsed.negocioId,
     planCode: scalarId(request.planCode)?.toLowerCase() || parsed.planCode,
     action: scalarId(request.action)?.toLowerCase() || parsed.action,
     request,
@@ -259,7 +259,7 @@ export async function processAsaasBillingEvent(
   const checkoutSessionId = scalarId(event.checkout_session_id)
     || directReference.checkoutSessionId
     || storedReference.checkoutSessionId;
-  let negocioId = scalarId(event.negocio_id)
+  let negocioId = scalarId(event.business_id)
     || directReference.negocioId
     || storedReference.negocioId;
   const planCode = directReference.planCode || storedReference.planCode;
@@ -302,7 +302,7 @@ export async function processAsaasBillingEvent(
     const { data: subscription, error: subscriptionError } = await admin
       .from('business_subscriptions')
       .select('id, provider, provider_subscription_id, provider_status, canceled_at, billing_action_kind')
-      .eq('negocio_id', negocioId)
+      .eq('business_id', negocioId)
       .maybeSingle();
     if (subscriptionError) throw subscriptionError;
     if (!subscription) throw new Error('subscription_not_found');
@@ -353,16 +353,16 @@ export async function processAsaasBillingEvent(
     if (!subscriptionId) throw new Error('confirmed_subscription_reference_missing');
     const { data: currentSubscription, error: currentSubscriptionError } = await admin
       .from('business_subscriptions')
-      .select('negocio_id, provider_status, reactivation_request_id')
+      .select('business_id, provider_status, reactivation_request_id')
       .eq('provider', ASAAS_PROVIDER)
       .eq('provider_subscription_id', subscriptionId)
       .maybeSingle();
     if (currentSubscriptionError) throw currentSubscriptionError;
     let historicalBusinessId: string | null = null;
-    if (!currentSubscription?.negocio_id) {
+    if (!currentSubscription?.business_id) {
       const { data: historicalSession, error: historicalError } = await admin
         .from('billing_checkout_sessions')
-        .select('negocio_id')
+        .select('business_id')
         .eq('action', 'subscription')
         .eq('status', 'paid')
         .eq('origin_provider_status', 'EXPIRED')
@@ -371,15 +371,15 @@ export async function processAsaasBillingEvent(
         .limit(1)
         .maybeSingle();
       if (historicalError) throw historicalError;
-      historicalBusinessId = historicalSession?.negocio_id || null;
+      historicalBusinessId = historicalSession?.business_id || null;
       if (historicalBusinessId) {
         if (negocioId && negocioId !== historicalBusinessId) throw new Error('historical_subscription_business_mismatch');
         negocioId = historicalBusinessId;
         await reconcileAsaasSubscriptionCharges(admin, negocioId, subscriptionId, undefined, 'worker');
       }
     }
-    newSubscriptionPayment = !currentSubscription?.negocio_id && !historicalBusinessId;
-    suspendedExistingSubscriptionPayment = Boolean(currentSubscription?.negocio_id)
+    newSubscriptionPayment = !currentSubscription?.business_id && !historicalBusinessId;
+    suspendedExistingSubscriptionPayment = Boolean(currentSubscription?.business_id)
       && (['INACTIVE', 'EXPIRED'].includes(String(currentSubscription.provider_status || '').toUpperCase())
         || Boolean(currentSubscription.reactivation_request_id));
     if (newSubscriptionPayment && (!checkoutSessionId || !negocioId || action !== 'subscription')) {
@@ -388,27 +388,25 @@ export async function processAsaasBillingEvent(
     if (newSubscriptionPayment) {
       const { data: checkoutSession, error: checkoutSessionError } = await admin
         .from('billing_checkout_sessions')
-        .select('negocio_id, origin_provider_subscription_id, origin_provider_status')
+        .select('business_id, origin_provider_subscription_id, origin_provider_status')
         .eq('id', checkoutSessionId)
         .eq('action', 'subscription')
         .eq('status', 'paid')
         .maybeSingle();
       if (checkoutSessionError) throw checkoutSessionError;
-      if (!checkoutSession || checkoutSession.negocio_id !== negocioId) {
+      if (!checkoutSession || checkoutSession.business_id !== negocioId) {
         throw new Error('confirmed_subscription_checkout_mismatch');
       }
       if (checkoutSession.origin_provider_status === 'EXPIRED' && checkoutSession.origin_provider_subscription_id) {
         await reconcileAsaasSubscriptionCharges(admin, negocioId, checkoutSession.origin_provider_subscription_id, undefined, 'worker');
       }
     }
-    if (currentSubscription?.negocio_id && currentSubscription.provider_status !== 'DELETED') {
-      await reconcileAsaasSubscriptionCharges(admin, currentSubscription.negocio_id, subscriptionId, undefined, 'worker');
+    if (currentSubscription?.business_id && currentSubscription.provider_status !== 'DELETED') {
+      await reconcileAsaasSubscriptionCharges(admin, currentSubscription.business_id, subscriptionId, undefined, 'worker');
     }
   }
 
   const mapped = mapEvent(normalizedEventType, entity);
-  // The database preserves the confirmed access state for suspended subscriptions;
-  // the provider reconciliation below decides lifecycle changes.
   const { data: processed, error: processError } = await admin.rpc('process_gateway_event', {
     p_event_id: eventId,
     p_provider: ASAAS_PROVIDER,
